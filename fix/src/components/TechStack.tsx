@@ -46,7 +46,7 @@ export const TechStack = () => {
         {/* Categories */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {categories.map((category, index) => (
-            <div key={index} className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E5E5]">
+            <div key={index} className="bg-white p-8 shadow-sm border border-[#E5E5E5]">
               <h3 className="text-xl font-semibold text-[#1D1D1F] mb-6">
                 {category.title}
               </h3>

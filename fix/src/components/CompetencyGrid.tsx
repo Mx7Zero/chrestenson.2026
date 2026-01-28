@@ -360,7 +360,7 @@ export const CompetencyGrid = () => {
         {/* Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 md:px-12 lg:px-24 py-12 bg-[#FAFAFA] border-t border-[#E5E5E5]">
           {metrics.map((metric, index) => (
-            <div key={index} className="bg-white rounded-xl p-6 md:p-8 border border-[#E5E5E5] text-center">
+            <div key={index} className="bg-white p-6 md:p-8 border border-[#E5E5E5] text-center">
               <div className="text-2xl md:text-3xl lg:text-4xl font-semibold text-[#0071E3] mb-1 font-mono tracking-tight">
                 {metric.value}
               </div>

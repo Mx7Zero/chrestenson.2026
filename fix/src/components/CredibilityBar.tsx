@@ -212,7 +212,7 @@ export const CredibilityBar = () => {
       {logos.map((logo, index) => (
         <div 
           key={`${keyPrefix}-${index}`} 
-          className="flex-shrink-0 w-40 h-24 md:w-56 md:h-32 lg:w-64 lg:h-36 bg-[#1D1D1F] rounded-sm flex items-center justify-center p-3 md:p-4"
+          className="flex-shrink-0 w-40 h-24 md:w-56 md:h-32 lg:w-64 lg:h-36 bg-[#1D1D1F] flex items-center justify-center p-3 md:p-4"
         >
           <img 
             src={logo.src} 

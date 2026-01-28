@@ -71,7 +71,7 @@ export const Contact = () => {
           <p className="text-sm text-[#86868B] mb-4 uppercase tracking-wide">Track Record</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {achievements.map((item, index) => (
-              <div key={index} className="bg-[#F5F5F7] rounded-2xl p-6">
+              <div key={index} className="bg-[#F5F5F7] p-6">
                 <h4 className="text-lg font-semibold text-[#0071E3] mb-2">{item.stat}</h4>
                 <p className="text-[#6E6E73] text-sm">{item.desc}</p>
               </div>
@@ -130,7 +130,7 @@ export const Contact = () => {
         {/* CTA */}
         <a
           href="mailto:matthew@chrestenson.com"
-          className="inline-flex items-center gap-2 bg-[#0071E3] text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-[#0077ED] transition-colors"
+          className="inline-flex items-center gap-2 bg-[#0071E3] text-white px-8 py-4 text-lg font-medium hover:bg-[#0077ED] transition-colors"
         >
           Schedule Consultation
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

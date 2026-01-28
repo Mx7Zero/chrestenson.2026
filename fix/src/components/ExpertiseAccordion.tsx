@@ -287,7 +287,7 @@ export const ExpertiseAccordion = () => {
         {/* Accordion */}
         <div className="space-y-4">
           {sections.map((section, index) => (
-            <div key={index} className="border border-[#E5E5E5] rounded-2xl overflow-hidden">
+            <div key={index} className="border border-[#E5E5E5] overflow-hidden">
               <button
                 onClick={() => setOpenSection(openSection === index ? null : index)}
                 className="w-full flex items-center justify-between p-6 md:p-8 text-left bg-white hover:bg-[#F5F5F7] transition-colors"
