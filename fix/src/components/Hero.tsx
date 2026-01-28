@@ -12,11 +12,14 @@ export const Hero = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // C Logo random organic scaling animation
+      // C Logo random organic animation: scale, position, and rotation
       const animateLogo = () => {
         gsap.to(logoRef.current, {
-          scale: gsap.utils.random(0.85, 1.15, 0.01),
-          duration: gsap.utils.random(1.5, 3.5),
+          scale: gsap.utils.random(0.7, 1.6, 0.01), // Much larger range
+          x: gsap.utils.random(-40, 40), // Bounce horizontally
+          y: gsap.utils.random(-30, 30), // Bounce vertically
+          rotation: gsap.utils.random(-15, 15), // Slow spin
+          duration: gsap.utils.random(2, 4.5), // Slower, more varied timing
           ease: 'sine.inOut',
           onComplete: animateLogo, // Chain next random animation
         });
