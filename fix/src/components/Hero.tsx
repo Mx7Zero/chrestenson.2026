@@ -169,15 +169,21 @@ export const Hero = () => {
         {/* Executive Summary */}
         <div 
           ref={summaryRef}
-          className="space-y-6 text-lg md:text-xl text-[#424245] max-w-4xl mx-auto leading-relaxed mb-12 text-left"
+          className="space-y-8 text-lg md:text-xl text-[#424245] w-full max-w-6xl mx-auto leading-relaxed mb-12"
         >
-          <p className="font-medium text-[#1D1D1F] text-xl md:text-2xl mb-4 text-center">
-            The Short Version
-          </p>
-          <p>
+          {/* Cool heading treatment */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#E5E5E5] to-[#0071E3]/30" />
+            <span className="text-xs md:text-sm font-medium tracking-[0.3em] uppercase text-[#0071E3]">
+              The Short Version
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-[#E5E5E5] to-[#0071E3]/30" />
+          </div>
+          
+          <p className="text-left">
             <span className="font-semibold text-[#1D1D1F]">AI-augmented strategist</span> and <span className="font-semibold text-[#1D1D1F]">brand architect</span> with <span className="font-semibold text-[#1D1D1F]">30+ years</span> of creative leadership, using <span className="font-semibold text-[#1D1D1F]">LLMs and generative AI</span> to accelerate research, content production, and visual asset creation at <span className="font-semibold text-[#1D1D1F]">enterprise scale</span>. Demonstrated ability to transform complex market intelligence into <span className="font-semibold text-[#1D1D1F]">investor-ready documentation</span>, brand strategies, and <span className="font-semibold text-[#1D1D1F]">full-stack digital products</span>—work that previously required teams, now executed with AI-assisted workflows.
           </p>
-          <p>
+          <p className="text-left">
             Unique combination of <span className="font-semibold text-[#1D1D1F]">studio-grade production</span> experience{' '}
             <span className="text-[#6E6E73]">(Disney, National Geographic, Ridley Scott Associates)</span>, 
             <span className="font-semibold text-[#1D1D1F]"> hospitality brand-building</span>{' '}
