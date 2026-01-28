@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ResumeModal } from './ResumeModal';
 
+// Floating letters animation with collision detection - v1.0
 export const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const logoRef = useRef<HTMLImageElement>(null);
@@ -10,7 +11,10 @@ export const Hero = () => {
   const contactRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const lettersContainerRef = useRef<HTMLDivElement>(null);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
+
+  const letters = ['C', 'H', 'R', 'E', 'S', 'T', 'E', 'N', 'S', 'O', 'N'];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -99,6 +103,120 @@ export const Hero = () => {
       
       // Start animation loop
       animationFrameId = requestAnimationFrame(updateFloat);
+
+      // Floating letters animation
+      const letterElements: Array<{
+        el: HTMLElement;
+        x: number;
+        y: number;
+        vx: number;
+        vy: number;
+        size: number;
+      }> = [];
+
+      if (lettersContainerRef.current) {
+        const letterDivs = lettersContainerRef.current.children;
+        letters.forEach((_, idx) => {
+          const el = letterDivs[idx] as HTMLElement;
+          const size = 20 + Math.random() * 20; // Random size between 20-40px
+          letterElements.push({
+            el,
+            x: gsap.utils.random(-300, 300),
+            y: gsap.utils.random(-150, 100),
+            vx: gsap.utils.random(-30, 30),
+            vy: gsap.utils.random(-30, 30),
+            size
+          });
+          el.style.fontSize = `${size}px`;
+        });
+      }
+
+      const updateLetters = () => {
+        const logoRadius = 60; // Approximate radius of C logo
+        
+        letterElements.forEach(letter => {
+          // Update position
+          letter.x += letter.vx * 0.016;
+          letter.y += letter.vy * 0.016;
+          
+          // Bounce off boundaries
+          if (letter.x < -400 || letter.x > 400) {
+            letter.vx *= -1;
+            letter.x = letter.x < -400 ? -400 : 400;
+          }
+          if (letter.y < -150 || letter.y > 100) {
+            letter.vy *= -1;
+            letter.y = letter.y < -150 ? -150 : 100;
+          }
+          
+          // Collision detection with main C logo
+          const dx = letter.x - currentX;
+          const dy = letter.y - currentY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const minDistance = logoRadius + letter.size / 2;
+          
+          if (distance < minDistance) {
+            // Collision! Bounce off
+            const angle = Math.atan2(dy, dx);
+            const overlap = minDistance - distance;
+            
+            // Push letter away from logo
+            letter.x += Math.cos(angle) * overlap;
+            letter.y += Math.sin(angle) * overlap;
+            
+            // Bounce velocity
+            const speed = Math.sqrt(letter.vx * letter.vx + letter.vy * letter.vy);
+            letter.vx = Math.cos(angle) * speed * 0.8;
+            letter.vy = Math.sin(angle) * speed * 0.8;
+          }
+          
+          // Apply transform
+          letter.el.style.transform = `translate(${letter.x}px, ${letter.y}px) translateZ(0)`;
+        });
+      };
+      
+      // Replace animation loop with letters integration
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = requestAnimationFrame(function animate(currentTime) {
+        if (!logoRef.current) {
+          animationFrameId = requestAnimationFrame(animate);
+          return;
+        }
+
+        const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
+        lastTime = currentTime;
+
+        if (!isDraggingRef) {
+          currentX += velocityX * deltaTime;
+          currentY += velocityY * deltaTime;
+          currentRotation += rotationVelocity * deltaTime;
+          
+          if (currentX <= bounds.left || currentX >= bounds.right) {
+            velocityX *= -0.8;
+            currentX = currentX <= bounds.left ? bounds.left : bounds.right;
+            velocityY += gsap.utils.random(-5, 5);
+            rotationVelocity += gsap.utils.random(-3, 3);
+          }
+          
+          if (currentY <= bounds.top || currentY >= bounds.bottom) {
+            velocityY *= -0.8;
+            currentY = currentY <= bounds.top ? bounds.top : bounds.bottom;
+            velocityX += gsap.utils.random(-5, 5);
+            rotationVelocity += gsap.utils.random(-3, 3);
+          }
+          
+          if (Math.random() < 0.005) {
+            velocityX += gsap.utils.random(-2, 2);
+            velocityY += gsap.utils.random(-2, 2);
+            rotationVelocity += gsap.utils.random(-1, 1);
+          }
+          
+          logoRef.current.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotation}deg) translateZ(0)`;
+        }
+
+        updateLetters();
+        animationFrameId = requestAnimationFrame(animate);
+      });
       
       // Drag functionality
       const logo = logoRef.current;
@@ -277,6 +395,20 @@ export const Hero = () => {
             fetchPriority="high"
             decoding="async"
           />
+          
+          {/* Floating letters */}
+          <div ref={lettersContainerRef} className="absolute inset-0 pointer-events-none">
+            {letters.map((letter, index) => (
+              <span
+                key={index}
+                data-letter-index={index}
+                className="absolute text-2xl md:text-3xl font-black text-[#6E6E73]/30 select-none"
+                style={{ willChange: 'transform' }}
+              >
+                {letter}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Name - Brand Hierarchy */}
