@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { DockLetters } from './DockLetters';
 
 export const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
