@@ -24,11 +24,17 @@ export const Navigation = () => {
           
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#about" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
-              About
+            <a href="#credibility" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
+              Credibility
+            </a>
+            <a href="#competencies" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
+              Competencies
             </a>
             <a href="#expertise" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
               Expertise
+            </a>
+            <a href="#tech-stack" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
+              Tech Stack
             </a>
             <a href="#contact" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
               Contact
@@ -54,8 +60,10 @@ export const Navigation = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-[#E5E5E5]">
             <div className="flex flex-col gap-4">
-              <a href="#about" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>About</a>
+              <a href="#credibility" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Credibility</a>
+              <a href="#competencies" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Competencies</a>
               <a href="#expertise" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Expertise</a>
+              <a href="#tech-stack" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Tech Stack</a>
               <a href="#contact" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
             </div>
           </div>

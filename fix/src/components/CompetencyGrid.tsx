@@ -236,7 +236,7 @@ export const CompetencyGrid = () => {
   }, [startNodeAnimation]);
 
   return (
-    <section id="about" className="py-16 bg-white min-h-screen flex flex-col">
+    <section id="competencies" className="py-16 bg-white min-h-screen flex flex-col">
       {/* Header */}
       <div className="mb-8 text-center px-6">
         <div className="flex items-center justify-center gap-4 mb-6">

@@ -226,7 +226,7 @@ export const CredibilityBar = () => {
   );
 
   return (
-    <section className="py-8 md:py-10 overflow-hidden bg-[#1D1D1F]">
+    <section id="credibility" className="py-8 md:py-10 overflow-hidden bg-[#1D1D1F]">
       <div className="relative">
         <div 
           ref={scrollRef}
