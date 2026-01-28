@@ -3,31 +3,48 @@ import gsap from 'gsap';
 
 export const Hero = () => {
   const containerRef = useRef<HTMLElement>(null);
-  const nameRef = useRef<HTMLHeadingElement>(null);
+  const firstNameRef = useRef<HTMLDivElement>(null);
+  const lastNameRef = useRef<HTMLDivElement>(null);
   const orbRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Animate name letter by letter
-    if (nameRef.current) {
-      const text = nameRef.current.textContent || '';
-      nameRef.current.textContent = '';
-      
-      const letters = text.split('').map((char) => {
-        const span = document.createElement('span');
-        span.textContent = char === ' ' ? '\u00A0' : char;
-        span.style.opacity = '0';
-        span.style.display = 'inline-block';
-        nameRef.current?.appendChild(span);
-        return span;
-      });
+    // Animate first name letter by letter
+    const animateName = (ref: React.RefObject<HTMLDivElement | null>) => {
+      if (ref.current) {
+        const text = ref.current.textContent || '';
+        ref.current.textContent = '';
+        
+        const letters = text.split('').map((char) => {
+          const span = document.createElement('span');
+          span.textContent = char;
+          span.style.opacity = '0';
+          span.style.display = 'inline-block';
+          ref.current?.appendChild(span);
+          return span;
+        });
 
-      gsap.to(letters, {
-        opacity: 1,
-        duration: 0.05,
-        stagger: 0.03,
-        ease: 'power2.out',
-      });
-    }
+        return letters;
+      }
+      return [];
+    };
+
+    const firstLetters = animateName(firstNameRef);
+    const lastLetters = animateName(lastNameRef);
+
+    gsap.to(firstLetters, {
+      opacity: 1,
+      duration: 0.05,
+      stagger: 0.03,
+      ease: 'power2.out',
+    });
+
+    gsap.to(lastLetters, {
+      opacity: 1,
+      duration: 0.05,
+      stagger: 0.03,
+      delay: 0.25,
+      ease: 'power2.out',
+    });
 
     // Orb animation
     if (orbRef.current) {
@@ -59,11 +76,9 @@ export const Hero = () => {
       />
 
       <div className="relative z-10 max-w-6xl px-8">
-        <h1 
-          ref={nameRef}
-          className="text-[12vw] md:text-[140px] font-bold text-white mb-12 leading-[0.85] tracking-[-0.06em]"
-        >
-          MATTHEW<br />CHRESTENSON
+        <h1 className="text-[12vw] md:text-[140px] font-bold text-white mb-12 leading-[0.85] tracking-[-0.06em]">
+          <div ref={firstNameRef}>MATTHEW</div>
+          <div ref={lastNameRef}>CHRESTENSON</div>
         </h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-20 font-mono text-base">
