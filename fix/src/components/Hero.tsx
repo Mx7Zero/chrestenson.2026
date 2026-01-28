@@ -132,17 +132,17 @@ export const Hero = () => {
         letters.forEach((_, idx) => {
           const el = letterDivs[idx] as HTMLElement;
           if (!el) return;
-          // Start letters in a ring around the logo
+          // Start letters in a ring OUTSIDE the logo (logo collision is 200px)
           const angle = (idx / letters.length) * Math.PI * 2;
-          const radius = gsap.utils.random(160, 280);
+          const radius = gsap.utils.random(220, 300); // Outside collision zone
           letterElements.push({
             el,
             x: Math.cos(angle) * radius,
-            y: Math.sin(angle) * radius * 0.7,
-            vx: gsap.utils.random(-100, 100),  // Much more movement
-            vy: gsap.utils.random(-100, 100),
+            y: Math.sin(angle) * radius * 0.6, // Elliptical
+            vx: gsap.utils.random(-80, 80),
+            vy: gsap.utils.random(-80, 80),
             rotation: gsap.utils.random(0, 360),
-            rotationSpeed: gsap.utils.random(-25, 25), // More spin
+            rotationSpeed: gsap.utils.random(-20, 20),
             size
           });
         });
@@ -196,22 +196,17 @@ export const Hero = () => {
               const ny = dyLogo / distLogo;
               
               // Push letter firmly to edge of logo
-              letter.x = currentX + nx * (minDistLogo + 5);
-              letter.y = currentY + ny * (minDistLogo + 5);
+              letter.x = currentX + nx * (minDistLogo + 3);
+              letter.y = currentY + ny * (minDistLogo + 3);
               
-              // Strong bounce - reflect velocity and add energy
-              const dot = letter.vx * nx + letter.vy * ny;
-              // Always bounce outward
-              letter.vx = nx * Math.abs(dot) * 1.5 + letter.vx * 0.3;
-              letter.vy = ny * Math.abs(dot) * 1.5 + letter.vy * 0.3;
-              // Add minimum outward velocity if too slow
-              const outSpeed = letter.vx * nx + letter.vy * ny;
-              if (outSpeed < 30) {
-                letter.vx += nx * 40;
-                letter.vy += ny * 40;
-              }
+              // Simple outward bounce - always push away from center
+              const speed = Math.sqrt(letter.vx * letter.vx + letter.vy * letter.vy);
+              const bounceSpeed = Math.max(speed, 50); // Minimum bounce speed
+              letter.vx = nx * bounceSpeed * 0.8;
+              letter.vy = ny * bounceSpeed * 0.8;
+              
               // Add spin from collision
-              letter.rotationSpeed += (nx - ny) * 10;
+              letter.rotationSpeed += gsap.utils.random(-15, 15);
               
               // Minimal push on logo
               logoPushX -= nx * 0.3;
