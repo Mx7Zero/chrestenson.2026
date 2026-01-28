@@ -72,7 +72,8 @@ export const DockText = ({ children, className = '' }: DockTextProps) => {
       }
       
       gsap.to(wordEl, {
-        scale,
+        scaleX: scale,
+        scaleY: scale,
         duration: 0.15,
         ease: 'power2.out',
       });
@@ -84,7 +85,8 @@ export const DockText = ({ children, className = '' }: DockTextProps) => {
     wordsRef.current.forEach((wordEl) => {
       if (!wordEl) return;
       gsap.to(wordEl, {
-        scale: 1,
+        scaleX: 1,
+        scaleY: 1,
         duration: 0.3,
         ease: 'power2.out',
       });
@@ -119,8 +121,12 @@ export const DockText = ({ children, className = '' }: DockTextProps) => {
           <span
             key={idx}
             ref={el => { wordsRef.current[currentIndex] = el; }}
-            className={`inline-block origin-center ${word.bold ? 'font-semibold text-[#1D1D1F]' : ''}`}
-            style={{ willChange: 'transform' }}
+            className={`inline-block origin-bottom align-bottom ${word.bold ? 'font-semibold text-[#1D1D1F]' : ''}`}
+            style={{ 
+              willChange: 'transform',
+              transformOrigin: 'center bottom',
+              display: 'inline-block',
+            }}
           >
             {word.text}
           </span>
