@@ -1,7 +1,23 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export const ExpertiseAccordion = () => {
   const [openSection, setOpenSection] = useState<number | null>(0);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const handleToggle = (index: number) => {
+    const newOpenState = openSection === index ? null : index;
+    setOpenSection(newOpenState);
+    
+    // Scroll to the section after a brief delay to let it expand
+    if (newOpenState !== null) {
+      setTimeout(() => {
+        sectionRefs.current[index]?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }, 100);
+    }
+  };
 
   // ALL data from Job Skills 2026 document
   const sections = [
@@ -296,9 +312,13 @@ export const ExpertiseAccordion = () => {
         {/* Accordion */}
         <div className="border-t border-[#E5E5E5]">
           {sections.map((section, index) => (
-            <div key={index} className="border-b border-[#E5E5E5]">
+            <div 
+              key={index} 
+              ref={(el) => (sectionRefs.current[index] = el)}
+              className="border-b border-[#E5E5E5]"
+            >
               <button
-                onClick={() => setOpenSection(openSection === index ? null : index)}
+                onClick={() => handleToggle(index)}
                 className="w-full flex items-center justify-between py-6 md:py-8 text-left group"
               >
                 <div className="flex items-center gap-4 md:gap-6">
