@@ -248,36 +248,39 @@ export const Hero = () => {
             letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - smooth soft-body repulsion
+          // Letter-to-letter collision - gentle soft repulsion (no stuttering)
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2 + 12;
+            const minDist = (letter.size + other.size) / 2 + 10;
             
             if (dist < minDist && dist > 0) {
               const nx = dx / dist;
               const ny = dy / dist;
-              const overlap = minDist - dist;
               
-              // Smooth position separation (proportional to overlap)
-              const pushForce = overlap * 0.4;
+              // Soft position correction only (no velocity jerk)
+              const overlap = minDist - dist;
+              const pushForce = overlap * 0.3;
               letter.x -= nx * pushForce;
               letter.y -= ny * pushForce;
               other.x += nx * pushForce;
               other.y += ny * pushForce;
               
-              // Smooth velocity adjustment - proportional spring force
-              const springForce = overlap * 0.8;
-              letter.vx -= nx * springForce;
-              letter.vy -= ny * springForce;
-              other.vx += nx * springForce;
-              other.vy += ny * springForce;
+              // Only adjust velocity if moving toward each other
+              const relVelX = letter.vx - other.vx;
+              const relVelY = letter.vy - other.vy;
+              const relVelDot = relVelX * (-nx) + relVelY * (-ny);
               
-              // Add gentle spin
-              letter.rotationSpeed += (ny - nx) * 2;
-              other.rotationSpeed += (nx - ny) * 2;
+              if (relVelDot > 0) {
+                // Gentle elastic response
+                const impulse = relVelDot * 0.3;
+                letter.vx -= (-nx) * impulse;
+                letter.vy -= (-ny) * impulse;
+                other.vx += (-nx) * impulse;
+                other.vy += (-ny) * impulse;
+              }
             }
           }
           
