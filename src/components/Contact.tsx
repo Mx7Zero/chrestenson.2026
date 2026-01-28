@@ -1,33 +1,94 @@
 export const Contact = () => {
   return (
-    <section id="contact" className="py-20 md:py-32 bg-bg-primary">
-      <div className="max-w-[680px] mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-5xl font-bold text-text-primary mb-6">
-          Let's Build Something
-        </h2>
-        <p className="text-xl text-text-secondary mb-12">
-          Ready to transform strategy into execution?
-        </p>
-        
-        <div className="space-y-6">
-          <a
-            href="mailto:matthew@chrestenson.com"
-            className="inline-block px-10 py-5 bg-accent hover:bg-accent-hover 
-                       text-white font-semibold rounded-lg transition-all duration-300
-                       hover:scale-105 text-lg"
-          >
-            Book a Consultation
-          </a>
-          
-          <p className="text-text-muted text-sm">
-            Or email directly:{' '}
-            <a 
-              href="mailto:matthew@chrestenson.com"
-              className="text-accent hover:text-accent-hover transition-colors"
-            >
-              matthew@chrestenson.com
-            </a>
-          </p>
+    <section id="contact" className="py-32 px-8 border-t border-white/5">
+      <div className="max-w-[1600px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+          <div>
+            <div className="text-text-muted font-mono text-[10px] tracking-[0.2em] mb-8">
+              INITIATE PROJECT
+            </div>
+            <h2 className="text-5xl md:text-7xl font-extralight text-white tracking-[-0.04em] leading-[1.1] mb-12">
+              Transform<br />
+              Strategy Into<br />
+              Execution
+            </h2>
+            <div className="space-y-4 text-text-secondary font-light">
+              <p>AI-native execution for $100M+ projects.</p>
+              <p>Investor-ready documentation. Full-stack delivery.</p>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <div className="text-text-muted font-mono text-[9px] tracking-wider mb-3">
+                  EMAIL
+                </div>
+                <a 
+                  href="mailto:matthew@chrestenson.com"
+                  className="text-white hover:text-accent transition-colors duration-300 text-sm font-light"
+                >
+                  matthew@chrestenson.com
+                </a>
+              </div>
+              <div>
+                <div className="text-text-muted font-mono text-[9px] tracking-wider mb-3">
+                  PHONE
+                </div>
+                <a 
+                  href="tel:8054528932"
+                  className="text-white hover:text-accent transition-colors duration-300 text-sm font-light"
+                >
+                  805.452.8932
+                </a>
+              </div>
+              <div>
+                <div className="text-text-muted font-mono text-[9px] tracking-wider mb-3">
+                  LOCATION
+                </div>
+                <div className="text-white text-sm font-light">
+                  Denver, CO
+                </div>
+              </div>
+              <div>
+                <div className="text-text-muted font-mono text-[9px] tracking-wider mb-3">
+                  LINKEDIN
+                </div>
+                <a 
+                  href="https://linkedin.com/in/matthewchrestenson"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-accent transition-colors duration-300 text-sm font-light inline-flex items-center gap-2"
+                >
+                  Connect
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            <div className="pt-8 border-t border-white/5">
+              <a
+                href="mailto:matthew@chrestenson.com"
+                className="inline-flex items-center gap-3 text-accent hover:text-white transition-colors duration-300 font-mono text-xs tracking-wider"
+              >
+                SCHEDULE CONSULTATION
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-32 pt-12 border-t border-white/5 flex items-center justify-between">
+          <div className="text-text-muted font-mono text-[9px] tracking-wider">
+            © 2026 MATTHEW CHRESTENSON
+          </div>
+          <div className="text-text-muted font-mono text-[9px] tracking-wider">
+            AI-NATIVE EXECUTION
+          </div>
         </div>
       </div>
     </section>

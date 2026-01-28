@@ -1,61 +1,38 @@
 export const TechStack = () => {
-  const techCategories = [
-    {
-      category: 'Development & Design',
-      items: [
-        { label: 'Frontend', tools: 'React 18, TypeScript, Tailwind CSS, Vite, GSAP' },
-        { label: 'Backend', tools: 'Node.js, Express, PostgreSQL, Supabase, Redis' },
-        { label: 'Design/Video', tools: 'Adobe Creative Cloud (full suite), DaVinci Resolve' },
-        { label: 'AI/Content', tools: 'Claude Code, Gemini, MidJourney, Runway ML, VEO 3' },
-        { label: 'Web Platforms', tools: 'Replit, Framer, Webflow, WordPress' },
-      ],
-    },
-    {
-      category: 'Business Systems',
-      items: [
-        { label: 'CRM', tools: 'Pipedrive, HubSpot, JobNimbus' },
-        { label: 'Analytics', tools: 'Google Analytics 4, Microsoft Clarity, Search Console' },
-        { label: 'Documentation', tools: 'Notion, Markdown, Technical specifications' },
-        { label: 'Project Management', tools: 'Agile/Scrum, risk management, roadmap planning' },
-        { label: 'Financial', tools: 'Excel/Sheets modeling, investment memoranda' },
-      ],
-    },
-    {
-      category: 'Healthcare & Regulatory',
-      items: [
-        { label: 'Standards', tools: 'HL7 FHIR R4, HIPAA, CMS billing rules' },
-        { label: 'FDA Pathways', tools: '510(k), De Novo, SaMD classification' },
-        { label: 'IP Systems', tools: 'USPTO, EPO, WIPO, CNIPA' },
-        { label: 'Compliance', tools: 'HIPAA, AKS, Medicare billing' },
-      ],
-    },
+  const stack = [
+    { category: 'FRONTEND', items: ['React 18', 'TypeScript', 'Tailwind CSS', 'Vite', 'GSAP'] },
+    { category: 'BACKEND', items: ['Node.js', 'PostgreSQL', 'Supabase', 'Redis'] },
+    { category: 'AI/ML', items: ['Claude', 'Gemini', 'MidJourney', 'Runway ML'] },
+    { category: 'DESIGN', items: ['Adobe CC', 'DaVinci Resolve', 'Framer'] },
+    { category: 'BUSINESS', items: ['Pipedrive', 'HubSpot', 'GA4', 'Notion'] },
+    { category: 'HEALTHCARE', items: ['HL7 FHIR', 'HIPAA', 'FDA 510(k)', 'CMS'] },
   ];
 
   return (
-    <section className="py-20 md:py-32 bg-bg-surface">
-      <div className="max-w-[1200px] mx-auto px-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-12 text-center">
-          Technical Stack
-        </h2>
+    <section className="py-32 px-8 border-t border-white/5">
+      <div className="max-w-[1600px] mx-auto">
+        <div className="mb-20">
+          <div className="text-text-muted font-mono text-[10px] tracking-[0.2em] mb-4">
+            TECHNICAL CAPABILITIES
+          </div>
+          <h2 className="text-5xl md:text-7xl font-extralight text-white tracking-[-0.04em]">
+            Full-Stack<br />Execution
+          </h2>
+        </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {techCategories.map((category) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-white/5">
+          {stack.map((category) => (
             <div
               key={category.category}
-              className="bg-bg-primary border border-border rounded-xl p-6"
+              className="bg-black p-6 hover:bg-white/[0.02] transition-colors duration-500"
             >
-              <h3 className="text-xl font-semibold text-accent mb-6">
+              <div className="text-accent font-mono text-[10px] tracking-wider mb-6">
                 {category.category}
-              </h3>
-              <div className="space-y-4">
+              </div>
+              <div className="space-y-3">
                 {category.items.map((item) => (
-                  <div key={item.label}>
-                    <div className="text-sm font-medium text-text-primary mb-1">
-                      {item.label}
-                    </div>
-                    <div className="text-sm text-text-secondary leading-relaxed">
-                      {item.tools}
-                    </div>
+                  <div key={item} className="text-text-secondary text-xs font-light">
+                    {item}
                   </div>
                 ))}
               </div>
