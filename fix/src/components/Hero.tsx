@@ -172,17 +172,17 @@ export const Hero = () => {
           className="space-y-6 text-lg md:text-xl text-[#424245] max-w-4xl mx-auto leading-relaxed mb-12 text-left"
         >
           <p className="font-medium text-[#1D1D1F] text-xl md:text-2xl mb-4 text-center">
-            Executive Summary
+            The Short Version
           </p>
           <p>
-            AI-augmented strategist and brand architect with 30+ years of creative leadership, using LLMs and generative AI to accelerate research, content production, and visual asset creation at enterprise scale. Demonstrated ability to transform complex market intelligence into investor-ready documentation, brand strategies, and full-stack digital products—work that previously required teams, now executed with AI-assisted workflows.
+            <span className="font-semibold text-[#1D1D1F]">AI-augmented strategist</span> and <span className="font-semibold text-[#1D1D1F]">brand architect</span> with <span className="font-semibold text-[#1D1D1F]">30+ years</span> of creative leadership, using <span className="font-semibold text-[#1D1D1F]">LLMs and generative AI</span> to accelerate research, content production, and visual asset creation at <span className="font-semibold text-[#1D1D1F]">enterprise scale</span>. Demonstrated ability to transform complex market intelligence into <span className="font-semibold text-[#1D1D1F]">investor-ready documentation</span>, brand strategies, and <span className="font-semibold text-[#1D1D1F]">full-stack digital products</span>—work that previously required teams, now executed with AI-assisted workflows.
           </p>
           <p>
-            Unique combination of studio-grade production experience{' '}
+            Unique combination of <span className="font-semibold text-[#1D1D1F]">studio-grade production</span> experience{' '}
             <span className="text-[#6E6E73]">(Disney, National Geographic, Ridley Scott Associates)</span>, 
-            hospitality brand-building{' '}
+            <span className="font-semibold text-[#1D1D1F]"> hospitality brand-building</span>{' '}
             <span className="text-[#6E6E73]">(six successful ventures from concept to exit)</span>, 
-            and current AI-first strategic advisory across health technology, hospitality, and consumer goods.
+            and current <span className="font-semibold text-[#1D1D1F]">AI-first strategic advisory</span> across health technology, hospitality, and consumer goods.
           </p>
           <p className="font-medium text-[#0071E3] text-lg md:text-xl border-l-2 border-[#0071E3] pl-6 py-2 bg-gradient-to-r from-[#0071E3]/5 to-transparent text-left">
             Not just AI-literate—AI-native: using these tools as thinking partners, not just productivity shortcuts.
