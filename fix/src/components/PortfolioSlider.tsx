@@ -232,7 +232,7 @@ export const PortfolioSlider = () => {
                 {portfolioImages.map((image, idx) => (
                   <div 
                     key={`${setIndex}-${idx}`} 
-                    className="relative h-[200px] w-[200px] shrink-0 overflow-hidden bg-white hover:opacity-80 transition-opacity duration-300 cursor-pointer"
+                    className="relative h-[200px] w-[200px] shrink-0 overflow-hidden bg-white cursor-pointer group"
                     onClick={(e) => {
                       if (!isDraggingRef.current) {
                         e.stopPropagation();
@@ -243,7 +243,7 @@ export const PortfolioSlider = () => {
                     <img
                       src={`/portfolio/${encodeURIComponent(image)}`}
                       alt={`Portfolio item ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                       draggable="false"
                     />
                   </div>
