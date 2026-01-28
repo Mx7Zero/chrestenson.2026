@@ -139,10 +139,10 @@ export const Hero = () => {
             el,
             x: Math.cos(angle) * radius,
             y: Math.sin(angle) * radius * 0.7,
-            vx: gsap.utils.random(-20, 20),  // Slower for tranquil movement
-            vy: gsap.utils.random(-20, 20),
+            vx: gsap.utils.random(-60, 60),  // More movement
+            vy: gsap.utils.random(-60, 60),
             rotation: gsap.utils.random(0, 360),
-            rotationSpeed: gsap.utils.random(-12, 12), // Gentler spin
+            rotationSpeed: gsap.utils.random(-20, 20), // More spin
             size
           });
         });
@@ -193,23 +193,24 @@ export const Hero = () => {
             if (distLogo > 0) {
               const nx = dxLogo / distLogo;
               const ny = dyLogo / distLogo;
-              const overlap = minDistLogo - distLogo;
               
-              // Very gentle push - letters can get closer
-              const pushStrength = Math.min(overlap * 0.2, 4);
-              letter.x += nx * pushStrength;
-              letter.y += ny * pushStrength;
+              // Push letter to edge of logo
+              letter.x = currentX + nx * (minDistLogo + 2);
+              letter.y = currentY + ny * (minDistLogo + 2);
               
-              // Soft velocity adjustment
+              // Proper bounce - reflect velocity off the surface
               const dot = letter.vx * nx + letter.vy * ny;
               if (dot < 0) {
-                letter.vx -= dot * nx * 0.3;
-                letter.vy -= dot * ny * 0.3;
+                // Reflect and add some energy
+                letter.vx = letter.vx - 1.8 * dot * nx;
+                letter.vy = letter.vy - 1.8 * dot * ny;
+                // Add spin from collision
+                letter.rotationSpeed += (nx - ny) * 5;
               }
               
               // Minimal push on logo
-              logoPushX -= nx * 0.2;
-              logoPushY -= ny * 0.2;
+              logoPushX -= nx * 0.3;
+              logoPushY -= ny * 0.3;
             } else {
               // Letter at logo center, push gently
               const angle = Math.random() * Math.PI * 2;
