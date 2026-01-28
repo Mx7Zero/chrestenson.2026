@@ -255,8 +255,16 @@ export const Hero = () => {
 
         {/* Name - Brand Hierarchy */}
         <div ref={nameRef} className="mb-8">
-          {/* CHRESTENSON - Primary */}
-          <h1 className="text-[10vw] md:text-[8vw] lg:text-[7vw] font-black text-[#1D1D1F] uppercase tracking-tight leading-none mb-2">
+          {/* CHRESTENSON - Primary with outline */}
+          <h1 
+            className="text-[10vw] md:text-[8vw] lg:text-[7vw] font-black uppercase tracking-tight leading-none mb-2"
+            style={{
+              WebkitTextStroke: '2px #1D1D1F',
+              WebkitTextFillColor: 'transparent',
+              textStroke: '2px #1D1D1F',
+              color: 'transparent'
+            }}
+          >
             CHRESTENSON
           </h1>
           {/* MATTHEW - Secondary with underline */}
