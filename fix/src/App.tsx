@@ -15,8 +15,8 @@ function App() {
       <Navigation />
       <Hero />
       <CredibilityBar />
-      <PortfolioSlider />
       <CompetencyGrid />
+      <PortfolioSlider />
       <ExpertiseAccordion />
       <TechStack />
       <Contact />

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import gsap from 'gsap';
 
 export const PortfolioSlider = () => {
@@ -12,6 +12,7 @@ export const PortfolioSlider = () => {
     lastTime: number;
     velocity: number;
   } | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const portfolioImages = [
     '01_FoodBox Mockup.png',
