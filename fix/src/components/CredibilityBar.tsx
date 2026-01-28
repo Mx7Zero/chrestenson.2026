@@ -32,7 +32,7 @@ export const CredibilityBar = () => {
     
     gsap.to(scrollContainer, {
       x: -scrollWidth,
-      duration: 25,
+      duration: 45,
       ease: 'none',
       repeat: -1,
     });
@@ -43,16 +43,16 @@ export const CredibilityBar = () => {
   }, []);
 
   const LogoSet = ({ keyPrefix }: { keyPrefix: string }) => (
-    <div className="logo-set flex items-center gap-12 md:gap-16 px-6 md:px-8">
+    <div className="logo-set flex items-center gap-16 md:gap-20 px-8 md:px-10">
       {logos.map((logo, index) => (
         <div 
           key={`${keyPrefix}-${index}`} 
-          className="flex-shrink-0 w-32 md:w-44 flex items-center justify-center"
+          className="flex-shrink-0 h-14 md:h-20 flex items-center justify-center"
         >
           <img 
             src={logo.src} 
             alt={logo.alt}
-            className="max-h-12 md:max-h-16 w-auto max-w-full object-contain invert opacity-60 hover:opacity-100 transition-opacity duration-300"
+            className="h-full w-auto object-contain invert opacity-70 hover:opacity-100 transition-opacity duration-300"
           />
         </div>
       ))}
