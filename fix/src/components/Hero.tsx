@@ -149,8 +149,9 @@ export const Hero = () => {
       }
 
       const updateLetters = () => {
-        // Logo collision radius - the C logo is 384px on desktop, so radius ~180-190px
-        const logoRadius = 160; // Good collision zone for visible bouncing
+        // Logo collision radius - lg:w-96 = 384px, so radius = 192px
+        // Add some buffer for visual match
+        const logoRadius = 200; // Match the actual logo size
         const maxSpeed = 80; // Higher max velocity for more movement
         const maxRotationSpeed = 20; // More spin allowed
         
@@ -194,19 +195,23 @@ export const Hero = () => {
               const nx = dxLogo / distLogo;
               const ny = dyLogo / distLogo;
               
-              // Push letter to edge of logo
-              letter.x = currentX + nx * (minDistLogo + 2);
-              letter.y = currentY + ny * (minDistLogo + 2);
+              // Push letter firmly to edge of logo
+              letter.x = currentX + nx * (minDistLogo + 5);
+              letter.y = currentY + ny * (minDistLogo + 5);
               
-              // Proper bounce - reflect velocity off the surface
+              // Strong bounce - reflect velocity and add energy
               const dot = letter.vx * nx + letter.vy * ny;
-              if (dot < 0) {
-                // Reflect and add some energy
-                letter.vx = letter.vx - 1.8 * dot * nx;
-                letter.vy = letter.vy - 1.8 * dot * ny;
-                // Add spin from collision
-                letter.rotationSpeed += (nx - ny) * 5;
+              // Always bounce outward
+              letter.vx = nx * Math.abs(dot) * 1.5 + letter.vx * 0.3;
+              letter.vy = ny * Math.abs(dot) * 1.5 + letter.vy * 0.3;
+              // Add minimum outward velocity if too slow
+              const outSpeed = letter.vx * nx + letter.vy * ny;
+              if (outSpeed < 30) {
+                letter.vx += nx * 40;
+                letter.vy += ny * 40;
               }
+              // Add spin from collision
+              letter.rotationSpeed += (nx - ny) * 10;
               
               // Minimal push on logo
               logoPushX -= nx * 0.3;
