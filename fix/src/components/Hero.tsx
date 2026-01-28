@@ -248,38 +248,35 @@ export const Hero = () => {
             letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - gentle soft repulsion (no stuttering)
+          // Letter-to-letter collision - smooth velocity-based repulsion
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2 + 10;
+            const minDist = (letter.size + other.size) / 2 + 8;
             
             if (dist < minDist && dist > 0) {
               const nx = dx / dist;
               const ny = dy / dist;
-              
-              // Soft position correction only (no velocity jerk)
               const overlap = minDist - dist;
-              const pushForce = overlap * 0.3;
-              letter.x -= nx * pushForce;
-              letter.y -= ny * pushForce;
-              other.x += nx * pushForce;
-              other.y += ny * pushForce;
               
-              // Only adjust velocity if moving toward each other
-              const relVelX = letter.vx - other.vx;
-              const relVelY = letter.vy - other.vy;
-              const relVelDot = relVelX * (-nx) + relVelY * (-ny);
+              // Very gentle position nudge (prevents overlap but no stutter)
+              const nudge = overlap * 0.15;
+              letter.x -= nx * nudge;
+              letter.y -= ny * nudge;
+              other.x += nx * nudge;
+              other.y += ny * nudge;
               
-              if (relVelDot > 0) {
-                // Gentle elastic response
-                const impulse = relVelDot * 0.3;
-                letter.vx -= (-nx) * impulse;
-                letter.vy -= (-ny) * impulse;
-                other.vx += (-nx) * impulse;
-                other.vy += (-ny) * impulse;
+              // Smooth velocity exchange (elastic collision)
+              const relVelDot = (letter.vx - other.vx) * nx + (letter.vy - other.vy) * ny;
+              
+              if (relVelDot < 0) { // Only if approaching
+                const impulse = relVelDot * 0.4;
+                letter.vx -= impulse * nx;
+                letter.vy -= impulse * ny;
+                other.vx += impulse * nx;
+                other.vy += impulse * ny;
               }
             }
           }
