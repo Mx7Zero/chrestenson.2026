@@ -174,33 +174,64 @@ export const Hero = () => {
         {/* Executive Summary */}
         <div 
           ref={summaryRef}
-          className="space-y-8 text-lg md:text-xl text-[#424245] w-full max-w-6xl mx-auto leading-relaxed mb-12"
+          className="w-full max-w-5xl mx-auto mb-16"
         >
-          {/* Cool heading treatment */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#E5E5E5] to-[#0071E3]/30" />
-            <span className="text-xs md:text-sm font-medium tracking-[0.3em] uppercase text-[#0071E3]">
+          {/* Section Label */}
+          <div className="flex items-center justify-center gap-4 mb-10">
+            <div className="h-px flex-1 max-w-24 bg-gradient-to-r from-transparent to-[#E5E5E5]" />
+            <span className="text-xs font-mono tracking-[0.3em] uppercase text-[#0071E3]">
               The Short Version
             </span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-[#E5E5E5] to-[#0071E3]/30" />
+            <div className="h-px flex-1 max-w-24 bg-gradient-to-l from-transparent to-[#E5E5E5]" />
           </div>
           
-          <DockText className="text-left">
-            <span className="font-semibold text-[#1D1D1F]">AI-augmented strategist</span> and <span className="font-semibold text-[#1D1D1F]">brand architect</span> with <span className="font-semibold text-[#1D1D1F]">30+ years</span> of creative leadership, using <span className="font-semibold text-[#1D1D1F]">LLMs and generative AI</span> to accelerate research, content production, and visual asset creation at <span className="font-semibold text-[#1D1D1F]">enterprise scale</span>. Demonstrated ability to transform complex market intelligence into <span className="font-semibold text-[#1D1D1F]">investor-ready documentation</span>, brand strategies, and <span className="font-semibold text-[#1D1D1F]">full-stack digital products</span>—work that previously required teams, now executed with AI-assisted workflows.
-          </DockText>
-          <DockText className="text-left">
-            Unique combination of <span className="font-semibold text-[#1D1D1F]">studio-grade production</span> experience{' '}
-            <span className="text-[#6E6E73]">(Disney, National Geographic, Ridley Scott Associates)</span>, 
-            <span className="font-semibold text-[#1D1D1F]"> hospitality brand-building</span>{' '}
-            <span className="text-[#6E6E73]">(six successful ventures from concept to exit)</span>, 
-            and current <span className="font-semibold text-[#1D1D1F]">AI-first strategic advisory</span> across health technology, hospitality, and consumer goods.
-          </DockText>
-          <div className="flex items-center justify-center gap-3 mt-4">
-            <div className="h-px w-8 bg-[#0071E3]/40" />
-            <span className="text-xs font-mono tracking-[0.2em] uppercase text-[#0071E3]">
+          {/* Summary Cards */}
+          <div className="border-t border-[#E5E5E5]">
+            {/* Card 1 */}
+            <div className="py-8 md:py-10 border-b border-[#E5E5E5] group">
+              <div className="flex gap-4 md:gap-6">
+                <div className="flex-shrink-0 w-10 h-10 border border-[#E5E5E5] flex items-center justify-center group-hover:border-[#0071E3] group-hover:bg-[#0071E3] transition-all">
+                  <span className="text-xs font-mono text-[#86868B] group-hover:text-white transition-colors">01</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm md:text-base text-[#424245] leading-relaxed">
+                    <span className="text-[#1D1D1F] font-medium">AI-augmented strategist</span> and <span className="text-[#1D1D1F] font-medium">brand architect</span> with <span className="text-[#0071E3] font-mono text-sm">30+ years</span> of creative leadership, using LLMs and generative AI to accelerate research, content production, and visual asset creation at enterprise scale.
+                  </p>
+                  <p className="text-sm md:text-base text-[#6E6E73] leading-relaxed mt-3">
+                    Demonstrated ability to transform complex market intelligence into investor-ready documentation, brand strategies, and full-stack digital products—work that previously required teams, now executed with AI-assisted workflows.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Card 2 */}
+            <div className="py-8 md:py-10 border-b border-[#E5E5E5] group">
+              <div className="flex gap-4 md:gap-6">
+                <div className="flex-shrink-0 w-10 h-10 border border-[#E5E5E5] flex items-center justify-center group-hover:border-[#0071E3] group-hover:bg-[#0071E3] transition-all">
+                  <span className="text-xs font-mono text-[#86868B] group-hover:text-white transition-colors">02</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm md:text-base text-[#424245] leading-relaxed">
+                    Unique combination of <span className="text-[#1D1D1F] font-medium">studio-grade production</span> experience and <span className="text-[#1D1D1F] font-medium">hospitality brand-building</span> with current <span className="text-[#1D1D1F] font-medium">AI-first strategic advisory</span> across health technology, hospitality, and consumer goods.
+                  </p>
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <span className="text-xs font-mono tracking-wider text-[#86868B] border border-[#E5E5E5] px-3 py-1.5">DISNEY</span>
+                    <span className="text-xs font-mono tracking-wider text-[#86868B] border border-[#E5E5E5] px-3 py-1.5">NATIONAL GEOGRAPHIC</span>
+                    <span className="text-xs font-mono tracking-wider text-[#86868B] border border-[#E5E5E5] px-3 py-1.5">RIDLEY SCOTT ASSOCIATES</span>
+                    <span className="text-xs font-mono tracking-wider text-[#0071E3] border border-[#0071E3]/30 px-3 py-1.5">6 VENTURES → EXIT</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tagline */}
+          <div className="pt-8 flex items-center justify-center gap-4">
+            <div className="h-px w-12 bg-[#0071E3]/30" />
+            <span className="text-xs font-mono tracking-[0.25em] uppercase text-[#0071E3]">
               AI-native — not just AI-literate
             </span>
-            <div className="h-px w-8 bg-[#0071E3]/40" />
+            <div className="h-px w-12 bg-[#0071E3]/30" />
           </div>
         </div>
 
