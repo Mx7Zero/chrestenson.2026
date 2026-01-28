@@ -128,7 +128,7 @@ export const Hero = () => {
 
       if (lettersContainerRef.current) {
         const letterDivs = lettersContainerRef.current.children;
-        const size = 32; // Consistent size
+        const size = 24; // Smaller letters
         letters.forEach((_, idx) => {
           const el = letterDivs[idx] as HTMLElement;
           if (!el) return;
@@ -202,18 +202,18 @@ export const Hero = () => {
               const nx = dxLogo / distLogo;
               const ny = dyLogo / distLogo;
               
-              // Push letter firmly to edge of logo
-              letter.x = currentX + nx * (minDistLogo + 3);
-              letter.y = currentY + ny * (minDistLogo + 3);
+              // Gentle push to edge
+              letter.x = currentX + nx * (minDistLogo + 2);
+              letter.y = currentY + ny * (minDistLogo + 2);
               
-              // Simple outward bounce - always push away from center
+              // Softer outward bounce
               const speed = Math.sqrt(letter.vx * letter.vx + letter.vy * letter.vy);
-              const bounceSpeed = Math.max(speed, 50); // Minimum bounce speed
-              letter.vx = nx * bounceSpeed * 0.8;
-              letter.vy = ny * bounceSpeed * 0.8;
+              const bounceSpeed = Math.max(speed * 0.6, 35); // Lower minimum, preserve some velocity
+              letter.vx = nx * bounceSpeed;
+              letter.vy = ny * bounceSpeed;
               
-              // Add spin from collision
-              letter.rotationSpeed += gsap.utils.random(-15, 15);
+              // Gentle spin
+              letter.rotationSpeed += gsap.utils.random(-10, 10);
               
               // Minimal push on logo
               logoPushX -= nx * 0.3;
@@ -529,7 +529,7 @@ export const Hero = () => {
                   willChange: 'transform', 
                   left: '50%', 
                   top: '50%',
-                  fontSize: '32px'
+                  fontSize: '24px'
                 }}
               >
                 {letter}
