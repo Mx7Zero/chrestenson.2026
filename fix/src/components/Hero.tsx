@@ -338,10 +338,17 @@ export const Hero = () => {
             rotationVelocity += gsap.utils.random(-3, 3);
           }
           
+          // Frequent random drift for unpredictable movement
+          if (Math.random() < 0.03) {
+            velocityX += gsap.utils.random(-15, 15);
+            velocityY += gsap.utils.random(-15, 15);
+            rotationVelocity += gsap.utils.random(-5, 5);
+          }
+          
+          // Occasional bigger direction change
           if (Math.random() < 0.005) {
-            velocityX += gsap.utils.random(-2, 2);
-            velocityY += gsap.utils.random(-2, 2);
-            rotationVelocity += gsap.utils.random(-1, 1);
+            velocityX += gsap.utils.random(-40, 40);
+            velocityY += gsap.utils.random(-40, 40);
           }
           
           logoRef.current.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotation}deg) translateZ(0)`;
