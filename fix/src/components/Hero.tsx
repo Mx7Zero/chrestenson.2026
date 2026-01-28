@@ -108,12 +108,12 @@ export const Hero = () => {
     <section 
       ref={sectionRef}
       id="hero" 
-      className="min-h-screen flex flex-col justify-center px-6 md:px-12 lg:px-24 py-32 relative overflow-hidden"
+      className="min-h-screen flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-32 relative overflow-hidden"
     >
       {/* Subtle gradient background accent */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
       
-      <div className="max-w-5xl relative z-10">
+      <div className="max-w-5xl relative z-10 text-center">
         {/* Name */}
         <h1 
           ref={nameRef}
@@ -137,7 +137,7 @@ export const Hero = () => {
         {/* Contact Links */}
         <div 
           ref={contactRef}
-          className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-12 text-sm"
+          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-12 text-sm"
         >
           {contactLinks.map((link, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -169,9 +169,9 @@ export const Hero = () => {
         {/* Executive Summary */}
         <div 
           ref={summaryRef}
-          className="space-y-6 text-lg md:text-xl text-[#424245] max-w-4xl leading-relaxed mb-12"
+          className="space-y-6 text-lg md:text-xl text-[#424245] max-w-4xl mx-auto leading-relaxed mb-12 text-left"
         >
-          <p className="font-medium text-[#1D1D1F] text-xl md:text-2xl mb-4">
+          <p className="font-medium text-[#1D1D1F] text-xl md:text-2xl mb-4 text-center">
             Executive Summary
           </p>
           <p>
@@ -184,13 +184,13 @@ export const Hero = () => {
             <span className="text-[#6E6E73]">(six successful ventures from concept to exit)</span>, 
             and current AI-first strategic advisory across health technology, hospitality, and consumer goods.
           </p>
-          <p className="font-medium text-[#0071E3] text-lg md:text-xl border-l-2 border-[#0071E3] pl-6 py-2 bg-gradient-to-r from-[#0071E3]/5 to-transparent">
+          <p className="font-medium text-[#0071E3] text-lg md:text-xl border-l-2 border-[#0071E3] pl-6 py-2 bg-gradient-to-r from-[#0071E3]/5 to-transparent text-left">
             Not just AI-literate—AI-native: using these tools as thinking partners, not just productivity shortcuts.
           </p>
         </div>
 
         {/* CTA Buttons */}
-        <div ref={ctaRef} className="flex flex-wrap gap-4">
+        <div ref={ctaRef} className="flex flex-wrap justify-center gap-4">
           <a
             href="mailto:matthew@chrestenson.com"
             className="group inline-flex items-center gap-3 bg-[#0071E3] text-white px-8 py-4 rounded-full text-base font-medium hover:bg-[#0077ED] transition-all duration-300 hover:shadow-lg hover:shadow-[#0071E3]/25 hover:-translate-y-0.5"
