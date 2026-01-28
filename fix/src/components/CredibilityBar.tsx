@@ -32,7 +32,7 @@ export const CredibilityBar = () => {
     
     gsap.to(scrollContainer, {
       x: -scrollWidth,
-      duration: 45,
+      duration: 30,
       ease: 'none',
       repeat: -1,
     });
