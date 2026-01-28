@@ -195,21 +195,21 @@ export const Hero = () => {
               const ny = dyLogo / distLogo;
               const overlap = minDistLogo - distLogo;
               
-              // Smooth gradual push (not instant teleport)
-              const pushStrength = Math.min(overlap * 0.3, 8);
+              // Letters yield strongly to logo - they get pushed away
+              const pushStrength = Math.min(overlap * 0.6, 15);
               letter.x += nx * pushStrength;
               letter.y += ny * pushStrength;
               
-              // Gentle velocity adjustment
+              // Letters bounce away from logo
               const dot = letter.vx * nx + letter.vy * ny;
               if (dot < 0) {
-                letter.vx -= dot * nx * 0.5;
-                letter.vy -= dot * ny * 0.5;
+                letter.vx -= dot * nx * 1.2;
+                letter.vy -= dot * ny * 1.2;
               }
               
-              // Accumulate push force on logo (opposite direction)
-              logoPushX -= nx * 5;
-              logoPushY -= ny * 5;
+              // Very light push on logo (letters barely affect it)
+              logoPushX -= nx * 0.5;
+              logoPushY -= ny * 0.5;
             } else {
               // Letter at logo center, push gently
               const angle = Math.random() * Math.PI * 2;
@@ -272,13 +272,13 @@ export const Hero = () => {
         });
         
         // Apply accumulated push force from letters to logo velocity
-        // More letters = more push (weighted by collision count)
+        // Letters have minimal effect on logo - logo plows through
         if (collisionCount > 0) {
-          const weight = Math.min(collisionCount * 1.5, 8); // Stronger effect
+          const weight = Math.min(collisionCount * 0.3, 2); // Weak effect
           velocityX += logoPushX * weight;
           velocityY += logoPushY * weight;
-          // Also affect rotation when letters push
-          rotationVelocity += (logoPushX - logoPushY) * 0.2 * weight;
+          // Slight rotation nudge
+          rotationVelocity += (logoPushX - logoPushY) * 0.05 * weight;
         }
       };
       
