@@ -33,8 +33,8 @@ export const Hero = () => {
         let x = 0, y = 0;
         if (matrix !== 'none') {
           const values = matrix.split('(')[1].split(')')[0].split(',');
-          x = parseFloat(values[4] || 0);
-          y = parseFloat(values[5] || 0);
+          x = parseFloat(values[4] || '0');
+          y = parseFloat(values[5] || '0');
         }
         
         // Apply gravity
