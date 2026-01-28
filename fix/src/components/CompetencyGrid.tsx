@@ -274,26 +274,26 @@ export const CompetencyGrid = () => {
                 </span>
               </div>
 
-              {/* Tooltip on Hover - Thin line with floating text */}
+              {/* Tooltip on Hover - Thin line with floating text, top-right of bubble */}
               <div
                 className={`
-                  absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50
-                  flex items-center gap-0
+                  absolute right-full top-0 -translate-y-1/2 mr-4 z-[100]
+                  flex items-start gap-0 flex-row-reverse
                   transition-all duration-300 ease-out pointer-events-none
                   ${hoveredNode === node.id && draggedNode === null 
                     ? 'opacity-100 translate-x-0' 
-                    : 'opacity-0 -translate-x-2'}
+                    : 'opacity-0 translate-x-2'}
                 `}
               >
-                {/* Thin connecting line */}
-                <div className="w-8 h-px bg-[#1D1D1F]" />
+                {/* Thin connecting line with gap */}
+                <div className="w-10 h-px bg-[#1D1D1F] mt-3 ml-4" />
                 
                 {/* Text content */}
-                <div className="pl-3">
-                  <div className="text-[11px] font-bold text-[#1D1D1F] tracking-wide uppercase mb-0.5">
+                <div className="text-right">
+                  <div className="text-sm font-bold text-[#1D1D1F] tracking-wide uppercase mb-1">
                     {node.proficiency}
                   </div>
-                  <div className="text-[12px] text-[#6E6E73] font-normal leading-snug max-w-[180px]">
+                  <div className="text-base text-[#6E6E73] font-normal leading-snug max-w-[220px]">
                     {node.evidence}
                   </div>
                 </div>
