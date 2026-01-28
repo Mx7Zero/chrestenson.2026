@@ -118,10 +118,9 @@ export const Hero = () => {
         {/* C Logo - Hero Focal Point */}
         <div className="mb-8 flex justify-center">
           <img 
-            src="/letter.c.png" 
+            src="/black-letter-c.png" 
             alt="C" 
-            className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 object-contain"
-            style={{ filter: 'brightness(0)' }}
+            className="w-40 h-40 md:w-52 md:h-52 lg:w-64 lg:h-64 object-contain"
           />
         </div>
 
