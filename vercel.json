@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "buildCommand": "cd fix && npm install && npm run build",
+  "outputDirectory": "fix/dist",
+  "devCommand": "cd fix && npm run dev",
+  "installCommand": "cd fix && npm install",
   "framework": "vite",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
