@@ -30,12 +30,6 @@ export const CompetencyGrid = () => {
     { id: 7, domain: 'Market Analysis', proficiency: 'Expert', evidence: 'Multi-segment sizing, competitive landscape' },
   ];
 
-  const metrics = [
-    { value: '$180M–$450M', label: 'IP Portfolio Valuation' },
-    { value: '6 Ventures', label: 'Built & Sold to Exit' },
-    { value: '160x ROI', label: 'Demonstrated Returns' },
-  ];
-
   // Start random animation for a node from its current position
   const startNodeAnimation = useCallback((node: HTMLDivElement, index: number) => {
     const container = containerRef.current;
@@ -352,20 +346,6 @@ export const CompetencyGrid = () => {
                     {node.evidence}
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 md:px-12 lg:px-24 py-12 bg-[#FAFAFA] border-t border-[#E5E5E5]">
-          {metrics.map((metric, index) => (
-            <div key={index} className="bg-white p-6 md:p-8 border border-[#E5E5E5] text-center">
-              <div className="text-2xl md:text-3xl lg:text-4xl font-semibold text-[#0071E3] mb-1 font-mono tracking-tight">
-                {metric.value}
-              </div>
-              <div className="text-sm md:text-base text-[#6E6E73] tracking-wide">
-                {metric.label}
               </div>
             </div>
           ))}
