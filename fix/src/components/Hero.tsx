@@ -116,80 +116,86 @@ export const Hero = () => {
         size: number;
       }> = [];
 
+      // Letter bounds - constrain to area around the logo only
+      const letterBounds = {
+        left: -350,
+        right: 350,
+        top: -200,
+        bottom: 150
+      };
+
       if (lettersContainerRef.current) {
-        const letterContainer = lettersContainerRef.current.querySelector('div');
-        if (!letterContainer) return;
-        const letterDivs = letterContainer.children;
-        const size = 40; // All same large size
+        const letterDivs = lettersContainerRef.current.children;
+        const size = 32; // Consistent size
         letters.forEach((_, idx) => {
           const el = letterDivs[idx] as HTMLElement;
           if (!el) return;
-          // Spread letters across entire container area, avoiding center where logo is
-          const angle = (idx / letters.length) * Math.PI * 2 + gsap.utils.random(-0.5, 0.5);
-          const radius = gsap.utils.random(200, 450);
+          // Start letters in a ring around the logo
+          const angle = (idx / letters.length) * Math.PI * 2;
+          const radius = gsap.utils.random(150, 300);
           letterElements.push({
             el,
             x: Math.cos(angle) * radius,
-            y: Math.sin(angle) * radius * 0.6, // Compress vertically
-            vx: gsap.utils.random(-60, 60),
-            vy: gsap.utils.random(-60, 60),
+            y: Math.sin(angle) * radius * 0.7,
+            vx: gsap.utils.random(-40, 40),
+            vy: gsap.utils.random(-40, 40),
             size
           });
-          el.style.fontSize = `${size}px`;
         });
       }
 
       const updateLetters = () => {
-        // Larger collision radius for the C logo (based on actual logo size ~384px on desktop)
-        const logoRadius = 180; // Slightly larger than half for better collision feel
+        // Logo collision radius - match the visual size of the C logo
+        const logoRadius = 120;
         
         letterElements.forEach(letter => {
           // Update position
           letter.x += letter.vx * 0.016;
           letter.y += letter.vy * 0.016;
           
-          // Bounce off boundaries (larger area)
-          if (letter.x < -500 || letter.x > 500) {
-            letter.vx *= -0.9;
-            letter.x = letter.x < -500 ? -500 : 500;
+          // Bounce off boundaries - keep letters in the logo area
+          if (letter.x < letterBounds.left) {
+            letter.vx = Math.abs(letter.vx) * 0.9;
+            letter.x = letterBounds.left;
+          } else if (letter.x > letterBounds.right) {
+            letter.vx = -Math.abs(letter.vx) * 0.9;
+            letter.x = letterBounds.right;
           }
-          if (letter.y < -300 || letter.y > 300) {
-            letter.vy *= -0.9;
-            letter.y = letter.y < -300 ? -300 : 300;
+          if (letter.y < letterBounds.top) {
+            letter.vy = Math.abs(letter.vy) * 0.9;
+            letter.y = letterBounds.top;
+          } else if (letter.y > letterBounds.bottom) {
+            letter.vy = -Math.abs(letter.vy) * 0.9;
+            letter.y = letterBounds.bottom;
           }
           
-          // Collision detection with main C logo
+          // Collision detection with main C logo (currentX, currentY is logo's offset)
           const dx = letter.x - currentX;
           const dy = letter.y - currentY;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          const minDistance = logoRadius + letter.size;
+          const minDistance = logoRadius + letter.size / 2;
           
           if (distance < minDistance && distance > 0) {
-            // Collision! Bounce off
-            const angle = Math.atan2(dy, dx);
-            const overlap = minDistance - distance;
+            // Collision detected - bounce off!
+            const nx = dx / distance;
+            const ny = dy / distance;
             
-            // Push letter away from logo
-            letter.x += Math.cos(angle) * (overlap + 5);
-            letter.y += Math.sin(angle) * (overlap + 5);
+            // Move letter outside collision zone
+            letter.x = currentX + nx * (minDistance + 2);
+            letter.y = currentY + ny * (minDistance + 2);
             
-            // Reflect velocity off the collision surface
-            const normalX = dx / distance;
-            const normalY = dy / distance;
-            const dotProduct = letter.vx * normalX + letter.vy * normalY;
+            // Reflect velocity
+            const dotProduct = letter.vx * nx + letter.vy * ny;
+            letter.vx = (letter.vx - 2 * dotProduct * nx) * 0.8;
+            letter.vy = (letter.vy - 2 * dotProduct * ny) * 0.8;
             
-            // Only bounce if moving toward the logo
-            if (dotProduct < 0) {
-              letter.vx = letter.vx - 2 * dotProduct * normalX;
-              letter.vy = letter.vy - 2 * dotProduct * normalY;
-              // Add some energy loss
-              letter.vx *= 0.85;
-              letter.vy *= 0.85;
-            }
+            // Add some randomness
+            letter.vx += gsap.utils.random(-10, 10);
+            letter.vy += gsap.utils.random(-10, 10);
           }
           
-          // Apply transform
-          letter.el.style.transform = `translate(${letter.x}px, ${letter.y}px) translateZ(0)`;
+          // Apply transform - position from center
+          letter.el.style.transform = `translate(calc(-50% + ${letter.x}px), calc(-50% + ${letter.y}px))`;
         });
       };
       
@@ -403,33 +409,46 @@ export const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
       
       <div className="max-w-full relative z-10 text-center px-4">
-        {/* C Logo - Hero Focal Point */}
-        <div className="mb-12 flex justify-center">
-          <img 
-            ref={logoRef}
-            src="/black-letter-c.png" 
-            alt="C" 
-            className="w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain"
-            fetchPriority="high"
-            decoding="async"
-          />
-          
-        </div>
-        
-        {/* Floating letters - positioned across full hero section */}
-        <div ref={lettersContainerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ top: '10%', bottom: '30%' }}>
-          <div className="relative w-full h-full flex items-center justify-center">
+        {/* C Logo and Floating Letters Container */}
+        <div className="mb-12 flex justify-center relative">
+          {/* Floating letters - positioned relative to logo center */}
+          <div 
+            ref={lettersContainerRef} 
+            className="absolute pointer-events-none"
+            style={{ 
+              width: '700px', 
+              height: '400px', 
+              left: '50%', 
+              top: '50%', 
+              transform: 'translate(-50%, -50%)',
+              zIndex: 5
+            }}
+          >
             {letters.map((letter, index) => (
               <span
                 key={index}
-                data-letter-index={index}
-                className="absolute text-4xl font-black text-[#1D1D1F] select-none"
-                style={{ willChange: 'transform', left: '50%', top: '50%' }}
+                className="absolute font-black text-[#1D1D1F] select-none opacity-60"
+                style={{ 
+                  willChange: 'transform', 
+                  left: '50%', 
+                  top: '50%',
+                  fontSize: '32px'
+                }}
               >
                 {letter}
               </span>
             ))}
           </div>
+          
+          {/* C Logo */}
+          <img 
+            ref={logoRef}
+            src="/black-letter-c.png" 
+            alt="C" 
+            className="w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain relative z-10"
+            fetchPriority="high"
+            decoding="async"
+          />
         </div>
 
         {/* Name - Brand Hierarchy */}
