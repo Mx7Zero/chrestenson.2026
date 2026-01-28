@@ -139,10 +139,10 @@ export const Hero = () => {
             el,
             x: Math.cos(angle) * radius,
             y: Math.sin(angle) * radius * 0.7,
-            vx: gsap.utils.random(-60, 60),  // More movement
-            vy: gsap.utils.random(-60, 60),
+            vx: gsap.utils.random(-100, 100),  // Much more movement
+            vy: gsap.utils.random(-100, 100),
             rotation: gsap.utils.random(0, 360),
-            rotationSpeed: gsap.utils.random(-20, 20), // More spin
+            rotationSpeed: gsap.utils.random(-25, 25), // More spin
             size
           });
         });
@@ -150,9 +150,9 @@ export const Hero = () => {
 
       const updateLetters = () => {
         // Logo collision radius - the C logo is 384px on desktop, so radius ~180-190px
-        const logoRadius = 120; // Smaller collision zone
-        const maxSpeed = 40; // Maximum velocity
-        const maxRotationSpeed = 15; // Maximum rotation speed
+        const logoRadius = 160; // Good collision zone for visible bouncing
+        const maxSpeed = 80; // Higher max velocity for more movement
+        const maxRotationSpeed = 20; // More spin allowed
         
         // Accumulate push force from letters to logo
         let logoPushX = 0;
@@ -160,10 +160,10 @@ export const Hero = () => {
         let collisionCount = 0;
         
         letterElements.forEach((letter, i) => {
-          // Apply gentle friction/damping for tranquil movement
-          letter.vx *= 0.998;
-          letter.vy *= 0.998;
-          letter.rotationSpeed *= 0.995;
+          // Less friction for more sustained movement
+          letter.vx *= 0.9995;
+          letter.vy *= 0.9995;
+          letter.rotationSpeed *= 0.998;
           
           // Update position
           letter.x += letter.vx * 0.016;
