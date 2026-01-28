@@ -26,10 +26,10 @@ export const Hero = () => {
         logoRef.current.style.transform = 'translateZ(0)';
       }
 
-      // Zero gravity floating animation - more active movement
-      let velocityX = gsap.utils.random(-80, 80);
-      let velocityY = gsap.utils.random(-80, 80);
-      let rotationVelocity = gsap.utils.random(-25, 25); // Moderate spin
+      // Zero gravity floating animation - active random movement
+      let velocityX = gsap.utils.random(-120, 120);
+      let velocityY = gsap.utils.random(-120, 120);
+      let rotationVelocity = gsap.utils.random(-30, 30); // Good spin
       let currentX = 0;
       let currentY = 0;
       let currentRotation = 0;
@@ -89,11 +89,17 @@ export const Hero = () => {
             rotationVelocity += gsap.utils.random(-3, 3);
           }
           
-          // Slight random drift (less frequently for better performance)
+          // Frequent random drift for unpredictable movement
+          if (Math.random() < 0.03) {
+            velocityX += gsap.utils.random(-15, 15);
+            velocityY += gsap.utils.random(-15, 15);
+            rotationVelocity += gsap.utils.random(-5, 5);
+          }
+          
+          // Occasional bigger direction change
           if (Math.random() < 0.005) {
-            velocityX += gsap.utils.random(-2, 2);
-            velocityY += gsap.utils.random(-2, 2);
-            rotationVelocity += gsap.utils.random(-1, 1);
+            velocityX += gsap.utils.random(-40, 40);
+            velocityY += gsap.utils.random(-40, 40);
           }
           
           // Apply transform directly for better performance
