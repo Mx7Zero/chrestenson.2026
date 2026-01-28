@@ -1,26 +1,16 @@
 export const CredibilityBar = () => {
-  const credentials = ['DISNEY', 'NATIONAL GEOGRAPHIC', 'RIDLEY SCOTT ASSOCIATES'];
+  const studios = ['Disney', 'National Geographic', 'Ridley Scott Associates'];
 
   return (
-    <section className="py-24 px-8 border-t border-white/5">
-      <div className="max-w-[1600px] mx-auto">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div className="font-mono text-[10px] tracking-[0.2em] text-text-muted">
-            STUDIO CREDENTIALS
-          </div>
-          <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
-            {credentials.map((credential) => (
-              <div
-                key={credential}
-                className="flex items-center gap-3"
-              >
-                <div className="w-1 h-1 rounded-full bg-accent" />
-                <div className="text-text-secondary text-xs tracking-wide font-light">
-                  {credential}
-                </div>
-              </div>
-            ))}
-          </div>
+    <section className="py-16 px-6 md:px-12 lg:px-24 border-y border-[#E5E5E5]">
+      <div className="max-w-7xl mx-auto">
+        <p className="text-sm text-[#86868B] mb-6 uppercase tracking-wide">Studio Experience</p>
+        <div className="flex flex-wrap gap-8 md:gap-16">
+          {studios.map((studio) => (
+            <span key={studio} className="text-2xl md:text-3xl font-semibold text-[#1D1D1F]">
+              {studio}
+            </span>
+          ))}
         </div>
       </div>
     </section>

@@ -1,4 +1,3 @@
-import { CustomCursor } from './components/CustomCursor'
 import { Navigation } from './components/Navigation'
 import { Hero } from './components/Hero'
 import { CredibilityBar } from './components/CredibilityBar'
@@ -9,8 +8,7 @@ import { Contact } from './components/Contact'
 
 function App() {
   return (
-    <div className="relative bg-black">
-      <CustomCursor />
+    <div className="relative bg-[#FAFAFA]">
       <Navigation />
       <Hero />
       <CredibilityBar />

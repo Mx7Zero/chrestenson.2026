@@ -10,92 +10,52 @@ export const CompetencyGrid = () => {
     { domain: 'Market Analysis', evidence: 'Multi-segment sizing, competitive landscape' },
   ];
 
+  const metrics = [
+    { value: '$180M–$450M', label: 'IP Portfolio Valuation' },
+    { value: '6 Ventures', label: 'Built & Sold to Exit' },
+    { value: '160x ROI', label: 'Demonstrated Returns' },
+  ];
+
   return (
-    <section id="about" className="py-32 px-8">
-      <div className="max-w-[1600px] mx-auto">
-        <div className="mb-20">
-          <div className="text-text-muted font-mono text-sm tracking-[0.2em] mb-6">
-            CORE COMPETENCIES
-          </div>
-          <h2 className="text-6xl md:text-8xl font-bold text-white tracking-[-0.04em]">
-            Expert-Level<br />Execution
+    <section id="about" className="py-24 px-6 md:px-12 lg:px-24">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-16">
+          <p className="text-sm text-[#86868B] mb-4 uppercase tracking-wide">Core Competencies</p>
+          <h2 className="text-4xl md:text-5xl font-semibold text-[#1D1D1F]">
+            Expert-level execution<br />across eight domains.
           </h2>
         </div>
-        
-        {/* Competency Cards */}
-        <div className="space-y-3">
+
+        {/* Competency List */}
+        <div className="space-y-0 mb-24">
           {competencies.map((item, index) => (
             <div 
               key={index} 
-              className="group relative overflow-hidden"
+              className="py-6 border-b border-[#E5E5E5] flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-8"
             >
-              <div className="flex items-stretch">
-                {/* Number */}
-                <div className="w-20 flex-shrink-0 flex items-center justify-center bg-white/[0.02] border-r border-white/5">
-                  <span className="text-accent font-mono text-lg font-bold">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                </div>
-                
-                {/* Content */}
-                <div className="flex-1 flex items-center justify-between gap-8 py-8 px-10 bg-white/[0.01] hover:bg-white/[0.04] transition-all duration-500 border-b border-white/5">
-                  <div className="flex items-center gap-8">
-                    {/* Domain */}
-                    <div className="w-64 flex-shrink-0">
-                      <h3 className="text-white text-2xl font-bold group-hover:text-accent transition-colors duration-300">
-                        {item.domain}
-                      </h3>
-                    </div>
-                    
-                    {/* Expert Badge */}
-                    <div className="hidden md:block">
-                      <span className="text-accent font-mono text-xs tracking-[0.2em] border border-accent/30 px-4 py-2">
-                        EXPERT
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Evidence */}
-                  <div className="flex-1 text-right">
-                    <p className="text-text-secondary text-lg">
-                      {item.evidence}
-                    </p>
-                  </div>
-                  
-                  {/* Arrow */}
-                  <div className="w-8 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
+              <h3 className="text-xl md:text-2xl font-semibold text-[#1D1D1F]">
+                {item.domain}
+              </h3>
+              <p className="text-lg text-[#6E6E73] md:text-right max-w-xl">
+                {item.evidence}
+              </p>
             </div>
           ))}
         </div>
 
-        {/* Key Metrics */}
-        <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="group relative p-12 bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 hover:border-accent/50 transition-all duration-500">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="text-accent font-mono text-5xl md:text-6xl font-bold mb-4">$180M</div>
-            <div className="text-text-muted font-mono text-xs tracking-[0.2em] mb-2">TO $450M</div>
-            <div className="text-white text-xl font-medium">IP Portfolio Valuation</div>
-          </div>
-          
-          <div className="group relative p-12 bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 hover:border-accent/50 transition-all duration-500">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="text-accent font-mono text-5xl md:text-6xl font-bold mb-4">6</div>
-            <div className="text-text-muted font-mono text-xs tracking-[0.2em] mb-2">VENTURES → EXIT</div>
-            <div className="text-white text-xl font-medium">Built & Sold</div>
-          </div>
-          
-          <div className="group relative p-12 bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 hover:border-accent/50 transition-all duration-500">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="text-accent font-mono text-5xl md:text-6xl font-bold mb-4">160x</div>
-            <div className="text-text-muted font-mono text-xs tracking-[0.2em] mb-2">RETURN MULTIPLE</div>
-            <div className="text-white text-xl font-medium">ROI Demonstrated</div>
-          </div>
+        {/* Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {metrics.map((metric, index) => (
+            <div key={index} className="bg-white rounded-2xl p-8 shadow-sm border border-[#E5E5E5]">
+              <div className="text-4xl md:text-5xl font-semibold text-[#0071E3] mb-2">
+                {metric.value}
+              </div>
+              <div className="text-lg text-[#6E6E73]">
+                {metric.label}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
