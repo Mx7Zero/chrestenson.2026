@@ -34,7 +34,7 @@ export const CompetencyGrid = () => {
     { value: '160x ROI', label: 'Demonstrated Returns' },
   ];
 
-  // Start random animation for a node
+  // Start random animation for a node from its current position
   const startNodeAnimation = useCallback((node: HTMLDivElement, index: number) => {
     const container = containerRef.current;
     if (!container) return;
@@ -43,37 +43,45 @@ export const CompetencyGrid = () => {
     const padding = 100;
 
     const animateNode = () => {
-      if (draggedNode === index) return; // Don't animate while dragging
+      // Get current position to animate FROM
+      const currentX = gsap.getProperty(node, 'x') as number;
+      const currentY = gsap.getProperty(node, 'y') as number;
+      const currentScale = gsap.getProperty(node, 'scale') as number || 1;
       
       const newX = padding + Math.random() * (containerRect.width - padding * 2 - 150);
       const newY = padding + Math.random() * (containerRect.height - padding * 2 - 150);
       const newScale = 0.8 + Math.random() * 0.5;
       const duration = 8 + Math.random() * 6;
 
-      animationsRef.current[index] = gsap.to(node, {
-        x: newX,
-        y: newY,
-        scale: newScale,
-        duration: duration,
-        ease: 'sine.inOut',
-        onComplete: animateNode,
-      });
+      animationsRef.current[index] = gsap.fromTo(node, 
+        { x: currentX, y: currentY, scale: currentScale },
+        {
+          x: newX,
+          y: newY,
+          scale: newScale,
+          duration: duration,
+          ease: 'sine.inOut',
+          onComplete: animateNode,
+        }
+      );
     };
 
     animateNode();
-  }, [draggedNode]);
+  }, []);
 
   // Handle mouse/touch down on a bubble
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent, index: number) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     const node = nodesRef.current[index];
     if (!node) return;
 
-    // Kill the current animation
+    // Kill the current animation for this node only
     if (animationsRef.current[index]) {
       animationsRef.current[index]?.kill();
+      animationsRef.current[index] = null;
     }
-    gsap.killTweensOf(node);
 
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -117,15 +125,18 @@ export const CompetencyGrid = () => {
     if (draggedNode === null) return;
     
     const node = nodesRef.current[draggedNode];
-    if (node) {
-      // Resume animation after a short delay
-      gsap.delayedCall(0.5, () => {
-        startNodeAnimation(node, draggedNode);
-      });
-    }
-
+    const nodeIndex = draggedNode;
+    
+    // Clear drag state first
     setDraggedNode(null);
     dragStartRef.current = null;
+    
+    // Resume animation after a delay, starting from where it was dropped
+    if (node) {
+      setTimeout(() => {
+        startNodeAnimation(node, nodeIndex);
+      }, 1500);
+    }
   }, [draggedNode, startNodeAnimation]);
 
   // Set up global mouse/touch listeners for drag
