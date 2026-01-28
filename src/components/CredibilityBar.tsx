@@ -9,7 +9,7 @@ export const CredibilityBar = () => {
             STUDIO CREDENTIALS
           </div>
           <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
-            {credentials.map((credential, index) => (
+            {credentials.map((credential) => (
               <div
                 key={credential}
                 className="flex items-center gap-3"
