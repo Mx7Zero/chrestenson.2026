@@ -143,7 +143,7 @@ export const Contact = () => {
         </div>
 
         {/* Contact Section */}
-        <div className="border-t border-[#E5E5E5] pt-16">
+        <div id="get-in-touch" className="border-t border-[#E5E5E5] pt-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             {/* Left - CTA */}
             <div>

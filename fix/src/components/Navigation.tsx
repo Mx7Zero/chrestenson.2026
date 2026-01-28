@@ -36,7 +36,7 @@ export const Navigation = () => {
             <a href="#tech-stack" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
               Tech Stack
             </a>
-            <a href="#contact" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
+            <a href="#get-in-touch" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
               Contact
             </a>
           </div>
@@ -64,7 +64,7 @@ export const Navigation = () => {
               <a href="#competencies" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Competencies</a>
               <a href="#expertise" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Expertise</a>
               <a href="#tech-stack" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Tech Stack</a>
-              <a href="#contact" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+              <a href="#get-in-touch" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
             </div>
           </div>
         )}
