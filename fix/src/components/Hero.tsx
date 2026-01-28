@@ -113,15 +113,17 @@ export const Hero = () => {
         y: number;
         vx: number;
         vy: number;
+        rotation: number;
+        rotationSpeed: number;
         size: number;
       }> = [];
 
       // Letter bounds - constrain to area around the logo only
       const letterBounds = {
-        left: -350,
-        right: 350,
-        top: -200,
-        bottom: 150
+        left: -320,
+        right: 320,
+        top: -180,
+        bottom: 140
       };
 
       if (lettersContainerRef.current) {
@@ -132,13 +134,15 @@ export const Hero = () => {
           if (!el) return;
           // Start letters in a ring around the logo
           const angle = (idx / letters.length) * Math.PI * 2;
-          const radius = gsap.utils.random(150, 300);
+          const radius = gsap.utils.random(140, 280);
           letterElements.push({
             el,
             x: Math.cos(angle) * radius,
             y: Math.sin(angle) * radius * 0.7,
-            vx: gsap.utils.random(-40, 40),
-            vy: gsap.utils.random(-40, 40),
+            vx: gsap.utils.random(-30, 30),
+            vy: gsap.utils.random(-30, 30),
+            rotation: gsap.utils.random(0, 360),
+            rotationSpeed: gsap.utils.random(-20, 20), // Slow spin
             size
           });
         });
@@ -146,12 +150,14 @@ export const Hero = () => {
 
       const updateLetters = () => {
         // Logo collision radius - match the visual size of the C logo
-        const logoRadius = 120;
+        const logoRadius = 100;
         
-        letterElements.forEach(letter => {
+        letterElements.forEach((letter, i) => {
           // Update position
           letter.x += letter.vx * 0.016;
           letter.y += letter.vy * 0.016;
+          // Update rotation
+          letter.rotation += letter.rotationSpeed * 0.016;
           
           // Bounce off boundaries - keep letters in the logo area
           if (letter.x < letterBounds.left) {
@@ -169,33 +175,64 @@ export const Hero = () => {
             letter.y = letterBounds.bottom;
           }
           
-          // Collision detection with main C logo (currentX, currentY is logo's offset)
-          const dx = letter.x - currentX;
-          const dy = letter.y - currentY;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const minDistance = logoRadius + letter.size / 2;
+          // Collision detection with main C logo
+          const dxLogo = letter.x - currentX;
+          const dyLogo = letter.y - currentY;
+          const distLogo = Math.sqrt(dxLogo * dxLogo + dyLogo * dyLogo);
+          const minDistLogo = logoRadius + letter.size / 2;
           
-          if (distance < minDistance && distance > 0) {
-            // Collision detected - bounce off!
-            const nx = dx / distance;
-            const ny = dy / distance;
-            
-            // Move letter outside collision zone
-            letter.x = currentX + nx * (minDistance + 2);
-            letter.y = currentY + ny * (minDistance + 2);
+          if (distLogo < minDistLogo && distLogo > 0) {
+            // Push letter out of logo
+            const nx = dxLogo / distLogo;
+            const ny = dyLogo / distLogo;
+            letter.x = currentX + nx * (minDistLogo + 5);
+            letter.y = currentY + ny * (minDistLogo + 5);
             
             // Reflect velocity
-            const dotProduct = letter.vx * nx + letter.vy * ny;
-            letter.vx = (letter.vx - 2 * dotProduct * nx) * 0.8;
-            letter.vy = (letter.vy - 2 * dotProduct * ny) * 0.8;
-            
-            // Add some randomness
-            letter.vx += gsap.utils.random(-10, 10);
-            letter.vy += gsap.utils.random(-10, 10);
+            const dot = letter.vx * nx + letter.vy * ny;
+            letter.vx = (letter.vx - 2 * dot * nx) * 0.85;
+            letter.vy = (letter.vy - 2 * dot * ny) * 0.85;
+            // Spin faster on collision
+            letter.rotationSpeed += gsap.utils.random(-15, 15);
           }
           
-          // Apply transform - position from center
-          letter.el.style.transform = `translate(calc(-50% + ${letter.x}px), calc(-50% + ${letter.y}px))`;
+          // Letter-to-letter collision
+          for (let j = i + 1; j < letterElements.length; j++) {
+            const other = letterElements[j];
+            const dx = other.x - letter.x;
+            const dy = other.y - letter.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const minDist = (letter.size + other.size) / 2;
+            
+            if (dist < minDist && dist > 0) {
+              // Push apart
+              const nx = dx / dist;
+              const ny = dy / dist;
+              const overlap = minDist - dist;
+              
+              letter.x -= nx * overlap / 2;
+              letter.y -= ny * overlap / 2;
+              other.x += nx * overlap / 2;
+              other.y += ny * overlap / 2;
+              
+              // Exchange velocities (elastic collision)
+              const dvx = letter.vx - other.vx;
+              const dvy = letter.vy - other.vy;
+              const dot = dvx * nx + dvy * ny;
+              
+              letter.vx -= dot * nx * 0.8;
+              letter.vy -= dot * ny * 0.8;
+              other.vx += dot * nx * 0.8;
+              other.vy += dot * ny * 0.8;
+              
+              // Affect rotation on collision
+              letter.rotationSpeed += gsap.utils.random(-5, 5);
+              other.rotationSpeed += gsap.utils.random(-5, 5);
+            }
+          }
+          
+          // Apply transform with rotation
+          letter.el.style.transform = `translate(calc(-50% + ${letter.x}px), calc(-50% + ${letter.y}px)) rotate(${letter.rotation}deg)`;
         });
       };
       
