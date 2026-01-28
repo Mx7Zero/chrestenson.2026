@@ -12,16 +12,22 @@ export const Hero = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // C Logo random organic animation: scale, position, and rotation
+      // C Logo slow bouncing ball animation
       const animateLogo = () => {
+        const targetScale = gsap.utils.random(0.7, 1.8, 0.01);
+        const targetX = gsap.utils.random(-60, 60);
+        const targetY = gsap.utils.random(-40, 40);
+        const targetRotation = gsap.utils.random(-20, 20);
+        const duration = gsap.utils.random(3, 5);
+        
         gsap.to(logoRef.current, {
-          scale: gsap.utils.random(0.7, 1.6, 0.01), // Much larger range
-          x: gsap.utils.random(-40, 40), // Bounce horizontally
-          y: gsap.utils.random(-30, 30), // Bounce vertically
-          rotation: gsap.utils.random(-15, 15), // Slow spin
-          duration: gsap.utils.random(2, 4.5), // Slower, more varied timing
-          ease: 'sine.inOut',
-          onComplete: animateLogo, // Chain next random animation
+          scale: targetScale,
+          x: targetX,
+          y: targetY,
+          rotation: targetRotation,
+          duration: duration,
+          ease: 'elastic.out(1, 0.4)', // Bouncy, elastic motion
+          onComplete: animateLogo,
         });
       };
       animateLogo();
