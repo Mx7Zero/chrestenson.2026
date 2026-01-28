@@ -261,7 +261,6 @@ export const Hero = () => {
             style={{
               WebkitTextStroke: '2px #1D1D1F',
               WebkitTextFillColor: 'transparent',
-              textStroke: '2px #1D1D1F',
               color: 'transparent'
             }}
           >
