@@ -13,6 +13,8 @@ export const PortfolioSlider = () => {
     velocity: number;
   } | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [mouseX, setMouseX] = useState<number | null>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const portfolioImages = [
     '01_FoodBox Mockup.png',
@@ -185,6 +187,33 @@ export const PortfolioSlider = () => {
     }
     
     dragDataRef.current = null;
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDraggingRef.current) {
+      setMouseX(e.clientX);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setMouseX(null);
+  }, []);
+
+  const getScale = (index: number): number => {
+    if (mouseX === null) return 1;
+    
+    const item = itemRefs.current[index];
+    if (!item) return 1;
+    
+    const rect = item.getBoundingClientRect();
+    const itemCenter = rect.left + rect.width / 2;
+    const distance = Math.abs(mouseX - itemCenter);
+    const maxDistance = 200;
+    
+    if (distance > maxDistance) return 1;
+    
+    const scale = 1 + (1 - distance / maxDistance) * 0.5;
+    return scale;
+  };
+
   }, [startAutoScroll]);
 
   useEffect(() => {
