@@ -154,6 +154,11 @@ export const Hero = () => {
         const maxSpeed = 40; // Maximum velocity
         const maxRotationSpeed = 15; // Maximum rotation speed
         
+        // Accumulate push force from letters to logo
+        let logoPushX = 0;
+        let logoPushY = 0;
+        let collisionCount = 0;
+        
         letterElements.forEach((letter, i) => {
           // Apply gentle friction/damping for tranquil movement
           letter.vx *= 0.998;
@@ -183,6 +188,8 @@ export const Hero = () => {
           const minDistLogo = logoRadius + letter.size / 2;
           
           if (distLogo < minDistLogo) {
+            collisionCount++;
+            
             if (distLogo > 0) {
               const nx = dxLogo / distLogo;
               const ny = dyLogo / distLogo;
@@ -191,12 +198,16 @@ export const Hero = () => {
               letter.x = currentX + nx * (minDistLogo + 5);
               letter.y = currentY + ny * (minDistLogo + 5);
               
-              // Gentle bounce
+              // Gentle bounce for letter
               const dot = letter.vx * nx + letter.vy * ny;
               if (dot < 0) {
                 letter.vx = (letter.vx - 1.5 * dot * nx) * 0.7;
                 letter.vy = (letter.vy - 1.5 * dot * ny) * 0.7;
               }
+              
+              // Accumulate push force on logo (opposite direction)
+              logoPushX -= nx * 3;
+              logoPushY -= ny * 3;
             } else {
               // Letter at logo center, push gently
               const angle = Math.random() * Math.PI * 2;
@@ -257,6 +268,16 @@ export const Hero = () => {
           // Apply transform with rotation
           letter.el.style.transform = `translate(calc(-50% + ${letter.x}px), calc(-50% + ${letter.y}px)) rotate(${letter.rotation}deg)`;
         });
+        
+        // Apply accumulated push force from letters to logo velocity
+        // More letters = more push (weighted by collision count)
+        if (collisionCount > 0) {
+          const weight = Math.min(collisionCount * 0.5, 3); // Cap the effect
+          velocityX += logoPushX * weight;
+          velocityY += logoPushY * weight;
+          // Also affect rotation when letters push
+          rotationVelocity += (logoPushX - logoPushY) * 0.1 * weight;
+        }
       };
       
       // Replace animation loop with letters integration
