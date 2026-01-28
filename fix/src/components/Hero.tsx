@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
 export const Hero = () => {
@@ -9,7 +9,6 @@ export const Hero = () => {
   const contactRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -60,7 +59,7 @@ export const Hero = () => {
       };
       
       // Run animation at 60fps
-      const ticker = gsap.ticker.add(updateFloat);
+      gsap.ticker.add(updateFloat);
       
       // Drag functionality
       const logo = logoRef.current;
@@ -70,7 +69,6 @@ export const Hero = () => {
       
       const handleStart = (e: MouseEvent | TouchEvent) => {
         isDraggingRef = true;
-        setIsDragging(true);
         
         const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
         const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -102,7 +100,6 @@ export const Hero = () => {
         if (!isDraggingRef) return;
         
         isDraggingRef = false;
-        setIsDragging(false);
         logo.style.cursor = 'grab';
         
         // Calculate velocity from last movement for momentum
