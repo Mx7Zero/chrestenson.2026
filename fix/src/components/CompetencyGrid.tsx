@@ -11,11 +11,13 @@ interface BubbleNode {
 export const CompetencyGrid = () => {
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
   const [draggedNode, setDraggedNode] = useState<number | null>(null);
+  const [touchHeldNode, setTouchHeldNode] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const nodesRef = useRef<(HTMLDivElement | null)[]>([]);
   const linesRef = useRef<SVGSVGElement>(null);
   const animationsRef = useRef<{ [key: number]: gsap.core.Tween | null }>({});
   const dragStartRef = useRef<{ x: number; y: number; nodeX: number; nodeY: number } | null>(null);
+  const touchHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const nodes: BubbleNode[] = [
     { id: 0, domain: 'Brand Development', proficiency: 'Expert', evidence: 'Six hospitality brands built from concept to exit' },
@@ -40,7 +42,9 @@ export const CompetencyGrid = () => {
     if (!container) return;
     
     const containerRect = container.getBoundingClientRect();
-    const padding = 100;
+    const isMobile = window.innerWidth < 768;
+    const padding = isMobile ? 20 : 80;
+    const nodeSize = isMobile ? 96 : 144;
 
     const animateNode = () => {
       // Get current position to animate FROM
@@ -48,10 +52,13 @@ export const CompetencyGrid = () => {
       const currentY = gsap.getProperty(node, 'y') as number;
       const currentScale = gsap.getProperty(node, 'scale') as number || 1;
       
-      const newX = padding + Math.random() * (containerRect.width - padding * 2 - 150);
-      const newY = padding + Math.random() * (containerRect.height - padding * 2 - 150);
-      const newScale = 0.8 + Math.random() * 0.5;
-      const duration = 8 + Math.random() * 6;
+      const maxX = containerRect.width - padding - nodeSize;
+      const maxY = containerRect.height - padding - nodeSize;
+      
+      const newX = padding + Math.random() * Math.max(maxX - padding, 50);
+      const newY = padding + Math.random() * Math.max(maxY - padding, 50);
+      const newScale = isMobile ? 0.9 + Math.random() * 0.2 : 0.8 + Math.random() * 0.5;
+      const duration = isMobile ? 10 + Math.random() * 5 : 8 + Math.random() * 6;
 
       animationsRef.current[index] = gsap.fromTo(node, 
         { x: currentX, y: currentY, scale: currentScale },
@@ -167,15 +174,25 @@ export const CompetencyGrid = () => {
     if (!container) return;
 
     const containerRect = container.getBoundingClientRect();
-    const padding = 100;
+    // Smaller padding on mobile
+    const isMobile = window.innerWidth < 768;
+    const padding = isMobile ? 20 : 80;
 
     // Animate each node with random movement and size changes
     nodesRef.current.forEach((node, index) => {
       if (!node) return;
 
-      // Random starting position
-      const startX = padding + Math.random() * (containerRect.width - padding * 2 - 150);
-      const startY = padding + Math.random() * (containerRect.height - padding * 2 - 150);
+      // Distribute nodes more evenly across the container
+      const cols = isMobile ? 2 : 4;
+      const rows = Math.ceil(nodes.length / cols);
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      
+      const cellWidth = (containerRect.width - padding * 2) / cols;
+      const cellHeight = (containerRect.height - padding * 2) / rows;
+      
+      const startX = padding + col * cellWidth + (Math.random() * 0.5) * cellWidth;
+      const startY = padding + row * cellHeight + (Math.random() * 0.5) * cellHeight;
       
       gsap.set(node, { x: startX, y: startY });
 
@@ -238,6 +255,11 @@ export const CompetencyGrid = () => {
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1D1D1F]">
           Expert-level execution across eight domains
         </h2>
+        <p className="mt-4 text-xs font-mono tracking-widest uppercase text-[#86868B] flex items-center justify-center gap-2">
+          <span className="inline-block w-4 h-px bg-[#86868B]" />
+          Drag to interact
+          <span className="inline-block w-4 h-px bg-[#86868B]" />
+        </p>
       </div>
 
       {/* Bubble Network - Full Width */}
@@ -272,7 +294,23 @@ export const CompetencyGrid = () => {
               onMouseEnter={() => draggedNode === null && setHoveredNode(node.id)}
               onMouseLeave={() => setHoveredNode(null)}
               onMouseDown={(e) => handleDragStart(e, index)}
-              onTouchStart={(e) => handleDragStart(e, index)}
+              onTouchStart={(e) => {
+                // Clear any previous timer
+                if (touchHoldTimerRef.current) {
+                  clearTimeout(touchHoldTimerRef.current);
+                }
+                // Show tooltip after short hold
+                touchHoldTimerRef.current = setTimeout(() => {
+                  setTouchHeldNode(index);
+                }, 200);
+                handleDragStart(e, index);
+              }}
+              onTouchEnd={() => {
+                if (touchHoldTimerRef.current) {
+                  clearTimeout(touchHoldTimerRef.current);
+                }
+                setTouchHeldNode(null);
+              }}
             >
               {/* Main Bubble */}
               <div
@@ -291,13 +329,13 @@ export const CompetencyGrid = () => {
                 </span>
               </div>
 
-              {/* Tooltip on Hover - Thin line with floating text, top-right of bubble */}
+              {/* Tooltip on Hover/Touch - Thin line with floating text, top-right of bubble */}
               <div
                 className={`
                   absolute left-full top-0 -translate-y-1/2 ml-4 z-[100]
                   flex items-start gap-0
                   transition-all duration-300 ease-out pointer-events-none
-                  ${hoveredNode === node.id && draggedNode === null 
+                  ${(hoveredNode === node.id && draggedNode === null) || touchHeldNode === index || draggedNode === index 
                     ? 'opacity-100 translate-x-0' 
                     : 'opacity-0 -translate-x-2'}
                 `}
