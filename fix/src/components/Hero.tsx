@@ -116,7 +116,7 @@ export const Hero = () => {
       
       <div className="max-w-full relative z-10 text-center px-4">
         {/* C Logo - Hero Focal Point */}
-        <div className="mb-8 flex justify-center">
+        <div className="mb-12 flex justify-center">
           <img 
             src="/black-letter-c.png" 
             alt="C" 
@@ -124,21 +124,26 @@ export const Hero = () => {
           />
         </div>
 
-        {/* Name */}
-        <h1 
-          ref={nameRef}
-          className="mb-6 leading-[0.9] tracking-tighter"
-        >
-          <DockLetters 
-            text={"MATTHEW\nCHRESTENSON"}
-            className="text-[8vw] md:text-[6vw] lg:text-[5vw] font-bold text-[#1D1D1F] uppercase"
-          />
-        </h1>
+        {/* Name - Brand Hierarchy */}
+        <div ref={nameRef} className="mb-8">
+          {/* CHRESTENSON - Primary */}
+          <h1 className="text-[10vw] md:text-[8vw] lg:text-[7vw] font-black text-[#1D1D1F] uppercase tracking-tight leading-none mb-2">
+            CHRESTENSON
+          </h1>
+          {/* MATTHEW - Secondary with underline */}
+          <div className="flex items-center justify-center gap-4 mb-1">
+            <div className="h-px w-20 bg-[#1D1D1F]" />
+            <p className="text-2xl md:text-3xl lg:text-4xl font-light text-[#1D1D1F] uppercase tracking-[0.3em]">
+              MATTHEW
+            </p>
+            <div className="h-px w-20 bg-[#1D1D1F]" />
+          </div>
+        </div>
         
         {/* Title */}
         <p 
           ref={titleRef}
-          className="text-xl md:text-2xl lg:text-3xl text-[#6E6E73] font-normal mb-8 tracking-tight"
+          className="text-sm md:text-base lg:text-lg text-[#6E6E73] font-normal mb-8 tracking-[0.2em] uppercase"
         >
           Executive Strategist{' '}
           <span className="text-[#D1D1D6]">|</span>{' '}
