@@ -1,11 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 
 export const CredibilityBar = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<gsap.core.Tween | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef<{ x: number; scrollX: number } | null>(null);
+  const isDraggingRef = useRef(false);
+  const dragDataRef = useRef<{ 
+    startX: number; 
+    scrollX: number; 
+    lastX: number;
+    lastTime: number;
+    velocity: number;
+  } | null>(null);
 
   const logos = [
     { src: '/logos/DISNEY INTERACTIVE.png', alt: 'Disney Interactive' },
@@ -20,94 +26,155 @@ export const CredibilityBar = () => {
     { src: '/logos/balance-bar-logo-png-transparent.png', alt: 'Balance Bar' },
   ];
 
-  // Handle drag start
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+  const getSetWidth = useCallback(() => {
+    if (!scrollRef.current) return 0;
+    const logoSet = scrollRef.current.querySelector('.logo-set') as HTMLElement;
+    return logoSet?.offsetWidth || 0;
+  }, []);
+
+  const normalizePosition = useCallback((x: number, setWidth: number) => {
+    if (setWidth === 0) return x;
+    let normalized = x % setWidth;
+    if (normalized > 0) normalized -= setWidth;
+    return normalized;
+  }, []);
+
+  const startAutoScroll = useCallback((fromX: number) => {
+    if (!scrollRef.current) return;
+    
+    const setWidth = getSetWidth();
+    if (setWidth === 0) return;
+    
+    const normalizedX = normalizePosition(fromX, setWidth);
+    
     if (animationRef.current) {
-      animationRef.current.pause();
+      animationRef.current.kill();
     }
-    setIsDragging(true);
+    
+    gsap.set(scrollRef.current, { x: normalizedX });
+    
+    animationRef.current = gsap.to(scrollRef.current, {
+      x: normalizedX - setWidth,
+      duration: 40,
+      ease: 'none',
+      repeat: -1,
+      modifiers: {
+        x: (x) => {
+          const xNum = parseFloat(x);
+          return normalizePosition(xNum, setWidth) + 'px';
+        }
+      }
+    });
+  }, [getSetWidth, normalizePosition]);
+
+  // Handle drag start
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    
+    if (animationRef.current) {
+      animationRef.current.kill();
+    }
+    isDraggingRef.current = true;
     
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const currentX = gsap.getProperty(scrollRef.current, 'x') as number;
-    dragStartRef.current = { x: clientX, scrollX: currentX };
-  };
+    const now = Date.now();
+    
+    dragDataRef.current = { 
+      startX: clientX, 
+      scrollX: currentX,
+      lastX: clientX,
+      lastTime: now,
+      velocity: 0
+    };
+    
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = 'grabbing';
+    }
+  }, []);
 
   // Handle drag move
-  const handleDragMove = (e: MouseEvent | TouchEvent) => {
-    if (!isDragging || !dragStartRef.current || !scrollRef.current) return;
+  const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isDraggingRef.current || !dragDataRef.current || !scrollRef.current) return;
+    
+    e.preventDefault();
     
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const deltaX = clientX - dragStartRef.current.x;
-    let newX = dragStartRef.current.scrollX + deltaX;
+    const now = Date.now();
+    const deltaTime = now - dragDataRef.current.lastTime;
     
-    // Get the width of one set for wrapping
-    const logoSet = scrollRef.current.querySelector('.logo-set') as HTMLElement;
-    if (logoSet) {
-      const setWidth = logoSet.offsetWidth;
-      // Wrap around
-      if (newX > 0) newX = newX - setWidth;
-      if (newX < -setWidth) newX = newX + setWidth;
+    // Calculate velocity for momentum
+    if (deltaTime > 0) {
+      const deltaX = clientX - dragDataRef.current.lastX;
+      dragDataRef.current.velocity = deltaX / deltaTime * 16; // normalize to ~60fps
     }
+    
+    dragDataRef.current.lastX = clientX;
+    dragDataRef.current.lastTime = now;
+    
+    const deltaX = clientX - dragDataRef.current.startX;
+    const setWidth = getSetWidth();
+    let newX = normalizePosition(dragDataRef.current.scrollX + deltaX, setWidth);
     
     gsap.set(scrollRef.current, { x: newX });
-  };
+  }, [getSetWidth, normalizePosition]);
 
-  // Handle drag end
-  const handleDragEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    dragStartRef.current = null;
+  // Handle drag end with momentum
+  const handleDragEnd = useCallback(() => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
     
-    // Resume auto-scroll from current position - keep where user dropped it
     if (scrollRef.current) {
-      const currentX = gsap.getProperty(scrollRef.current, 'x') as number;
-      const logoSet = scrollRef.current.querySelector('.logo-set') as HTMLElement;
-      if (logoSet) {
-        const setWidth = logoSet.offsetWidth;
-        // Normalize position to valid range
-        let normalizedX = currentX % setWidth;
-        if (normalizedX > 0) normalizedX -= setWidth;
-        
-        // Kill old animation and create new one from current position
-        if (animationRef.current) {
-          animationRef.current.kill();
-        }
-        
-        gsap.set(scrollRef.current, { x: normalizedX });
-        
-        animationRef.current = gsap.to(scrollRef.current, {
-          x: normalizedX - setWidth,
-          duration: 40,
-          ease: 'none',
-          repeat: -1,
-          modifiers: {
-            x: (x) => {
-              const xNum = parseFloat(x);
-              return (((xNum % setWidth) + setWidth) % setWidth - setWidth) + 'px';
-            }
-          }
-        });
-      }
+      scrollRef.current.style.cursor = 'grab';
     }
-  };
-
-  // Set up drag listeners
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleDragMove);
-      window.addEventListener('mouseup', handleDragEnd);
-      window.addEventListener('touchmove', handleDragMove, { passive: false });
-      window.addEventListener('touchend', handleDragEnd);
+    
+    const velocity = dragDataRef.current?.velocity || 0;
+    dragDataRef.current = null;
+    
+    if (!scrollRef.current) return;
+    
+    const currentX = gsap.getProperty(scrollRef.current, 'x') as number;
+    const setWidth = getSetWidth();
+    
+    // Apply momentum if there's velocity
+    if (Math.abs(velocity) > 2) {
+      const momentumDistance = velocity * 20;
+      const targetX = normalizePosition(currentX + momentumDistance, setWidth);
       
-      return () => {
-        window.removeEventListener('mousemove', handleDragMove);
-        window.removeEventListener('mouseup', handleDragEnd);
-        window.removeEventListener('touchmove', handleDragMove);
-        window.removeEventListener('touchend', handleDragEnd);
-      };
+      gsap.to(scrollRef.current, {
+        x: targetX,
+        duration: 0.8,
+        ease: 'power2.out',
+        onComplete: () => {
+          const finalX = gsap.getProperty(scrollRef.current, 'x') as number;
+          startAutoScroll(finalX);
+        }
+      });
+    } else {
+      // No momentum, just resume auto-scroll
+      startAutoScroll(currentX);
     }
-  }, [isDragging]);
+  }, [getSetWidth, normalizePosition, startAutoScroll]);
 
+  // Set up drag listeners - always active
+  useEffect(() => {
+    const handleMove = (e: MouseEvent | TouchEvent) => handleDragMove(e);
+    const handleEnd = () => handleDragEnd();
+    
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+    };
+  }, [handleDragMove, handleDragEnd]);
+
+  // Initial auto-scroll setup
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
@@ -163,7 +230,7 @@ export const CredibilityBar = () => {
       <div className="relative">
         <div 
           ref={scrollRef}
-          className={`flex items-center ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className="flex items-center cursor-grab active:cursor-grabbing"
           style={{ width: 'max-content', touchAction: 'none' }}
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
