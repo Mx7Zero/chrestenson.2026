@@ -1,0 +1,632 @@
+# CLAUDE CODE PROMPT: chrestenson.com Personal Website Build
+
+## PROJECT OVERVIEW
+
+Build an ultra-clean, single-page scroll website for **chrestenson.com** with a bio-hacker/tech-founder aesthetic. The site positions Matthew Chrestenson as an AI-augmented executive strategist and brand architect.
+
+**Live URL:** chrestenson.com  
+**Stack:** React 18 + TypeScript + Tailwind CSS + Vite + GSAP  
+**Hosting:** Vercel  
+**Repo:** GitHub  
+
+---
+
+## DESIGN SYSTEM
+
+### Color Palette (Dark Mode Primary)
+```css
+--bg-primary: #0D0D0D;      /* Main background */
+--bg-surface: #1A1A1A;      /* Cards, sections */
+--bg-elevated: #242424;     /* Hover states, elevated elements */
+--border: #333333;          /* Subtle borders */
+--text-primary: #FFFFFF;    /* Headlines, primary text */
+--text-secondary: #A0A0A0;  /* Body text, descriptions */
+--text-muted: #666666;      /* Tertiary info */
+--accent: #3B82F6;          /* Primary accent - trust blue */
+--accent-hover: #2563EB;    /* Accent hover state */
+--success: #10B981;         /* Positive indicators */
+```
+
+### Typography
+```css
+/* Fonts - Load from Google Fonts */
+--font-heading: 'Inter', sans-serif;  /* Weight 600-700 for headings */
+--font-body: 'Inter', sans-serif;     /* Weight 400-500 for body */
+--font-mono: 'JetBrains Mono', monospace; /* For data/metrics */
+
+/* Scale */
+H1: 56-72px, font-weight: 700, line-height: 1.1
+H2: 36-42px, font-weight: 600, line-height: 1.2  
+H3: 24-28px, font-weight: 600, line-height: 1.3
+Body: 17-18px, font-weight: 400, line-height: 1.65
+Small: 14px, font-weight: 400
+Mono/Data: 14-16px, font-weight: 500
+```
+
+### Spacing & Layout
+```css
+--section-padding-y: 120px;  /* Desktop vertical section padding */
+--section-padding-y-mobile: 80px;
+--content-max-width: 1200px;
+--prose-max-width: 680px;    /* For text-heavy sections */
+--card-radius: 12px;
+--button-radius: 8px;
+```
+
+### Animation (GSAP)
+- **Easing:** `power2.out` for reveals, `power1.inOut` for interactions
+- **Duration:** 0.6-0.8s for section reveals, 0.3s for micro-interactions
+- **Pattern:** Fade up from `opacity: 0, y: 50` to `opacity: 1, y: 0`
+- **Stagger:** 0.1s delay between child elements
+- **Trigger:** ScrollTrigger with `start: "top 80%"`
+
+---
+
+## PAGE STRUCTURE (Single-Page Scroll)
+
+### 1. NAVIGATION (Fixed)
+- Logo/Name: "MATTHEW CHRESTENSON" (text only, no image)
+- Nav items: About | Expertise | Work | Contact (smooth scroll anchors)
+- CTA Button: "Book a Call" → opens Calendly embed/link
+- Mobile: Hamburger menu with slide-in panel
+- Background: Transparent → `--bg-primary` on scroll (add blur backdrop)
+
+### 2. HERO SECTION
+**Layout:** Full viewport height, centered content, minimal
+
+**Content:**
+```
+MATTHEW CHRESTENSON
+
+Executive Strategist | Brand Architect | Platform Developer
+
+AI-augmented strategist with 30+ years of creative leadership. 
+Transforming complex market intelligence into investor-ready documentation, 
+brand strategies, and full-stack digital products.
+
+[Book a Consultation] ← Primary CTA button
+```
+
+**Design Notes:**
+- No hero image (tech-founder anti-hero pattern)
+- Subtle animated gradient orb in background (very subtle, barely visible)
+- Name animates in letter-by-letter on load
+- Tagline fades up after name completes
+
+### 3. CREDIBILITY BAR (Social Proof)
+**Layout:** Horizontal scroll on mobile, grid on desktop
+
+**Content:** Logo/text badges for past work:
+```
+Disney | National Geographic | Ridley Scott Associates
+```
+
+**Design:** Muted text or subtle logo marks, not flashy. Use `--text-muted` color.
+
+### 4. ABOUT / POSITIONING SECTION
+**Headline:** "Not AI-literate. AI-native."
+
+**Body Copy:**
+```
+Unique combination of studio-grade production experience (Disney, National Geographic, 
+Ridley Scott Associates), hospitality brand-building (six successful ventures from 
+concept to exit), and current AI-first strategic advisory across health technology, 
+hospitality, and consumer goods.
+
+Using LLMs and generative AI to accelerate research, content production, and visual 
+asset creation at enterprise scale—work that previously required teams, now executed 
+with AI-assisted workflows.
+```
+
+**Contact Info Card:**
+```
+Denver, CO
+matthew@chrestenson.com
+805.452.8932
+LinkedIn ← icon link
+```
+
+### 5. CORE COMPETENCIES GRID
+**Headline:** "Expert-Level Execution"
+
+**Layout:** 2x4 grid on desktop, stacked cards on mobile
+
+**Data (use monospace font for "Expert" labels):**
+
+| Domain | Level | Evidence |
+|--------|-------|----------|
+| Corporate Strategy | Expert | VUCA framework, category creation, exit architecture |
+| Brand Development | Expert | Six hospitality brands built from concept to exit |
+| Financial Modeling | Expert | Investment memoranda, ROI analysis, capital deployment |
+| Patent/IP Strategy | Expert | Multi-patent portfolios, FTO compliance, valuation |
+| Product Architecture | Expert | Hardware-software platforms, metric development |
+| Technical Development | Expert | React/TypeScript, PostgreSQL, full-stack SaaS |
+| Hospitality Development | Expert | Concept-to-exit: R&D, ABC licensing, permitting |
+| Market Analysis | Expert | Multi-segment sizing, competitive landscape |
+
+**Card Design:**
+- Background: `--bg-surface`
+- Border: 1px `--border`
+- "Expert" label in `--accent` color with monospace font
+- Hover: subtle lift with `--bg-elevated` background
+
+### 6. EXPERTISE SECTIONS (Accordion or Tabs)
+**Design:** Expandable sections or horizontal tabs. Each section expands to show bullet points.
+
+**Section 1: Executive Leadership & Strategy**
+```
+Corporate Strategy & Vision
+• Category creation at intersection of industries (longevity medicine, fitness tech, medical devices)
+• VUCA Framework application for navigating volatile, uncertain business environments
+• Multi-frame positioning for different audience segments without strategic contradiction
+• Strategic optionality design preserving flexibility while establishing foundational commitments
+• Exit strategy architecture—PE acquisition, licensing platform, FDA-cleared device, public markets
+
+Business Transformation
+• IP-first business model design transforming hardware companies into licensing platforms
+• Valuation multiple arbitrage repositioning from low-multiple (1-2x) to high-multiple (8-15x) categories
+• Platform business development supporting OEM licensing, SaaS subscriptions, and direct sales
+• Franchise model architecture including economics, support systems, and scalability frameworks
+
+Business Model Innovation
+• Aggregator/consolidator business model development
+• Joint venture structuring with healthcare systems, real estate developers, and strategic partners
+• Partnership structure analysis and implementation
+• Multi-market expansion strategy design with geographic rollout sequencing
+```
+
+**Section 2: Financial Leadership**
+```
+Corporate Finance
+• Investment memorandum development with institutional-grade documentation
+• Multi-year pro forma development (3-5 year projections)
+• Financial modeling including 24-month capital deployment projections, unit economics analysis
+• ROI analysis using institutional stress-testing methodologies (160x+ return multiples demonstrated)
+• Budget development across IP prosecution, clinical validation, regulatory submissions
+
+Pricing Strategy
+• Veblen good positioning where price signals quality and efficacy
+• Segment-based pricing architecture ($15K-$80K ranges across market segments)
+• Recurring revenue modeling converting hardware sales to ARR
+• Membership tier structuring with premium positioning
+
+Investment Strategy
+• Milestone-based funding structures tied to value-creation events
+• Risk register development with probability weighting and impact analysis
+• Asymmetric return identification with bounded downside and exponential upside
+• Capital expenditure planning and working capital forecasting
+• Break-even analysis and payback period modeling (18-24 month targets)
+```
+
+**Section 3: Intellectual Property & Patent Strategy**
+```
+Patent Portfolio Development
+• Provisional patent and omnibus drafting with technical specifications and FTO compliance language
+• Multi-tier patent architecture (Foundational → Diagnostic → Algorithmic → Application)
+• Patent valuation using comparable transaction analysis ($180M-$450M portfolio estimates)
+• Priority date strategy managing critical filing windows
+
+Freedom-to-Operate (FTO) Analysis
+• Competitive patent landscape analysis (USPTO, EPO, WIPO, CNIPA)
+• Design-around strategy development avoiding competitor claims
+• White space identification for patent claim development
+• IPR vulnerability audits and litigation-tested validation planning
+
+Trademark Strategy
+• Brand architecture development with coherent naming conventions
+• Trademark filing strategy for novel terminology
+• Layered protection strategy (utility + design + trade secrets)
+```
+
+**Section 4: Brand Strategy & Marketing**
+```
+Brand Development
+• Built six distinct hospitality concepts that became cultural anchors
+• Brand storytelling across food, wellness, and performance markets
+• Brand voice development and messaging framework creation
+• Competitive differentiation through authentic positioning
+
+Strategic Marketing
+• Multi-channel campaign development and execution
+• Budget allocation optimization ($2K/month guerrilla to $30K+ strategies)
+• Lead generation funnel design targeting 50-150 qualified leads monthly
+• Conversion rate optimization (20-30% chat-to-consultation targets)
+
+Content & Creative
+• Documentary film series production (broadcast-quality)
+• Podcast strategy and content ecosystem development
+• Video-first product launch campaigns
+• Micro-influencer program development
+
+Digital Marketing
+• Local SEO strategy development
+• Google Local Services Ads, Google Ads, Meta advertising
+• Citation building directories
+• Marketing automation and CRM implementation (HubSpot, Pipedrive)
+```
+
+**Section 5: Product Architecture & Development**
+```
+Technical Product Design
+• System architecture for integrated hardware-software platforms
+• Metric development and scoring methodologies (proprietary diagnostic metrics)
+• Algorithm design for real-time adaptive systems
+• Wearable integration with commercial platforms (WHOOP, Apple Watch, Garmin, Oura)
+
+Full-Stack Development
+• Frontend: React 18, TypeScript, Tailwind CSS, Progressive Web Apps
+• Backend: Node.js, Express, PostgreSQL, Supabase, Edge Functions
+• Architecture: Component-based design, state machine patterns, offline-first
+• Security: Role-based access control, multi-tenant data isolation, RLS policies
+
+Product Management
+• Requirements documentation and feature specification
+• Phased roadmap planning with dependency mapping
+• Sprint planning and development team coordination
+• MVP scoping and iterative refinement
+```
+
+**Section 6: Healthcare Industry Expertise**
+```
+Medical Billing & Reimbursement
+• CPT code expertise (97110, 97112, 97116, 97530, 97150)
+• Medicare MPPR calculations and 8-minute rule compliance
+• Insurance reimbursement rate analysis and revenue modeling
+• Multi-payer engine design (Medicare FFS, MA, commercial)
+
+Clinical Operations
+• Physical therapy clinic operations and economics
+• Evidence-based program design (Otago, Matter of Balance)
+• Clinical outcomes measurement and reporting
+• Physician referral network development
+
+Regulatory Compliance
+• HIPAA technical safeguards (administrative, physical, technical controls)
+• FDA regulatory strategy (SaMD classification, 510(k) pathway planning)
+• Medicare fraud and abuse prevention
+• Anti-Kickback Statute compliance and safe harbor navigation
+```
+
+**Section 7: Sales & Business Development**
+```
+B2B Enterprise Sales
+• High-ticket medical equipment sales ($21,500-$50,000+ per unit)
+• Complex 8-12 month healthcare procurement cycle navigation
+• Committee-based purchasing process management
+• Multi-stakeholder relationship building
+
+Sales Operations
+• Trial-to-close conversion strategy development
+• Pipeline management and deal prioritization
+• Sales process systematization and playbook development
+• CRM administration and optimization
+
+Deal Structuring
+• Equipment financing arrangement (lease, purchase, EaaS models)
+• Contract negotiation and warranty structuring
+• Multi-year service agreement development
+```
+
+**Section 8: Industry Expertise**
+```
+Hospitality & Food Service
+• Six hospitality concept launches from concept through profitable operation
+• Head chef experience, farm-to-table operations, craft brewing
+• P&L management and cost-control analytics
+• Subcontractor relationship management
+
+Health & Wellness
+• Longevity market analysis
+• Exercise physiology knowledge (VO2 max, cardiorespiratory dynamics)
+• Fall prevention and balance training protocols
+• Senior fitness and aging-in-place market dynamics
+
+Home Services
+• Kitchen and bathroom remodeling operations
+• Three-tier pricing structure development
+• ADA compliance and universal design principles
+• Subcontractor operational model implementation
+```
+
+### 7. TECHNICAL PROFICIENCIES SECTION
+**Headline:** "Technical Stack"
+
+**Layout:** Three-column grid of category cards
+
+**Development & Design**
+| Category | Tools |
+|----------|-------|
+| Frontend | React 18, TypeScript, Tailwind CSS, Vite, GSAP |
+| Backend | Node.js, Express, PostgreSQL, Supabase, Redis |
+| Design/Video | Adobe Creative Cloud (full suite), DaVinci Resolve |
+| AI/Content | Claude Code, Gemini, MidJourney, Runway ML, VEO 3 |
+| Web Platforms | Replit, Framer, Webflow, WordPress |
+
+**Business Systems**
+| Category | Tools |
+|----------|-------|
+| CRM | Pipedrive, HubSpot, JobNimbus |
+| Analytics | Google Analytics 4, Microsoft Clarity, Search Console |
+| Documentation | Notion, Markdown, Technical specifications |
+| Project Management | Agile/Scrum, risk management, roadmap planning |
+| Financial | Excel/Sheets modeling, investment memoranda |
+
+**Healthcare & Regulatory**
+| Category | Knowledge Areas |
+|----------|-----------------|
+| Standards | HL7 FHIR R4, HIPAA, CMS billing rules |
+| FDA Pathways | 510(k), De Novo, SaMD classification |
+| IP Systems | USPTO, EPO, WIPO, CNIPA |
+| Compliance | HIPAA, AKS, Medicare billing |
+
+### 8. KEY ACHIEVEMENTS SECTION
+**Headline:** "Track Record"
+
+**Layout:** Metrics/stats displayed prominently with supporting text
+
+```
+30+ YEARS
+Creative leadership spanning studio production and hospitality brand-building
+
+6 VENTURES → EXIT  
+Hospitality concepts built from scratch through profitable sale
+
+$180M-$450M
+IP portfolio architected with 19-patent strategy and full FTO compliance
+
+FULL-STACK TECHNICAL
+Built production SaaS platforms; can spec and ship, not just strategize
+
+INSTITUTIONAL-GRADE ANALYSIS
+Strategic intelligence briefs on $1B+ public companies
+
+STUDIO CREDENTIALS
+Disney | National Geographic | Ridley Scott Associates
+```
+
+**Design:** Large numbers in `--accent` color, supporting text below each. Staggered animation on scroll.
+
+### 9. PRINCIPLES SECTION
+**Headline:** "How I Work"
+
+**Layout:** Four cards in a row
+
+```
+ACCURACY OVER APPEAL
+Mathematical validation of all projections
+
+TRANSPARENCY IN METHODOLOGY  
+Source validation and defensibility
+
+SCALABLE SYSTEMS
+Build systems that grow
+
+TRUST THROUGH EXECUTION
+Under-promise, over-deliver
+```
+
+### 10. CTA / CONTACT SECTION
+**Headline:** "Let's Build Something"
+
+**Subhead:** "Ready to transform strategy into execution?"
+
+**Primary CTA:** Large "Book a Consultation" button → Calendly link
+
+**Alternative:** "Or email directly: matthew@chrestenson.com"
+
+**Footer:**
+```
+© 2026 Matthew Chrestenson
+Denver, CO | 805.452.8932
+LinkedIn ← icon
+```
+
+---
+
+## TECHNICAL REQUIREMENTS
+
+### Project Setup
+```bash
+npm create vite@latest chrestenson-site -- --template react-ts
+cd chrestenson-site
+npm install
+npm install -D tailwindcss postcss autoprefixer
+npm install gsap @gsap/react
+npx tailwindcss init -p
+```
+
+### File Structure
+```
+src/
+├── components/
+│   ├── Navigation.tsx
+│   ├── Hero.tsx
+│   ├── CredibilityBar.tsx
+│   ├── About.tsx
+│   ├── CompetencyGrid.tsx
+│   ├── ExpertiseAccordion.tsx
+│   ├── TechStack.tsx
+│   ├── Achievements.tsx
+│   ├── Principles.tsx
+│   ├── Contact.tsx
+│   └── Footer.tsx
+├── hooks/
+│   └── useScrollAnimation.ts
+├── styles/
+│   └── globals.css
+├── App.tsx
+└── main.tsx
+```
+
+### Performance Requirements
+- Lighthouse score: 90+ on all metrics
+- First Contentful Paint: < 1.5s
+- Total Bundle Size: < 200KB gzipped
+- Images: WebP format, lazy loaded
+- Fonts: Preload critical fonts, font-display: swap
+
+### Responsive Breakpoints
+```css
+sm: 640px   /* Mobile landscape */
+md: 768px   /* Tablet */
+lg: 1024px  /* Desktop */
+xl: 1280px  /* Large desktop */
+```
+
+### Accessibility
+- Semantic HTML5 elements
+- ARIA labels on interactive elements
+- Keyboard navigation support
+- `prefers-reduced-motion` media query for animations
+- Color contrast ratio: minimum 4.5:1
+
+### SEO
+```html
+<title>Matthew Chrestenson | Executive Strategist & Brand Architect</title>
+<meta name="description" content="AI-augmented strategist with 30+ years of creative leadership. Brand strategy, financial modeling, patent portfolios, and full-stack product development.">
+<meta property="og:title" content="Matthew Chrestenson">
+<meta property="og:description" content="Executive Strategist | Brand Architect | Platform Developer">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://chrestenson.com">
+```
+
+### Vercel Deployment
+- Connect GitHub repo to Vercel
+- Auto-deploy on push to main
+- Custom domain: chrestenson.com
+- Enable Analytics
+
+---
+
+## CALENDLY INTEGRATION
+
+**Option 1:** Popup embed (preferred)
+```tsx
+import { PopupButton } from "react-calendly";
+
+<PopupButton
+  url="https://calendly.com/matthew-chrestenson/consultation"
+  text="Book a Consultation"
+  className="..."
+/>
+```
+
+**Option 2:** Direct link if no Calendly account yet
+```tsx
+<a href="mailto:matthew@chrestenson.com?subject=Consultation%20Request">
+  Book a Consultation
+</a>
+```
+
+---
+
+## ANIMATION SPECIFICATIONS
+
+### Hero Load Sequence
+1. Background gradient fades in (0-0.5s)
+2. Name letters animate in sequence (0.5-1.2s)
+3. Tagline fades up (1.2-1.6s)
+4. CTA button fades up (1.6-2s)
+
+### Scroll Animations
+- Each section: fade up with `y: 50` → `y: 0`
+- Stagger children by 0.1s
+- Cards: slight scale from 0.95 → 1
+- Stats/numbers: count up animation on scroll into view
+
+### Micro-interactions
+- Buttons: scale 1.02 on hover, background color shift
+- Cards: subtle lift (translateY: -4px) and shadow increase
+- Links: underline animation from left to right
+- Nav: blur backdrop appears after 100px scroll
+
+---
+
+## DELIVERABLES CHECKLIST
+
+- [ ] Vite + React + TypeScript project initialized
+- [ ] Tailwind CSS configured with custom design tokens
+- [ ] All sections built as separate components
+- [ ] GSAP ScrollTrigger animations implemented
+- [ ] Fully responsive (mobile-first)
+- [ ] Navigation with smooth scroll + mobile menu
+- [ ] Calendly integration (or mailto fallback)
+- [ ] SEO meta tags
+- [ ] Favicon and OG image
+- [ ] Vercel deployment configured
+- [ ] Custom domain connected
+- [ ] Lighthouse audit: 90+ scores
+
+---
+
+## EXAMPLE COMPONENT (Hero.tsx)
+
+```tsx
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+export const Hero = () => {
+  const containerRef = useRef<HTMLElement>(null);
+  const nameRef = useRef<HTMLHeadingElement>(null);
+  const taglineRef = useRef<HTMLParagraphElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+    
+    tl.from(nameRef.current, { opacity: 0, y: 30, duration: 0.8 })
+      .from(taglineRef.current, { opacity: 0, y: 20, duration: 0.6 }, '-=0.3')
+      .from(ctaRef.current, { opacity: 0, y: 20, duration: 0.6 }, '-=0.3');
+  }, []);
+
+  return (
+    <section 
+      ref={containerRef}
+      className="min-h-screen flex items-center justify-center bg-[#0D0D0D] px-6"
+    >
+      <div className="max-w-4xl text-center">
+        <h1 
+          ref={nameRef}
+          className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight"
+        >
+          MATTHEW CHRESTENSON
+        </h1>
+        <p 
+          ref={taglineRef}
+          className="text-lg md:text-xl text-[#A0A0A0] mb-4"
+        >
+          Executive Strategist | Brand Architect | Platform Developer
+        </p>
+        <p className="text-[#A0A0A0] max-w-2xl mx-auto mb-8 leading-relaxed">
+          AI-augmented strategist with 30+ years of creative leadership. 
+          Transforming complex market intelligence into investor-ready documentation, 
+          brand strategies, and full-stack digital products.
+        </p>
+        <div ref={ctaRef}>
+          <a 
+            href="#contact"
+            className="inline-block px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] 
+                       text-white font-medium rounded-lg transition-all duration-300
+                       hover:scale-[1.02]"
+          >
+            Book a Consultation
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+};
+```
+
+---
+
+## FINAL NOTES
+
+- Keep it **ultra-clean**. When in doubt, remove elements.
+- Whitespace is premium. Don't crowd sections.
+- All text from Job Skills 2026 document must be included.
+- The site should feel like a tech founder's personal site—confident, minimal, substance over flash.
+- Test on iPhone and Android before deploying.
+- Run Lighthouse audit and fix any issues before going live.
+
+**Build this site. Make it exceptional.**
