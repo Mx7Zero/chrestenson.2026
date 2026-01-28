@@ -14,6 +14,12 @@ export const Hero = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // Enable hardware acceleration
+      if (logoRef.current) {
+        logoRef.current.style.willChange = 'transform';
+        logoRef.current.style.transform = 'translateZ(0)';
+      }
+
       // Zero gravity floating animation
       let velocityX = gsap.utils.random(-50, 50);
       let velocityY = gsap.utils.random(-50, 50);
@@ -22,6 +28,8 @@ export const Hero = () => {
       let currentY = 0;
       let currentRotation = 0;
       let isDraggingRef = false;
+      let animationFrameId: number;
+      let lastTime = performance.now();
       
       // Responsive bounds based on screen width
       const getResponsiveBounds = () => {
@@ -42,44 +50,55 @@ export const Hero = () => {
       };
       window.addEventListener('resize', handleResize);
       
-      const updateFloat = () => {
-        if (isDraggingRef || !logoRef.current) return;
-        
-        // Update position
-        currentX += velocityX * 0.016;
-        currentY += velocityY * 0.016;
-        currentRotation += rotationVelocity * 0.016;
-        
-        // Bounce off boundaries by reversing velocity
-        if (currentX <= bounds.left || currentX >= bounds.right) {
-          velocityX *= -0.8;
-          currentX = currentX <= bounds.left ? bounds.left : bounds.right;
-          // Add slight variation on bounce
-          velocityY += gsap.utils.random(-5, 5);
-          rotationVelocity += gsap.utils.random(-3, 3);
+      const updateFloat = (currentTime: number) => {
+        if (!logoRef.current) {
+          animationFrameId = requestAnimationFrame(updateFloat);
+          return;
+        }
+
+        // Calculate delta time for smooth animation across different frame rates
+        const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1); // Cap at 100ms
+        lastTime = currentTime;
+
+        if (!isDraggingRef) {
+          // Update position with delta time
+          currentX += velocityX * deltaTime;
+          currentY += velocityY * deltaTime;
+          currentRotation += rotationVelocity * deltaTime;
+          
+          // Bounce off boundaries by reversing velocity
+          if (currentX <= bounds.left || currentX >= bounds.right) {
+            velocityX *= -0.8;
+            currentX = currentX <= bounds.left ? bounds.left : bounds.right;
+            // Add slight variation on bounce
+            velocityY += gsap.utils.random(-5, 5);
+            rotationVelocity += gsap.utils.random(-3, 3);
+          }
+          
+          if (currentY <= bounds.top || currentY >= bounds.bottom) {
+            velocityY *= -0.8;
+            currentY = currentY <= bounds.top ? bounds.top : bounds.bottom;
+            // Add slight variation on bounce
+            velocityX += gsap.utils.random(-5, 5);
+            rotationVelocity += gsap.utils.random(-3, 3);
+          }
+          
+          // Slight random drift (less frequently for better performance)
+          if (Math.random() < 0.005) {
+            velocityX += gsap.utils.random(-2, 2);
+            velocityY += gsap.utils.random(-2, 2);
+            rotationVelocity += gsap.utils.random(-1, 1);
+          }
+          
+          // Apply transform directly for better performance
+          logoRef.current.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotation}deg) translateZ(0)`;
         }
         
-        if (currentY <= bounds.top || currentY >= bounds.bottom) {
-          velocityY *= -0.8;
-          currentY = currentY <= bounds.top ? bounds.top : bounds.bottom;
-          // Add slight variation on bounce
-          velocityX += gsap.utils.random(-5, 5);
-          rotationVelocity += gsap.utils.random(-3, 3);
-        }
-        
-        // Slight random drift
-        if (Math.random() < 0.01) {
-          velocityX += gsap.utils.random(-2, 2);
-          velocityY += gsap.utils.random(-2, 2);
-          rotationVelocity += gsap.utils.random(-1, 1);
-        }
-        
-        // Apply transform with rotation
-        gsap.set(logoRef.current, { x: currentX, y: currentY, rotation: currentRotation });
+        animationFrameId = requestAnimationFrame(updateFloat);
       };
       
-      // Run animation at 60fps
-      gsap.ticker.add(updateFloat);
+      // Start animation loop
+      animationFrameId = requestAnimationFrame(updateFloat);
       
       // Drag functionality
       const logo = logoRef.current;
@@ -113,7 +132,8 @@ export const Hero = () => {
         currentX = Math.max(bounds.left, Math.min(bounds.right, initialX + deltaX));
         currentY = Math.max(bounds.top, Math.min(bounds.bottom, initialY + deltaY));
         
-        gsap.set(logo, { x: currentX, y: currentY });
+        // Use direct style manipulation during drag for better performance
+        logo.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotation}deg) translateZ(0)`;
       };
       
       const handleEnd = (e: MouseEvent | TouchEvent) => {
@@ -137,6 +157,12 @@ export const Hero = () => {
       window.addEventListener('touchmove', handleMove as EventListener);
       window.addEventListener('mouseup', handleEnd as EventListener);
       window.addEventListener('touchend', handleEnd as EventListener);
+
+      // Cleanup function
+      return () => {
+        cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('resize', handleResize);
+      };
 
       // Initial states
       gsap.set([nameRef.current, titleRef.current, contactRef.current, summaryRef.current, ctaRef.current], {
