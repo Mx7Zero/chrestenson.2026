@@ -150,7 +150,7 @@ export const Hero = () => {
 
       const updateLetters = () => {
         // Logo collision radius - the C logo is 384px on desktop, so radius ~180-190px
-        const logoRadius = 180;
+        const logoRadius = 120; // Smaller collision zone
         const maxSpeed = 40; // Maximum velocity
         const maxRotationSpeed = 15; // Maximum rotation speed
         
@@ -195,21 +195,21 @@ export const Hero = () => {
               const ny = dyLogo / distLogo;
               const overlap = minDistLogo - distLogo;
               
-              // Letters yield strongly to logo - they get pushed away
-              const pushStrength = Math.min(overlap * 0.6, 15);
+              // Very gentle push - letters can get closer
+              const pushStrength = Math.min(overlap * 0.2, 4);
               letter.x += nx * pushStrength;
               letter.y += ny * pushStrength;
               
-              // Letters bounce away from logo
+              // Soft velocity adjustment
               const dot = letter.vx * nx + letter.vy * ny;
               if (dot < 0) {
-                letter.vx -= dot * nx * 1.2;
-                letter.vy -= dot * ny * 1.2;
+                letter.vx -= dot * nx * 0.3;
+                letter.vy -= dot * ny * 0.3;
               }
               
-              // Very light push on logo (letters barely affect it)
-              logoPushX -= nx * 0.5;
-              logoPushY -= ny * 0.5;
+              // Minimal push on logo
+              logoPushX -= nx * 0.2;
+              logoPushY -= ny * 0.2;
             } else {
               // Letter at logo center, push gently
               const angle = Math.random() * Math.PI * 2;
@@ -245,15 +245,15 @@ export const Hero = () => {
             const minDist = (letter.size + other.size) / 2;
             
             if (dist < minDist && dist > 0) {
-              // Gently push apart
+              // Very gentle push apart
               const nx = dx / dist;
               const ny = dy / dist;
               const overlap = minDist - dist;
               
-              letter.x -= nx * overlap * 0.5;
-              letter.y -= ny * overlap * 0.5;
-              other.x += nx * overlap * 0.5;
-              other.y += ny * overlap * 0.5;
+              letter.x -= nx * overlap * 0.15;
+              letter.y -= ny * overlap * 0.15;
+              other.x += nx * overlap * 0.15;
+              other.y += ny * overlap * 0.15;
               
               // Gentle velocity exchange
               const dvx = letter.vx - other.vx;
