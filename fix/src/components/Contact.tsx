@@ -172,12 +172,12 @@ export const Contact = () => {
             
             {/* Right - Contact Details */}
             <div className="lg:border-l lg:border-[#E5E5E5] lg:pl-16">
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="border-l-2 border-[#E5E5E5] pl-5 hover:border-[#0071E3] transition-colors">
                   <p className="text-xs font-mono tracking-wider uppercase text-[#86868B] mb-2">Email</p>
                   <a 
                     href="mailto:matthew@chrestenson.com" 
-                    className="text-sm md:text-base text-[#1D1D1F] hover:text-[#0071E3] transition-colors"
+                    className="text-sm md:text-base text-[#1D1D1F] hover:text-[#0071E3] transition-colors break-words"
                   >
                     matthew@chrestenson.com
                   </a>
