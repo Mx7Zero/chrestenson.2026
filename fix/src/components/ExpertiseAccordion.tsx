@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FloatingText } from './FloatingText';
 
 export const ExpertiseAccordion = () => {
   const [openSection, setOpenSection] = useState<number | null>(0);
@@ -309,17 +310,19 @@ export const ExpertiseAccordion = () => {
                 <div className="px-6 md:px-8 pb-8 bg-[#FAFAFA]">
                   {section.subsections.map((subsection, subIndex) => (
                     <div key={subIndex} className="mb-8 last:mb-0">
-                      <h4 className="text-lg font-semibold text-[#1D1D1F] mb-4">
+                      <h4 className="text-xl md:text-2xl font-semibold text-[#1D1D1F] mb-6">
                         {subsection.subtitle}
                       </h4>
-                      <ul className="space-y-3">
+                      <div className="space-y-4">
                         {subsection.items.map((item, itemIndex) => (
-                          <li key={itemIndex} className="flex items-start gap-3 text-[#1D1D1F]">
-                            <span className="text-[#0071E3] mt-1.5 flex-shrink-0">•</span>
-                            <span>{item}</span>
-                          </li>
+                          <div key={itemIndex} className="border border-[#E5E5E5] bg-white p-4 md:p-5">
+                            <FloatingText className="text-base md:text-lg lg:text-xl text-[#1D1D1F]">
+                              <span className="text-[#0071E3] mr-3">•</span>
+                              {item}
+                            </FloatingText>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   ))}
                 </div>
