@@ -83,7 +83,7 @@ export const DockLetters = ({ text, className = '' }: DockLettersProps) => {
   return (
     <div ref={containerRef} className={className}>
       {lines.map((line, lineIdx) => (
-        <div key={lineIdx} className="block">
+        <div key={lineIdx} className="block whitespace-nowrap">
           {line.split('').map((char, charIdx) => {
             if (char === ' ') {
               return <span key={`${lineIdx}-${charIdx}`}>&nbsp;</span>;

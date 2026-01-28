@@ -115,15 +115,15 @@ export const Hero = () => {
       {/* Subtle gradient background accent */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
       
-      <div className="max-w-5xl relative z-10 text-center">
+      <div className="max-w-full relative z-10 text-center px-4">
         {/* Name */}
         <h1 
           ref={nameRef}
-          className="mb-6 leading-[0.9] tracking-tight"
+          className="mb-6 leading-[0.9] tracking-tighter"
         >
           <DockLetters 
             text={"MATTHEW\nCHRESTENSON"}
-            className="text-6xl md:text-8xl lg:text-[10rem] font-bold text-[#1D1D1F] uppercase"
+            className="text-[12vw] md:text-[10vw] lg:text-[9vw] font-bold text-[#1D1D1F] uppercase"
           />
         </h1>
         
