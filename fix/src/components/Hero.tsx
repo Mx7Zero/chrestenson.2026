@@ -12,25 +12,62 @@ export const Hero = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // C Logo slow bouncing ball animation
-      const animateLogo = () => {
-        const targetScale = gsap.utils.random(0.7, 1.8, 0.01);
-        const targetX = gsap.utils.random(-60, 60);
-        const targetY = gsap.utils.random(-40, 40);
-        const targetRotation = gsap.utils.random(-20, 20);
-        const duration = gsap.utils.random(3, 5);
-        
-        gsap.to(logoRef.current, {
-          scale: targetScale,
-          x: targetX,
-          y: targetY,
-          rotation: targetRotation,
-          duration: duration,
-          ease: 'elastic.out(1, 0.4)', // Bouncy, elastic motion
-          onComplete: animateLogo,
-        });
+      // Physics-based slow-motion bouncing ball
+      let velocityX = gsap.utils.random(-30, 30);
+      let velocityY = 0;
+      const gravity = 40; // Slow-motion gravity
+      const damping = 0.75; // Energy retention on bounce
+      const bounds = {
+        left: -80,
+        right: 80,
+        top: -60,
+        bottom: 40, // Bottom boundary (near CHRESTENSON text)
       };
-      animateLogo();
+      
+      const updateBall = () => {
+        const current = logoRef.current;
+        if (!current) return;
+        
+        // Get current position
+        const matrix = window.getComputedStyle(current).transform;
+        let x = 0, y = 0;
+        if (matrix !== 'none') {
+          const values = matrix.split('(')[1].split(')')[0].split(',');
+          x = parseFloat(values[4] || 0);
+          y = parseFloat(values[5] || 0);
+        }
+        
+        // Apply gravity
+        velocityY += gravity * 0.016; // Per frame (60fps)
+        
+        // Update position
+        x += velocityX * 0.016;
+        y += velocityY * 0.016;
+        
+        // Bounce off boundaries
+        if (x <= bounds.left || x >= bounds.right) {
+          velocityX *= -damping;
+          x = x <= bounds.left ? bounds.left : bounds.right;
+        }
+        
+        if (y >= bounds.bottom) {
+          velocityY *= -damping;
+          y = bounds.bottom;
+          // Add slight random horizontal velocity on bounce
+          velocityX += gsap.utils.random(-5, 5);
+        }
+        
+        if (y <= bounds.top) {
+          velocityY *= -damping;
+          y = bounds.top;
+        }
+        
+        // Apply transform
+        gsap.set(current, { x, y });
+      };
+      
+      // Run physics at 60fps
+      gsap.ticker.add(updateBall);
 
       // Initial states
       gsap.set([nameRef.current, titleRef.current, contactRef.current, summaryRef.current, ctaRef.current], {
