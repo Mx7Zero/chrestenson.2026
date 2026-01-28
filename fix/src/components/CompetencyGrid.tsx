@@ -274,24 +274,29 @@ export const CompetencyGrid = () => {
                 </span>
               </div>
 
-              {/* Tooltip on Hover - Sleek floating label */}
+              {/* Tooltip on Hover - Thin line with floating text */}
               <div
                 className={`
-                  absolute left-1/2 -translate-x-1/2 top-full mt-6 z-50
-                  backdrop-blur-xl bg-black/80 rounded-full px-5 py-2.5
-                  whitespace-nowrap
+                  absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50
+                  flex items-center gap-0
                   transition-all duration-300 ease-out pointer-events-none
                   ${hoveredNode === node.id && draggedNode === null 
-                    ? 'opacity-100 translate-y-0 scale-100' 
-                    : 'opacity-0 translate-y-1 scale-95'}
+                    ? 'opacity-100 translate-x-0' 
+                    : 'opacity-0 -translate-x-2'}
                 `}
               >
-                <span className="text-[11px] text-white/60 uppercase tracking-[0.2em] mr-2">
-                  {node.proficiency}
-                </span>
-                <span className="text-[13px] text-white font-light">
-                  {node.evidence}
-                </span>
+                {/* Thin connecting line */}
+                <div className="w-8 h-px bg-[#1D1D1F]" />
+                
+                {/* Text content */}
+                <div className="pl-3">
+                  <div className="text-[11px] font-bold text-[#1D1D1F] tracking-wide uppercase mb-0.5">
+                    {node.proficiency}
+                  </div>
+                  <div className="text-[12px] text-[#6E6E73] font-normal leading-snug max-w-[180px]">
+                    {node.evidence}
+                  </div>
+                </div>
               </div>
             </div>
           ))}
