@@ -208,11 +208,15 @@ export const PortfolioSlider = () => {
     const rect = item.getBoundingClientRect();
     const itemCenter = rect.left + rect.width / 2;
     const distance = Math.abs(mouseX - itemCenter);
-    const maxDistance = 200;
+    const maxDistance = 300;
     
     if (distance > maxDistance) return 1;
     
-    const scale = 1 + (1 - distance / maxDistance) * 0.5;
+    // Smooth easing curve for natural falloff
+    const normalizedDistance = distance / maxDistance;
+    const easedDistance = 1 - Math.pow(normalizedDistance, 2);
+    const scale = 1 + easedDistance * 0.25;
+    
     return scale;
   };
 
@@ -246,12 +250,13 @@ export const PortfolioSlider = () => {
   return (
     <>
       <section 
-        className="relative bg-white overflow-hidden"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing py-8">
+        className="relative bg-white overflow-hidden"16">
           <div 
+            ref={scrollRef}
+            className="flex will-change-transform items-end"
+            onMouseDown={handleDragStart}
+            onTouchStart={handleDragStart}
+            style={{ minHeight: '250px' }
             ref={scrollRef}
             className="flex will-change-transform items-end"
             onMouseDown={handleDragStart}
