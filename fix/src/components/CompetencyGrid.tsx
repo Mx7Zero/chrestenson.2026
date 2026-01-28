@@ -106,28 +106,26 @@ export const CompetencyGrid = () => {
   }, []);
 
   return (
-    <section id="about" className="py-24 px-6 md:px-12 lg:px-24 bg-white">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="h-px flex-1 max-w-32 bg-gradient-to-r from-transparent to-[#E5E5E5]" />
-            <span className="text-xs md:text-sm font-medium tracking-[0.3em] uppercase text-[#0071E3]">
-              Core Competencies
-            </span>
-            <div className="h-px flex-1 max-w-32 bg-gradient-to-l from-transparent to-[#E5E5E5]" />
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1D1D1F]">
-            Expert-level execution across eight domains
-          </h2>
-          <p className="text-[#6E6E73] mt-4">Hover over each node to explore</p>
+    <section id="about" className="py-16 bg-white min-h-screen flex flex-col">
+      {/* Header */}
+      <div className="mb-8 text-center px-6">
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="h-px flex-1 max-w-32 bg-gradient-to-r from-transparent to-[#E5E5E5]" />
+          <span className="text-xs md:text-sm font-medium tracking-[0.3em] uppercase text-[#0071E3]">
+            Core Competencies
+          </span>
+          <div className="h-px flex-1 max-w-32 bg-gradient-to-l from-transparent to-[#E5E5E5]" />
         </div>
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1D1D1F]">
+          Expert-level execution across eight domains
+        </h2>
+      </div>
 
-        {/* Bubble Network */}
-        <div 
-          ref={containerRef}
-          className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] mb-16 overflow-hidden"
-        >
+      {/* Bubble Network - Full Width */}
+      <div 
+        ref={containerRef}
+        className="relative w-full flex-1 min-h-[600px] md:min-h-[700px] lg:min-h-[800px] overflow-hidden"
+      >
           {/* Connection Lines SVG */}
           <svg 
             ref={linesRef}
@@ -175,40 +173,40 @@ export const CompetencyGrid = () => {
               <div
                 className={`
                   absolute left-1/2 -translate-x-1/2 top-full mt-4 z-50
-                  bg-white rounded-xl shadow-2xl border border-[#E5E5E5] p-4
-                  min-w-[200px] max-w-[260px]
-                  transition-all duration-300 pointer-events-none
+                  bg-[#1D1D1F] rounded-lg p-4
+                  min-w-[240px] max-w-[300px]
+                  transition-all duration-200 pointer-events-none
                   ${hoveredNode === node.id ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
                 `}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold tracking-wider text-[#0071E3] uppercase">
+                <div className="flex items-center gap-3 mb-3 pb-2 border-b border-white/10">
+                  <div className="w-2 h-2 rounded-full bg-[#0071E3]" />
+                  <span className="text-[10px] font-mono tracking-widest text-[#0071E3] uppercase">
                     {node.proficiency}
                   </span>
                 </div>
-                <p className="text-sm text-[#424245] leading-relaxed">
+                <p className="text-[13px] font-light text-white/90 leading-relaxed tracking-wide">
                   {node.evidence}
                 </p>
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-[#E5E5E5] rotate-45" />
+                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#1D1D1F] rotate-45" />
               </div>
             </div>
           ))}
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 md:px-12 lg:px-24 py-12 bg-[#FAFAFA] border-t border-[#E5E5E5]">
           {metrics.map((metric, index) => (
-            <div key={index} className="bg-[#FAFAFA] rounded-2xl p-8 border border-[#E5E5E5] text-center">
-              <div className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#0071E3] mb-2">
+            <div key={index} className="bg-white rounded-xl p-6 md:p-8 border border-[#E5E5E5] text-center">
+              <div className="text-2xl md:text-3xl lg:text-4xl font-semibold text-[#0071E3] mb-1 font-mono tracking-tight">
                 {metric.value}
               </div>
-              <div className="text-lg text-[#6E6E73]">
+              <div className="text-sm md:text-base text-[#6E6E73] tracking-wide">
                 {metric.label}
               </div>
             </div>
           ))}
         </div>
-      </div>
     </section>
   );
 };
