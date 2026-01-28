@@ -61,9 +61,9 @@ export const Hero = () => {
       <div className="relative z-10 max-w-6xl px-8">
         <h1 
           ref={nameRef}
-          className="text-[12vw] md:text-[160px] font-bold text-white mb-12 leading-[0.85] tracking-[-0.06em]"
+          className="text-[12vw] md:text-[140px] font-bold text-white mb-12 leading-[0.85] tracking-[-0.06em]"
         >
-          MATTHEW CHRESTENSON
+          MATTHEW<br />CHRESTENSON
         </h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-20 font-mono text-base">
