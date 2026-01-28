@@ -1,99 +1,75 @@
-import { useRef, useEffect } from 'react';
-import gsap from 'gsap';
-
 export const CompetencyGrid = () => {
-  const gridRef = useRef<HTMLDivElement>(null);
-
   const competencies = [
-    { domain: 'Corporate Strategy', years: 30, projects: 47 },
-    { domain: 'Brand Development', years: 30, projects: 6 },
-    { domain: 'Financial Modeling', years: 15, projects: 180 },
-    { domain: 'Patent/IP Strategy', years: 5, projects: 19 },
-    { domain: 'Product Architecture', years: 8, projects: 12 },
-    { domain: 'Technical Development', years: 8, projects: 24 },
-    { domain: 'Hospitality Operations', years: 30, projects: 6 },
-    { domain: 'Market Analysis', years: 30, projects: 89 },
+    { domain: 'Corporate Strategy', proficiency: 'Expert', evidence: 'VUCA framework, category creation, exit architecture' },
+    { domain: 'Brand Development', proficiency: 'Expert', evidence: 'Six hospitality brands built from concept to exit' },
+    { domain: 'Financial Modeling', proficiency: 'Expert', evidence: 'Investment memoranda, ROI analysis, capital deployment' },
+    { domain: 'Patent/IP Strategy', proficiency: 'Expert', evidence: 'Multi-patent portfolios, FTO compliance, valuation' },
+    { domain: 'Product Architecture', proficiency: 'Expert', evidence: 'Hardware-software platforms, metric development' },
+    { domain: 'Technical Development', proficiency: 'Expert', evidence: 'React/TypeScript, PostgreSQL, full-stack SaaS' },
+    { domain: 'Hospitality Development', proficiency: 'Expert', evidence: 'Concept-to-exit execution: R&D, ABC, permitting' },
+    { domain: 'Market Analysis', proficiency: 'Expert', evidence: 'Multi-segment sizing, competitive landscape' },
   ];
-
-  useEffect(() => {
-    if (!gridRef.current) return;
-
-    const items = gridRef.current.querySelectorAll('.data-item');
-    
-    gsap.from(items, {
-      opacity: 0,
-      y: 20,
-      duration: 0.4,
-      stagger: 0.05,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: gridRef.current,
-        start: 'top 70%',
-      },
-    });
-  }, []);
 
   return (
     <section id="about" className="py-32 px-8">
       <div className="max-w-[1600px] mx-auto">
-        <div className="mb-20">
+        <div className="mb-16">
           <div className="text-text-muted font-mono text-sm tracking-[0.2em] mb-6">
             CORE COMPETENCIES
           </div>
           <h2 className="text-6xl md:text-8xl font-bold text-white tracking-[-0.04em]">
-            Expert-Level<br />Execution
+            Competency<br />Matrix
           </h2>
         </div>
         
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5">
+        {/* Table */}
+        <div className="border border-white/10 overflow-hidden">
+          {/* Header */}
+          <div className="grid grid-cols-12 bg-white/5 border-b border-white/10">
+            <div className="col-span-3 p-6">
+              <span className="text-accent font-mono text-sm tracking-wider font-bold">DOMAIN</span>
+            </div>
+            <div className="col-span-2 p-6 border-l border-white/10">
+              <span className="text-accent font-mono text-sm tracking-wider font-bold">PROFICIENCY</span>
+            </div>
+            <div className="col-span-7 p-6 border-l border-white/10">
+              <span className="text-accent font-mono text-sm tracking-wider font-bold">EVIDENCE</span>
+            </div>
+          </div>
+
+          {/* Rows */}
           {competencies.map((item, index) => (
-            <div
-              key={index}
-              className="data-item bg-black p-10 hover:bg-white/[0.02] transition-colors duration-500 group"
+            <div 
+              key={index} 
+              className="grid grid-cols-12 border-b border-white/10 last:border-b-0 hover:bg-white/[0.02] transition-colors"
             >
-              <div className="mb-8">
-                <div className="text-accent font-mono text-5xl font-bold mb-2">
-                  {item.years}
-                </div>
-                <div className="text-text-muted font-mono text-sm tracking-wider">
-                  YEARS
-                </div>
+              <div className="col-span-3 p-6">
+                <span className="text-white font-bold text-lg">{item.domain}</span>
               </div>
-              
-              <div className="mb-8">
-                <div className="h-px bg-gradient-to-r from-accent/50 to-transparent" />
+              <div className="col-span-2 p-6 border-l border-white/10 flex items-center">
+                <span className="bg-accent/20 text-accent px-4 py-2 rounded font-mono text-sm font-bold">
+                  {item.proficiency}
+                </span>
               </div>
-
-              <div className="mb-6">
-                <div className="text-white font-bold text-lg leading-tight">
-                  {item.domain}
-                </div>
-              </div>
-
-              <div className="flex items-baseline gap-3">
-                <div className="text-text-secondary font-mono text-3xl font-bold">
-                  {item.projects}
-                </div>
-                <div className="text-text-muted font-mono text-xs tracking-wider">
-                  PROJECTS
-                </div>
+              <div className="col-span-7 p-6 border-l border-white/10">
+                <span className="text-text-secondary text-lg">{item.evidence}</span>
               </div>
             </div>
           ))}
         </div>
 
         {/* Key Metrics Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/5 mt-px">
-          <div className="bg-black p-10">
-            <div className="text-accent font-mono text-5xl font-bold mb-3">$180M-$450M</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/5 mt-16">
+          <div className="bg-black border border-white/10 p-10 text-center">
+            <div className="text-accent font-mono text-4xl md:text-5xl font-bold mb-3">$180M–$450M</div>
             <div className="text-text-secondary text-lg font-medium">IP Portfolio Valuation</div>
           </div>
-          <div className="bg-black p-10">
-            <div className="text-accent font-mono text-5xl font-bold mb-3">6 → EXIT</div>
+          <div className="bg-black border border-white/10 p-10 text-center">
+            <div className="text-accent font-mono text-4xl md:text-5xl font-bold mb-3">6 → EXIT</div>
             <div className="text-text-secondary text-lg font-medium">Ventures Built & Sold</div>
           </div>
-          <div className="bg-black p-10">
-            <div className="text-accent font-mono text-5xl font-bold mb-3">160x</div>
+          <div className="bg-black border border-white/10 p-10 text-center">
+            <div className="text-accent font-mono text-4xl md:text-5xl font-bold mb-3">160x</div>
             <div className="text-text-secondary text-lg font-medium">ROI Demonstrated</div>
           </div>
         </div>
