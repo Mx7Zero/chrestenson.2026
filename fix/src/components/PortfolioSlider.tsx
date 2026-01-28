@@ -92,9 +92,9 @@ export const PortfolioSlider = () => {
     
     gsap.set(scrollRef.current, { x: normalizedX });
     
-    animationRef.curr+ setWidth,
-      duration: 10edX - setWidth,
-      duration: 60,
+    animationRef.current = gsap.to(scrollRef.current, {
+      x: normalizedX + setWidth,
+      duration: 100,
       ease: 'none',
       repeat: -1,
       modifiers: {
@@ -275,7 +275,7 @@ export const PortfolioSlider = () => {
             />
           </div>
         </div>
-      
-    </section>
+      )}
+    </>
   );
 };
