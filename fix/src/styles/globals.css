@@ -17,8 +17,15 @@
 }
 
 @layer base {
-  * {
+  html {
     scroll-behavior: smooth;
+    scroll-padding-top: 80px; /* Offset for fixed nav */
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
   
   body {
@@ -39,6 +46,20 @@
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.1;
+  }
+
+  /* Performance optimizations */
+  img {
+    content-visibility: auto;
+  }
+
+  /* Hardware acceleration for animations */
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .will-change-opacity {
+    will-change: opacity;
   }
 }
 

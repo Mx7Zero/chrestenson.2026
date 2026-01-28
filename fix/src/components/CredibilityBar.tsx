@@ -219,6 +219,8 @@ export const CredibilityBar = () => {
             alt={logo.alt}
             className="max-w-full max-h-full w-auto h-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300"
             draggable={false}
+            loading="lazy"
+            decoding="async"
           />
         </div>
       ))}
