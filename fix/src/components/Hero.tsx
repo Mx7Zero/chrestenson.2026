@@ -12,14 +12,16 @@ export const Hero = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // C Logo breathing animation
-      gsap.to(logoRef.current, {
-        scale: 1.05,
-        duration: 2,
-        ease: 'sine.inOut',
-        yoyo: true,
-        repeat: -1,
-      });
+      // C Logo random organic scaling animation
+      const animateLogo = () => {
+        gsap.to(logoRef.current, {
+          scale: gsap.utils.random(0.85, 1.15, 0.01),
+          duration: gsap.utils.random(1.5, 3.5),
+          ease: 'sine.inOut',
+          onComplete: animateLogo, // Chain next random animation
+        });
+      };
+      animateLogo();
 
       // Initial states
       gsap.set([nameRef.current, titleRef.current, contactRef.current, summaryRef.current, ctaRef.current], {
