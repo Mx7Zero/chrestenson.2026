@@ -105,6 +105,9 @@ export const CompetencyGrid = () => {
   const handleDragMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (draggedNode === null || !dragStartRef.current) return;
     
+    // Prevent scrolling on touch devices
+    e.preventDefault();
+    
     const node = nodesRef.current[draggedNode];
     if (!node) return;
 
@@ -142,9 +145,12 @@ export const CompetencyGrid = () => {
   // Set up global mouse/touch listeners for drag
   useEffect(() => {
     if (draggedNode !== null) {
+      // Use passive: false to allow preventDefault on touch events
+      const options = { passive: false };
+      
       window.addEventListener('mousemove', handleDragMove);
       window.addEventListener('mouseup', handleDragEnd);
-      window.addEventListener('touchmove', handleDragMove);
+      window.addEventListener('touchmove', handleDragMove, options);
       window.addEventListener('touchend', handleDragEnd);
 
       return () => {
