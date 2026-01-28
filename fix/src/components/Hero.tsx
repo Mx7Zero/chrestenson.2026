@@ -26,10 +26,10 @@ export const Hero = () => {
         logoRef.current.style.transform = 'translateZ(0)';
       }
 
-      // Zero gravity floating animation
-      let velocityX = gsap.utils.random(-50, 50);
-      let velocityY = gsap.utils.random(-50, 50);
-      let rotationVelocity = gsap.utils.random(-15, 15); // Slow spin
+      // Zero gravity floating animation - more active movement
+      let velocityX = gsap.utils.random(-80, 80);
+      let velocityY = gsap.utils.random(-80, 80);
+      let rotationVelocity = gsap.utils.random(-25, 25); // Moderate spin
       let currentX = 0;
       let currentY = 0;
       let currentRotation = 0;
@@ -193,21 +193,23 @@ export const Hero = () => {
             if (distLogo > 0) {
               const nx = dxLogo / distLogo;
               const ny = dyLogo / distLogo;
+              const overlap = minDistLogo - distLogo;
               
-              // Push letter outside logo collision zone
-              letter.x = currentX + nx * (minDistLogo + 5);
-              letter.y = currentY + ny * (minDistLogo + 5);
+              // Smooth gradual push (not instant teleport)
+              const pushStrength = Math.min(overlap * 0.3, 8);
+              letter.x += nx * pushStrength;
+              letter.y += ny * pushStrength;
               
-              // Gentle bounce for letter
+              // Gentle velocity adjustment
               const dot = letter.vx * nx + letter.vy * ny;
               if (dot < 0) {
-                letter.vx = (letter.vx - 1.5 * dot * nx) * 0.7;
-                letter.vy = (letter.vy - 1.5 * dot * ny) * 0.7;
+                letter.vx -= dot * nx * 0.5;
+                letter.vy -= dot * ny * 0.5;
               }
               
               // Accumulate push force on logo (opposite direction)
-              logoPushX -= nx * 3;
-              logoPushY -= ny * 3;
+              logoPushX -= nx * 5;
+              logoPushY -= ny * 5;
             } else {
               // Letter at logo center, push gently
               const angle = Math.random() * Math.PI * 2;
@@ -272,11 +274,11 @@ export const Hero = () => {
         // Apply accumulated push force from letters to logo velocity
         // More letters = more push (weighted by collision count)
         if (collisionCount > 0) {
-          const weight = Math.min(collisionCount * 0.5, 3); // Cap the effect
+          const weight = Math.min(collisionCount * 1.5, 8); // Stronger effect
           velocityX += logoPushX * weight;
           velocityY += logoPushY * weight;
           // Also affect rotation when letters push
-          rotationVelocity += (logoPushX - logoPushY) * 0.1 * weight;
+          rotationVelocity += (logoPushX - logoPushY) * 0.2 * weight;
         }
       };
       
@@ -508,7 +510,7 @@ export const Hero = () => {
             {letters.map((letter, index) => (
               <span
                 key={index}
-                className="absolute font-black text-[#1D1D1F] select-none opacity-60"
+                className="absolute font-black text-[#1D1D1F] select-none"
                 style={{ 
                   willChange: 'transform', 
                   left: '50%', 
