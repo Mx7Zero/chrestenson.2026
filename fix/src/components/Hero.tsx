@@ -115,6 +115,16 @@ export const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
       
       <div className="max-w-full relative z-10 text-center px-4">
+        {/* C Logo - Hero Focal Point */}
+        <div className="mb-8 flex justify-center">
+          <img 
+            src="/letter.c.png" 
+            alt="C" 
+            className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 object-contain"
+            style={{ filter: 'brightness(0)' }}
+          />
+        </div>
+
         {/* Name */}
         <h1 
           ref={nameRef}
@@ -122,7 +132,7 @@ export const Hero = () => {
         >
           <DockLetters 
             text={"MATTHEW\nCHRESTENSON"}
-            className="text-[12vw] md:text-[10vw] lg:text-[9vw] font-bold text-[#1D1D1F] uppercase"
+            className="text-[8vw] md:text-[6vw] lg:text-[5vw] font-bold text-[#1D1D1F] uppercase"
           />
         </h1>
         
