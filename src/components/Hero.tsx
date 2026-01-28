@@ -58,40 +58,41 @@ export const Hero = () => {
         }}
       />
 
-      <div className="relative z-10 max-w-5xl px-8">
+      <div className="relative z-10 max-w-6xl px-8">
         <h1 
           ref={nameRef}
-          className="text-[8vw] md:text-[120px] font-extralight text-white mb-8 leading-[0.9] tracking-[-0.05em]"
+          className="text-[12vw] md:text-[160px] font-bold text-white mb-12 leading-[0.85] tracking-[-0.06em]"
         >
           MATTHEW CHRESTENSON
         </h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 font-mono text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-20 font-mono text-base">
           <div>
-            <div className="text-text-muted mb-2">ROLE</div>
-            <div className="text-white font-light">Executive Strategist</div>
+            <div className="text-text-muted mb-3 text-sm">ROLE</div>
+            <div className="text-white font-medium text-xl">Executive Strategist</div>
           </div>
           <div>
-            <div className="text-text-muted mb-2">EXPERTISE</div>
-            <div className="text-white font-light">Brand Architecture</div>
+            <div className="text-text-muted mb-3 text-sm">EXPERTISE</div>
+            <div className="text-white font-medium text-xl">Brand Architecture</div>
           </div>
           <div>
-            <div className="text-text-muted mb-2">APPROACH</div>
-            <div className="text-white font-light">AI-Native Execution</div>
+            <div className="text-text-muted mb-3 text-sm">APPROACH</div>
+            <div className="text-white font-medium text-xl">AI-Native Execution</div>
           </div>
         </div>
 
-        <div className="mt-20 flex items-center gap-4">
-          <div className="w-px h-12 bg-accent" />
-          <p className="text-text-secondary text-sm max-w-xl leading-relaxed font-light">
-            30+ years transforming complex market intelligence into<br />
-            investor-ready documentation and full-stack digital products.
+        <div className="mt-24 flex items-start gap-6">
+          <div className="w-1 h-20 bg-accent" />
+          <p className="text-text-secondary text-xl max-w-2xl leading-relaxed font-normal">
+            AI-augmented strategist with 30+ years of creative leadership.<br />
+            Transforming complex market intelligence into investor-ready<br />
+            documentation, brand strategies, and full-stack digital products.
           </p>
         </div>
 
         <a
           href="mailto:matthew@chrestenson.com"
-          className="inline-block mt-12 text-accent hover:text-white transition-colors duration-300 text-sm tracking-wide font-mono"
+          className="inline-block mt-16 text-accent hover:text-white transition-colors duration-300 text-lg tracking-wide font-mono font-bold"
         >
           INITIATE CONSULTATION →
         </a>

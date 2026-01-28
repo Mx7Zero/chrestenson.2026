@@ -37,10 +37,10 @@ export const CompetencyGrid = () => {
     <section id="about" className="py-32 px-8">
       <div className="max-w-[1600px] mx-auto">
         <div className="mb-20">
-          <div className="text-text-muted font-mono text-[10px] tracking-[0.2em] mb-4">
+          <div className="text-text-muted font-mono text-sm tracking-[0.2em] mb-6">
             CORE COMPETENCIES
           </div>
-          <h2 className="text-5xl md:text-7xl font-extralight text-white tracking-[-0.04em]">
+          <h2 className="text-6xl md:text-8xl font-bold text-white tracking-[-0.04em]">
             Expert-Level<br />Execution
           </h2>
         </div>
@@ -49,32 +49,32 @@ export const CompetencyGrid = () => {
           {competencies.map((item, index) => (
             <div
               key={index}
-              className="data-item bg-black p-8 hover:bg-white/[0.02] transition-colors duration-500 group"
+              className="data-item bg-black p-10 hover:bg-white/[0.02] transition-colors duration-500 group"
             >
-              <div className="mb-6">
-                <div className="text-accent font-mono text-3xl font-light mb-1">
+              <div className="mb-8">
+                <div className="text-accent font-mono text-5xl font-bold mb-2">
                   {item.years}
                 </div>
-                <div className="text-text-muted font-mono text-[10px] tracking-wider">
+                <div className="text-text-muted font-mono text-sm tracking-wider">
                   YEARS
                 </div>
               </div>
               
-              <div className="mb-6">
+              <div className="mb-8">
                 <div className="h-px bg-gradient-to-r from-accent/50 to-transparent" />
               </div>
 
-              <div className="mb-4">
-                <div className="text-white font-light text-sm leading-tight">
+              <div className="mb-6">
+                <div className="text-white font-bold text-lg leading-tight">
                   {item.domain}
                 </div>
               </div>
 
-              <div className="flex items-baseline gap-2">
-                <div className="text-text-secondary font-mono text-xl font-light">
+              <div className="flex items-baseline gap-3">
+                <div className="text-text-secondary font-mono text-3xl font-bold">
                   {item.projects}
                 </div>
-                <div className="text-text-muted font-mono text-[9px] tracking-wider">
+                <div className="text-text-muted font-mono text-xs tracking-wider">
                   PROJECTS
                 </div>
               </div>
@@ -84,17 +84,17 @@ export const CompetencyGrid = () => {
 
         {/* Key Metrics Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/5 mt-px">
-          <div className="bg-black p-8">
-            <div className="text-accent font-mono text-4xl font-light mb-2">$180M-$450M</div>
-            <div className="text-text-secondary text-sm font-light">IP Portfolio Valuation</div>
+          <div className="bg-black p-10">
+            <div className="text-accent font-mono text-5xl font-bold mb-3">$180M-$450M</div>
+            <div className="text-text-secondary text-lg font-medium">IP Portfolio Valuation</div>
           </div>
-          <div className="bg-black p-8">
-            <div className="text-accent font-mono text-4xl font-light mb-2">6 → EXIT</div>
-            <div className="text-text-secondary text-sm font-light">Ventures Built & Sold</div>
+          <div className="bg-black p-10">
+            <div className="text-accent font-mono text-5xl font-bold mb-3">6 → EXIT</div>
+            <div className="text-text-secondary text-lg font-medium">Ventures Built & Sold</div>
           </div>
-          <div className="bg-black p-8">
-            <div className="text-accent font-mono text-4xl font-light mb-2">160x</div>
-            <div className="text-text-secondary text-sm font-light">ROI Demonstrated</div>
+          <div className="bg-black p-10">
+            <div className="text-accent font-mono text-5xl font-bold mb-3">160x</div>
+            <div className="text-text-secondary text-lg font-medium">ROI Demonstrated</div>
           </div>
         </div>
       </div>

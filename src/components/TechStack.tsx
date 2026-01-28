@@ -12,10 +12,10 @@ export const TechStack = () => {
     <section className="py-32 px-8 border-t border-white/5">
       <div className="max-w-[1600px] mx-auto">
         <div className="mb-20">
-          <div className="text-text-muted font-mono text-[10px] tracking-[0.2em] mb-4">
+          <div className="text-text-muted font-mono text-sm tracking-[0.2em] mb-6">
             TECHNICAL CAPABILITIES
           </div>
-          <h2 className="text-5xl md:text-7xl font-extralight text-white tracking-[-0.04em]">
+          <h2 className="text-6xl md:text-8xl font-bold text-white tracking-[-0.04em]">
             Full-Stack<br />Execution
           </h2>
         </div>
@@ -24,14 +24,14 @@ export const TechStack = () => {
           {stack.map((category) => (
             <div
               key={category.category}
-              className="bg-black p-6 hover:bg-white/[0.02] transition-colors duration-500"
+              className="bg-black p-8 hover:bg-white/[0.02] transition-colors duration-500"
             >
-              <div className="text-accent font-mono text-[10px] tracking-wider mb-6">
+              <div className="text-accent font-mono text-sm tracking-wider mb-6 font-bold">
                 {category.category}
               </div>
               <div className="space-y-3">
                 {category.items.map((item) => (
-                  <div key={item} className="text-text-secondary text-xs font-light">
+                  <div key={item} className="text-text-secondary text-base font-normal">
                     {item}
                   </div>
                 ))}
