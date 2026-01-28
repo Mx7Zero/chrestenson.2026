@@ -274,26 +274,24 @@ export const CompetencyGrid = () => {
                 </span>
               </div>
 
-              {/* Tooltip on Hover */}
+              {/* Tooltip on Hover - Sleek floating label */}
               <div
                 className={`
-                  absolute left-1/2 -translate-x-1/2 top-full mt-4 z-50
-                  bg-[#1D1D1F] rounded-lg p-4
-                  min-w-[240px] max-w-[300px]
-                  transition-all duration-200 pointer-events-none
-                  ${hoveredNode === node.id && draggedNode === null ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}
+                  absolute left-1/2 -translate-x-1/2 top-full mt-6 z-50
+                  backdrop-blur-xl bg-black/80 rounded-full px-5 py-2.5
+                  whitespace-nowrap
+                  transition-all duration-300 ease-out pointer-events-none
+                  ${hoveredNode === node.id && draggedNode === null 
+                    ? 'opacity-100 translate-y-0 scale-100' 
+                    : 'opacity-0 translate-y-1 scale-95'}
                 `}
               >
-                <div className="flex items-center gap-3 mb-3 pb-2 border-b border-white/10">
-                  <div className="w-2 h-2 rounded-full bg-[#0071E3]" />
-                  <span className="text-[10px] font-mono tracking-widest text-[#0071E3] uppercase">
-                    {node.proficiency}
-                  </span>
-                </div>
-                <p className="text-[13px] font-light text-white/90 leading-relaxed tracking-wide">
+                <span className="text-[11px] text-white/60 uppercase tracking-[0.2em] mr-2">
+                  {node.proficiency}
+                </span>
+                <span className="text-[13px] text-white font-light">
                   {node.evidence}
-                </p>
-                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#1D1D1F] rotate-45" />
+                </span>
               </div>
             </div>
           ))}
