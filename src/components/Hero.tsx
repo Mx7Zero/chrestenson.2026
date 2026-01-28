@@ -96,13 +96,19 @@ export const Hero = () => {
           </div>
         </div>
 
-        <div className="mt-24 flex items-start gap-6">
-          <div className="w-1 h-20 bg-accent" />
-          <p className="text-text-secondary text-xl max-w-2xl leading-relaxed font-normal">
-            AI-augmented strategist with 30+ years of creative leadership.<br />
-            Transforming complex market intelligence into investor-ready<br />
-            documentation, brand strategies, and full-stack digital products.
-          </p>
+        <div className="mt-24 max-w-4xl">
+          <div className="flex items-start gap-6 mb-8">
+            <div className="w-1 h-full bg-accent flex-shrink-0" />
+            <p className="text-text-secondary text-xl leading-relaxed font-normal">
+              AI-augmented strategist and brand architect with 30+ years of creative leadership, using LLMs and generative AI to accelerate research, content production, and visual asset creation at enterprise scale. Demonstrated ability to transform complex market intelligence into investor-ready documentation, brand strategies, and full-stack digital products—work that previously required teams, now executed with AI-assisted workflows.
+            </p>
+          </div>
+          <div className="flex items-start gap-6">
+            <div className="w-1 h-full bg-accent flex-shrink-0" />
+            <p className="text-text-secondary text-xl leading-relaxed font-normal">
+              Unique combination of studio-grade production experience (Disney, National Geographic, Ridley Scott Associates), hospitality brand-building (six successful ventures from concept to exit), and current AI-first strategic advisory across health technology, hospitality, and consumer goods. Not just AI-literate—AI-native: using these tools as thinking partners, not just productivity shortcuts.
+            </p>
+          </div>
         </div>
 
         <a
