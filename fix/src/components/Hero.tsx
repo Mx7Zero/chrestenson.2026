@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { DockText } from './DockText';
+import { DockLetters } from './DockLetters';
 
 export const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -118,9 +119,12 @@ export const Hero = () => {
         {/* Name */}
         <h1 
           ref={nameRef}
-          className="text-5xl md:text-7xl lg:text-8xl font-semibold text-[#1D1D1F] mb-4 leading-[1.05] tracking-tight"
+          className="mb-6 leading-[0.9] tracking-tight"
         >
-          Matthew Chrestenson
+          <DockLetters 
+            text={"MATTHEW\nCHRESTENSON"}
+            className="text-6xl md:text-8xl lg:text-[10rem] font-bold text-[#1D1D1F] uppercase"
+          />
         </h1>
         
         {/* Title */}
