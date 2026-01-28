@@ -149,8 +149,8 @@ export const Hero = () => {
       }
 
       const updateLetters = () => {
-        // Logo collision radius - match the visual size of the C logo
-        const logoRadius = 100;
+        // Logo collision radius - the C logo is 384px on desktop, so radius ~180-190px
+        const logoRadius = 180;
         
         letterElements.forEach((letter, i) => {
           // Update position
@@ -158,6 +158,47 @@ export const Hero = () => {
           letter.y += letter.vy * 0.016;
           // Update rotation
           letter.rotation += letter.rotationSpeed * 0.016;
+          
+          // Collision detection with main C logo FIRST (before boundary check)
+          // This ensures letters are pushed out even when logo moves into them
+          const dxLogo = letter.x - currentX;
+          const dyLogo = letter.y - currentY;
+          const distLogo = Math.sqrt(dxLogo * dxLogo + dyLogo * dyLogo);
+          const minDistLogo = logoRadius + letter.size / 2;
+          
+          if (distLogo < minDistLogo) {
+            // Collision with logo!
+            if (distLogo > 0) {
+              const nx = dxLogo / distLogo;
+              const ny = dyLogo / distLogo;
+              
+              // Push letter outside logo collision zone
+              letter.x = currentX + nx * (minDistLogo + 10);
+              letter.y = currentY + ny * (minDistLogo + 10);
+              
+              // Bounce velocity away from logo
+              const dot = letter.vx * nx + letter.vy * ny;
+              if (dot < 0) {
+                // Only bounce if moving toward logo
+                letter.vx = (letter.vx - 2.2 * dot * nx);
+                letter.vy = (letter.vy - 2.2 * dot * ny);
+              } else {
+                // Already moving away, just add some push
+                letter.vx += nx * 20;
+                letter.vy += ny * 20;
+              }
+              
+              // Spin faster on collision
+              letter.rotationSpeed += gsap.utils.random(-25, 25);
+            } else {
+              // Letter is exactly at logo center, push in random direction
+              const angle = Math.random() * Math.PI * 2;
+              letter.x = currentX + Math.cos(angle) * (minDistLogo + 10);
+              letter.y = currentY + Math.sin(angle) * (minDistLogo + 10);
+              letter.vx = Math.cos(angle) * 50;
+              letter.vy = Math.sin(angle) * 50;
+            }
+          }
           
           // Bounce off boundaries - keep letters in the logo area
           if (letter.x < letterBounds.left) {
@@ -173,27 +214,6 @@ export const Hero = () => {
           } else if (letter.y > letterBounds.bottom) {
             letter.vy = -Math.abs(letter.vy) * 0.9;
             letter.y = letterBounds.bottom;
-          }
-          
-          // Collision detection with main C logo
-          const dxLogo = letter.x - currentX;
-          const dyLogo = letter.y - currentY;
-          const distLogo = Math.sqrt(dxLogo * dxLogo + dyLogo * dyLogo);
-          const minDistLogo = logoRadius + letter.size / 2;
-          
-          if (distLogo < minDistLogo && distLogo > 0) {
-            // Push letter out of logo
-            const nx = dxLogo / distLogo;
-            const ny = dyLogo / distLogo;
-            letter.x = currentX + nx * (minDistLogo + 5);
-            letter.y = currentY + ny * (minDistLogo + 5);
-            
-            // Reflect velocity
-            const dot = letter.vx * nx + letter.vy * ny;
-            letter.vx = (letter.vx - 2 * dot * nx) * 0.85;
-            letter.vy = (letter.vy - 2 * dot * ny) * 0.85;
-            // Spin faster on collision
-            letter.rotationSpeed += gsap.utils.random(-15, 15);
           }
           
           // Letter-to-letter collision
