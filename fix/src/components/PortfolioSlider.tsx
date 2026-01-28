@@ -92,8 +92,8 @@ export const PortfolioSlider = () => {
     
     gsap.set(scrollRef.current, { x: normalizedX });
     
-    animationRef.current = gsap.to(scrollRef.current, {
-      x: normalizedX - setWidth,
+    animationRef.curr+ setWidth,
+      duration: 10edX - setWidth,
       duration: 60,
       ease: 'none',
       repeat: -1,
@@ -215,48 +215,67 @@ export const PortfolioSlider = () => {
   }, [startAutoScroll, handleDragMove, handleDragEnd]);
 
   return (
-    <section className="relative py-16 bg-white overflow-hidden">
-      <div className="container mx-auto px-6 mb-8">
-        <h2 className="text-3xl font-light text-[#1D1D1F]">
-          Portfolio Showcase
-        </h2>
-      </div>
-      
-      <div className="relative overflow-hidden cursor-grab active:cursor-grabbing">
-        <div 
-          ref={scrollRef}
-          className="flex will-change-transform"
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-        >
-          {[0, 1, 2].map((setIndex) => (
-            <div 
-              key={setIndex} 
-              className="portfolio-set flex gap-6 shrink-0"
-            >
-              {portfolioImages.map((image, idx) => (
-                <div 
-                  key={`${setIndex}-${idx}`} 
-                  className="relative h-[200px] w-[200px] shrink-0 rounded-lg overflow-hidden bg-white shadow-md hover:shadow-xl transition-shadow duration-300"
-                >
-                  <img
-                    src={`/portfolio/${encodeURIComponent(image)}`}
-                    alt={`Portfolio item ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                    draggable="false"
-                  />
-                </div>
-              ))}
-            </div>
-          ))}
+    <>
+      <section className="relative bg-white overflow-hidden">
+        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing">
+          <div 
+            ref={scrollRef}
+            className="flex will-change-transform"
+            onMouseDown={handleDragStart}
+            onTouchStart={handleDragStart}
+          >
+            {[0, 1, 2].map((setIndex) => (
+              <div 
+                key={setIndex} 
+                className="portfolio-set flex shrink-0"
+              >
+                {portfolioImages.map((image, idx) => (
+                  <div 
+                    key={`${setIndex}-${idx}`} 
+                    className="relative h-[200px] w-[200px] shrink-0 overflow-hidden bg-white hover:opacity-80 transition-opacity duration-300 cursor-pointer"
+                    onClick={(e) => {
+                      if (!isDraggingRef.current) {
+                        e.stopPropagation();
+                        setSelectedImage(image);
+                      }
+                    }}
+                  >
+                    <img
+                      src={`/portfolio/${encodeURIComponent(image)}`}
+                      alt={`Portfolio item ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      draggable="false"
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            className="absolute top-6 right-6 text-white text-4xl font-light hover:text-[#0071E3] transition-colors"
+            onClick={() => setSelectedImage(null)}
+          >
+            ×
+          </button>
+          <div className="relative max-w-[90vw] max-h-[90vh] p-4">
+            <img
+              src={`/portfolio/${encodeURIComponent(selectedImage)}`}
+              alt="Portfolio detail"
+              className="max-w-full max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
       
-      <div className="container mx-auto px-6 mt-6">
-        <p className="text-sm text-[#6E6E73] text-center">
-          Drag to explore • {portfolioImages.length} projects
-        </p>
-      </div>
     </section>
   );
 };
