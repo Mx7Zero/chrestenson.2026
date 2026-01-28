@@ -14,9 +14,9 @@ export const Hero = () => {
   const lettersContainerRef = useRef<HTMLDivElement>(null);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
 
-  // 4 sets of CHRESTENSON letters
+  // 2 sets of CHRESTENSON letters for fluid movement
   const letterSet = ['C', 'H', 'R', 'E', 'S', 'T', 'E', 'N', 'S', 'O', 'N'];
-  const letters = [...letterSet, ...letterSet, ...letterSet, ...letterSet];
+  const letters = [...letterSet, ...letterSet];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -134,15 +134,15 @@ export const Hero = () => {
           if (!el) return;
           // Start letters in a ring around the logo
           const angle = (idx / letters.length) * Math.PI * 2;
-          const radius = gsap.utils.random(140, 280);
+          const radius = gsap.utils.random(160, 280);
           letterElements.push({
             el,
             x: Math.cos(angle) * radius,
             y: Math.sin(angle) * radius * 0.7,
-            vx: gsap.utils.random(-30, 30),
-            vy: gsap.utils.random(-30, 30),
+            vx: gsap.utils.random(-20, 20),  // Slower for tranquil movement
+            vy: gsap.utils.random(-20, 20),
             rotation: gsap.utils.random(0, 360),
-            rotationSpeed: gsap.utils.random(-20, 20), // Slow spin
+            rotationSpeed: gsap.utils.random(-12, 12), // Gentler spin
             size
           });
         });
