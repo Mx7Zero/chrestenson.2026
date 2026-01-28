@@ -43,16 +43,16 @@ export const CredibilityBar = () => {
   }, []);
 
   const LogoSet = ({ keyPrefix }: { keyPrefix: string }) => (
-    <div className="logo-set flex items-center gap-20 md:gap-28 px-10 md:px-14">
+    <div className="logo-set flex items-center gap-12 md:gap-16 px-6 md:px-8">
       {logos.map((logo, index) => (
         <div 
           key={`${keyPrefix}-${index}`} 
-          className="flex-shrink-0 w-28 md:w-36 flex items-center justify-center"
+          className="flex-shrink-0 w-32 md:w-44 flex items-center justify-center"
         >
           <img 
             src={logo.src} 
             alt={logo.alt}
-            className="max-h-8 md:max-h-10 w-auto max-w-full object-contain invert opacity-60 hover:opacity-100 transition-opacity duration-300"
+            className="max-h-12 md:max-h-16 w-auto max-w-full object-contain invert opacity-60 hover:opacity-100 transition-opacity duration-300"
           />
         </div>
       ))}
