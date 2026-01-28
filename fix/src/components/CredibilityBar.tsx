@@ -58,18 +58,35 @@ export const CredibilityBar = () => {
     setIsDragging(false);
     dragStartRef.current = null;
     
-    // Resume auto-scroll from current position
-    if (scrollRef.current && animationRef.current) {
+    // Resume auto-scroll from current position - keep where user dropped it
+    if (scrollRef.current) {
       const currentX = gsap.getProperty(scrollRef.current, 'x') as number;
       const logoSet = scrollRef.current.querySelector('.logo-set') as HTMLElement;
       if (logoSet) {
         const setWidth = logoSet.offsetWidth;
-        // Calculate remaining distance and normalize position
-        const normalizedX = ((currentX % setWidth) + setWidth) % setWidth;
-        const remainingDistance = setWidth - normalizedX;
+        // Normalize position to valid range
+        let normalizedX = currentX % setWidth;
+        if (normalizedX > 0) normalizedX -= setWidth;
         
-        gsap.set(scrollRef.current, { x: -setWidth + remainingDistance });
-        animationRef.current.invalidate().restart();
+        // Kill old animation and create new one from current position
+        if (animationRef.current) {
+          animationRef.current.kill();
+        }
+        
+        gsap.set(scrollRef.current, { x: normalizedX });
+        
+        animationRef.current = gsap.to(scrollRef.current, {
+          x: normalizedX - setWidth,
+          duration: 40,
+          ease: 'none',
+          repeat: -1,
+          modifiers: {
+            x: (x) => {
+              const xNum = parseFloat(x);
+              return (((xNum % setWidth) + setWidth) % setWidth - setWidth) + 'px';
+            }
+          }
+        });
       }
     }
   };
@@ -128,7 +145,7 @@ export const CredibilityBar = () => {
       {logos.map((logo, index) => (
         <div 
           key={`${keyPrefix}-${index}`} 
-          className="flex-shrink-0 w-32 h-20 md:w-44 md:h-24 lg:w-52 lg:h-28 bg-[#1D1D1F] rounded-sm flex items-center justify-center p-4 md:p-5"
+          className="flex-shrink-0 w-40 h-24 md:w-56 md:h-32 lg:w-64 lg:h-36 bg-[#1D1D1F] rounded-sm flex items-center justify-center p-3 md:p-4"
         >
           <img 
             src={logo.src} 
