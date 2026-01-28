@@ -248,48 +248,36 @@ export const Hero = () => {
             letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - strong repulsion to prevent bunching
+          // Letter-to-letter collision - smooth soft-body repulsion
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2 + 15; // More spacing
+            const minDist = (letter.size + other.size) / 2 + 12;
             
             if (dist < minDist && dist > 0) {
-              // Strong push apart
               const nx = dx / dist;
               const ny = dy / dist;
               const overlap = minDist - dist;
               
-              // Push both letters apart firmly
-              const pushForce = overlap * 0.8 + 5;
+              // Smooth position separation (proportional to overlap)
+              const pushForce = overlap * 0.4;
               letter.x -= nx * pushForce;
               letter.y -= ny * pushForce;
               other.x += nx * pushForce;
               other.y += ny * pushForce;
               
-              // Bounce velocities apart with minimum separation speed
-              const dvx = letter.vx - other.vx;
-              const dvy = letter.vy - other.vy;
-              const dot = dvx * nx + dvy * ny;
+              // Smooth velocity adjustment - proportional spring force
+              const springForce = overlap * 0.8;
+              letter.vx -= nx * springForce;
+              letter.vy -= ny * springForce;
+              other.vx += nx * springForce;
+              other.vy += ny * springForce;
               
-              // Always add some separation velocity
-              letter.vx -= nx * 20;
-              letter.vy -= ny * 20;
-              other.vx += nx * 20;
-              other.vy += ny * 20;
-              
-              if (dot > 0) {
-                letter.vx -= dot * nx * 0.6;
-                letter.vy -= dot * ny * 0.6;
-                other.vx += dot * nx * 0.6;
-                other.vy += dot * ny * 0.6;
-              }
-              
-              // Add spin from collision
-              letter.rotationSpeed += gsap.utils.random(-8, 8);
-              other.rotationSpeed += gsap.utils.random(-8, 8);
+              // Add gentle spin
+              letter.rotationSpeed += (ny - nx) * 2;
+              other.rotationSpeed += (nx - ny) * 2;
             }
           }
           
