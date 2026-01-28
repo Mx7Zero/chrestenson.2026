@@ -248,31 +248,31 @@ export const Hero = () => {
             letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - smooth velocity-based repulsion
+          // Letter-to-letter collision - ultra smooth
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2 + 8;
+            const minDist = (letter.size + other.size) / 2 + 10; // More spacing
             
             if (dist < minDist && dist > 0) {
               const nx = dx / dist;
               const ny = dy / dist;
               const overlap = minDist - dist;
               
-              // Very gentle position nudge (prevents overlap but no stutter)
-              const nudge = overlap * 0.15;
+              // Minimal position nudge
+              const nudge = overlap * 0.1;
               letter.x -= nx * nudge;
               letter.y -= ny * nudge;
               other.x += nx * nudge;
               other.y += ny * nudge;
               
-              // Smooth velocity exchange (elastic collision)
+              // Very gentle velocity adjustment
               const relVelDot = (letter.vx - other.vx) * nx + (letter.vy - other.vy) * ny;
               
-              if (relVelDot < 0) { // Only if approaching
-                const impulse = relVelDot * 0.4;
+              if (relVelDot < 0) {
+                const impulse = relVelDot * 0.25; // Softer
                 letter.vx -= impulse * nx;
                 letter.vy -= impulse * ny;
                 other.vx += impulse * nx;
