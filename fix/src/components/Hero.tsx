@@ -3,6 +3,7 @@ import gsap from 'gsap';
 
 export const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
+  const logoRef = useRef<HTMLImageElement>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const titleRef = useRef<HTMLParagraphElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
@@ -11,6 +12,15 @@ export const Hero = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // C Logo breathing animation
+      gsap.to(logoRef.current, {
+        scale: 1.05,
+        duration: 2,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+      });
+
       // Initial states
       gsap.set([nameRef.current, titleRef.current, contactRef.current, summaryRef.current, ctaRef.current], {
         opacity: 0,
@@ -117,6 +127,7 @@ export const Hero = () => {
         {/* C Logo - Hero Focal Point */}
         <div className="mb-12 flex justify-center">
           <img 
+            ref={logoRef}
             src="/black-letter-c.png" 
             alt="C" 
             className="w-40 h-40 md:w-52 md:h-52 lg:w-64 lg:h-64 object-contain"
