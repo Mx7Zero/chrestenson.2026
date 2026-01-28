@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
 export const Hero = () => {
@@ -9,65 +9,117 @@ export const Hero = () => {
   const contactRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Physics-based slow-motion bouncing ball
-      let velocityX = gsap.utils.random(-30, 30);
-      let velocityY = 0;
-      const gravity = 40; // Slow-motion gravity
-      const damping = 0.75; // Energy retention on bounce
+      // Zero gravity floating animation
+      let velocityX = gsap.utils.random(-20, 20);
+      let velocityY = gsap.utils.random(-20, 20);
+      let currentX = 0;
+      let currentY = 0;
+      let isDraggingRef = false;
+      
       const bounds = {
-        left: -80,
-        right: 80,
-        top: -60,
-        bottom: 40, // Bottom boundary (near CHRESTENSON text)
+        left: -150,
+        right: 150,
+        top: -100,
+        bottom: 100,
       };
       
-      const updateBall = () => {
-        const current = logoRef.current;
-        if (!current) return;
-        
-        // Get current position
-        const matrix = window.getComputedStyle(current).transform;
-        let x = 0, y = 0;
-        if (matrix !== 'none') {
-          const values = matrix.split('(')[1].split(')')[0].split(',');
-          x = parseFloat(values[4] || '0');
-          y = parseFloat(values[5] || '0');
-        }
-        
-        // Apply gravity
-        velocityY += gravity * 0.016; // Per frame (60fps)
+      const updateFloat = () => {
+        if (isDraggingRef || !logoRef.current) return;
         
         // Update position
-        x += velocityX * 0.016;
-        y += velocityY * 0.016;
+        currentX += velocityX * 0.016;
+        currentY += velocityY * 0.016;
         
-        // Bounce off boundaries
-        if (x <= bounds.left || x >= bounds.right) {
-          velocityX *= -damping;
-          x = x <= bounds.left ? bounds.left : bounds.right;
+        // Bounce off boundaries by reversing velocity
+        if (currentX <= bounds.left || currentX >= bounds.right) {
+          velocityX *= -0.8;
+          currentX = currentX <= bounds.left ? bounds.left : bounds.right;
+          // Add slight variation on bounce
+          velocityY += gsap.utils.random(-5, 5);
         }
         
-        if (y >= bounds.bottom) {
-          velocityY *= -damping;
-          y = bounds.bottom;
-          // Add slight random horizontal velocity on bounce
+        if (currentY <= bounds.top || currentY >= bounds.bottom) {
+          velocityY *= -0.8;
+          currentY = currentY <= bounds.top ? bounds.top : bounds.bottom;
+          // Add slight variation on bounce
           velocityX += gsap.utils.random(-5, 5);
         }
         
-        if (y <= bounds.top) {
-          velocityY *= -damping;
-          y = bounds.top;
+        // Slight random drift
+        if (Math.random() < 0.01) {
+          velocityX += gsap.utils.random(-2, 2);
+          velocityY += gsap.utils.random(-2, 2);
         }
         
         // Apply transform
-        gsap.set(current, { x, y });
+        gsap.set(logoRef.current, { x: currentX, y: currentY });
       };
       
-      // Run physics at 60fps
-      gsap.ticker.add(updateBall);
+      // Run animation at 60fps
+      const ticker = gsap.ticker.add(updateFloat);
+      
+      // Drag functionality
+      const logo = logoRef.current;
+      if (!logo) return;
+      
+      let startX = 0, startY = 0, initialX = 0, initialY = 0;
+      
+      const handleStart = (e: MouseEvent | TouchEvent) => {
+        isDraggingRef = true;
+        setIsDragging(true);
+        
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        
+        startX = clientX;
+        startY = clientY;
+        initialX = currentX;
+        initialY = currentY;
+        
+        logo.style.cursor = 'grabbing';
+      };
+      
+      const handleMove = (e: MouseEvent | TouchEvent) => {
+        if (!isDraggingRef) return;
+        
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+        
+        currentX = Math.max(bounds.left, Math.min(bounds.right, initialX + deltaX));
+        currentY = Math.max(bounds.top, Math.min(bounds.bottom, initialY + deltaY));
+        
+        gsap.set(logo, { x: currentX, y: currentY });
+      };
+      
+      const handleEnd = (e: MouseEvent | TouchEvent) => {
+        if (!isDraggingRef) return;
+        
+        isDraggingRef = false;
+        setIsDragging(false);
+        logo.style.cursor = 'grab';
+        
+        // Calculate velocity from last movement for momentum
+        const clientX = 'touches' in e ? e.changedTouches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.changedTouches[0].clientY : e.clientY;
+        
+        velocityX = (clientX - startX) * 0.3;
+        velocityY = (clientY - startY) * 0.3;
+      };
+      
+      logo.style.cursor = 'grab';
+      logo.addEventListener('mousedown', handleStart as EventListener);
+      logo.addEventListener('touchstart', handleStart as EventListener);
+      window.addEventListener('mousemove', handleMove as EventListener);
+      window.addEventListener('touchmove', handleMove as EventListener);
+      window.addEventListener('mouseup', handleEnd as EventListener);
+      window.addEventListener('touchend', handleEnd as EventListener);
 
       // Initial states
       gsap.set([nameRef.current, titleRef.current, contactRef.current, summaryRef.current, ctaRef.current], {
