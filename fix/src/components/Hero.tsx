@@ -255,14 +255,13 @@ export const Hero = () => {
 
         {/* Name - Brand Hierarchy */}
         <div ref={nameRef} className="mb-8">
-          {/* CHRESTENSON - Primary with outline */}
+          {/* CHRESTENSON - Primary */}
           <h1 
-            className="text-[10vw] md:text-[8vw] lg:text-[7vw] font-light uppercase tracking-tight leading-none mb-2"
+            className="text-[10vw] md:text-[8vw] lg:text-[7vw] font-black uppercase tracking-tight leading-none mb-2"
             style={{
-              WebkitTextStroke: '2px #1D1D1F',
-              WebkitTextFillColor: 'transparent',
-              color: 'transparent',
-              paintOrder: 'stroke fill'
+              WebkitTextStroke: '1px #1D1D1F',
+              WebkitTextFillColor: 'white',
+              color: 'white'
             }}
           >
             CHRESTENSON
