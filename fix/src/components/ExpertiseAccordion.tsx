@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { FloatingText } from './FloatingText';
 
 export const ExpertiseAccordion = () => {
   const [openSection, setOpenSection] = useState<number | null>(0);
@@ -278,48 +277,73 @@ export const ExpertiseAccordion = () => {
     <section id="expertise" className="py-24 px-6 md:px-12 lg:px-24 bg-white">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-16">
-          <p className="text-sm text-[#86868B] mb-4 uppercase tracking-wide">Comprehensive Capabilities</p>
-          <h2 className="text-4xl md:text-5xl font-semibold text-[#1D1D1F]">
-            30+ years of expertise.<br />One integrated skillset.
+        <div className="mb-16 text-center">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="h-px flex-1 max-w-32 bg-gradient-to-r from-transparent to-[#E5E5E5]" />
+            <span className="text-xs font-mono tracking-[0.3em] uppercase text-[#86868B]">
+              Comprehensive Capabilities
+            </span>
+            <div className="h-px flex-1 max-w-32 bg-gradient-to-l from-transparent to-[#E5E5E5]" />
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-[#1D1D1F] tracking-tight">
+            30+ years of expertise
           </h2>
+          <p className="mt-2 text-xl md:text-2xl text-[#6E6E73] font-light">
+            One integrated skillset
+          </p>
         </div>
 
         {/* Accordion */}
-        <div className="space-y-4">
+        <div className="border-t border-[#E5E5E5]">
           {sections.map((section, index) => (
-            <div key={index} className="border border-[#E5E5E5] overflow-hidden">
+            <div key={index} className="border-b border-[#E5E5E5]">
               <button
                 onClick={() => setOpenSection(openSection === index ? null : index)}
-                className="w-full flex items-center justify-between p-6 md:p-8 text-left bg-white hover:bg-[#F5F5F7] transition-colors"
+                className="w-full flex items-center justify-between py-6 md:py-8 text-left group"
               >
-                <h3 className="text-xl md:text-2xl font-semibold text-[#1D1D1F]">
-                  {section.title}
-                </h3>
-                <svg 
-                  className={`w-6 h-6 text-[#86868B] transition-transform ${openSection === index ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <div className="flex items-center gap-4 md:gap-6">
+                  <span className="text-xs font-mono text-[#0071E3] tracking-wider w-8">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-medium text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors">
+                    {section.title}
+                  </h3>
+                </div>
+                <div className={`w-8 h-8 border border-[#E5E5E5] flex items-center justify-center transition-all ${openSection === index ? 'bg-[#0071E3] border-[#0071E3]' : 'group-hover:border-[#0071E3]'}`}>
+                  <svg 
+                    className={`w-4 h-4 transition-transform ${openSection === index ? 'rotate-45 text-white' : 'text-[#86868B] group-hover:text-[#0071E3]'}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
               </button>
               
               {openSection === index && (
-                <div className="px-6 md:px-8 pb-8 bg-[#FAFAFA]">
+                <div className="pb-8 md:pb-12 pl-12 md:pl-14">
                   {section.subsections.map((subsection, subIndex) => (
-                    <div key={subIndex} className="mb-8 last:mb-0">
-                      <h4 className="text-xl md:text-2xl font-semibold text-[#1D1D1F] mb-6">
-                        {subsection.subtitle}
-                      </h4>
-                      <div className="space-y-4">
+                    <div key={subIndex} className="mb-10 last:mb-0">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-6 h-px bg-[#0071E3]" />
+                        <h4 className="text-sm md:text-base font-mono tracking-wider uppercase text-[#0071E3]">
+                          {subsection.subtitle}
+                        </h4>
+                      </div>
+                      <div className="grid gap-3">
                         {subsection.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="border border-[#E5E5E5] bg-white p-4 md:p-5">
-                            <FloatingText className="text-base md:text-lg lg:text-xl text-[#1D1D1F]">
-                              <span className="text-[#0071E3] mr-3">•</span>
+                          <div 
+                            key={itemIndex} 
+                            className="group/item flex items-start gap-4 py-3 border-l border-[#E5E5E5] pl-6 hover:border-[#0071E3] transition-colors"
+                          >
+                            <span className="text-xs font-mono text-[#D1D1D6] mt-1 group-hover/item:text-[#0071E3] transition-colors">
+                              {String(itemIndex + 1).padStart(2, '0')}
+                            </span>
+                            <p className="text-sm md:text-base text-[#424245] leading-relaxed group-hover/item:text-[#1D1D1F] transition-colors">
                               {item}
-                            </FloatingText>
+                            </p>
                           </div>
                         ))}
                       </div>
