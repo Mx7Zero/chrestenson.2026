@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { ResumeModal } from './ResumeModal';
 
 export const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -9,6 +10,7 @@ export const Hero = () => {
   const contactRef = useRef<HTMLDivElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
+  const [isResumeOpen, setIsResumeOpen] = useState(false);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -225,7 +227,7 @@ export const Hero = () => {
         </svg>
       ),
       label: 'LinkedIn',
-      href: 'https://linkedin.com/in/matthewchrestenson',
+      href: 'https://www.linkedin.com/in/chrestenson',
     },
   ];
 
@@ -391,6 +393,15 @@ export const Hero = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </a>
+          <button
+            onClick={() => setIsResumeOpen(true)}
+            className="group inline-flex items-center gap-3 border-2 border-[#0071E3] text-[#0071E3] px-8 py-4 text-base font-medium hover:bg-[#0071E3] hover:text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>View Resume</span>
+          </button>
           <a
             href="tel:+18054528932"
             className="group inline-flex items-center gap-3 bg-[#1D1D1F] text-white px-8 py-4 text-base font-medium hover:bg-[#2D2D2F] transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
@@ -410,6 +421,8 @@ export const Hero = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
       </div>
+      
+      <ResumeModal isOpen={isResumeOpen} onClose={() => setIsResumeOpen(false)} />
     </section>
   );
 };

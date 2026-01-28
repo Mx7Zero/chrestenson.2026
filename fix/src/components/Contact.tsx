@@ -198,7 +198,7 @@ export const Contact = () => {
                 <div className="border-l-2 border-[#E5E5E5] pl-5 hover:border-[#0071E3] transition-colors">
                   <p className="text-xs font-mono tracking-wider uppercase text-[#86868B] mb-2">LinkedIn</p>
                   <a 
-                    href="https://linkedin.com/in/matthewchrestenson"
+                    href="https://www.linkedin.com/in/chrestenson"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm md:text-base text-[#0071E3] hover:text-[#0077ED] transition-colors inline-flex items-center gap-1"
