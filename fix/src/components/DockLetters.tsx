@@ -81,9 +81,9 @@ export const DockLetters = ({ text, className = '' }: DockLettersProps) => {
   let letterIndex = 0;
 
   return (
-    <div ref={containerRef} className={className}>
+    <div ref={containerRef} className={`${className} flex flex-col items-center`}>
       {lines.map((line, lineIdx) => (
-        <div key={lineIdx} className="block whitespace-nowrap">
+        <div key={lineIdx} className="block whitespace-nowrap text-center">
           {line.split('').map((char, charIdx) => {
             if (char === ' ') {
               return <span key={`${lineIdx}-${charIdx}`}>&nbsp;</span>;
