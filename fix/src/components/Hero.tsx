@@ -15,8 +15,10 @@ export const Hero = () => {
       // Zero gravity floating animation
       let velocityX = gsap.utils.random(-50, 50);
       let velocityY = gsap.utils.random(-50, 50);
+      let rotationVelocity = gsap.utils.random(-15, 15); // Slow spin
       let currentX = 0;
       let currentY = 0;
+      let currentRotation = 0;
       let isDraggingRef = false;
       
       const bounds = {
@@ -32,6 +34,7 @@ export const Hero = () => {
         // Update position
         currentX += velocityX * 0.016;
         currentY += velocityY * 0.016;
+        currentRotation += rotationVelocity * 0.016;
         
         // Bounce off boundaries by reversing velocity
         if (currentX <= bounds.left || currentX >= bounds.right) {
@@ -39,6 +42,7 @@ export const Hero = () => {
           currentX = currentX <= bounds.left ? bounds.left : bounds.right;
           // Add slight variation on bounce
           velocityY += gsap.utils.random(-5, 5);
+          rotationVelocity += gsap.utils.random(-3, 3);
         }
         
         if (currentY <= bounds.top || currentY >= bounds.bottom) {
@@ -46,16 +50,18 @@ export const Hero = () => {
           currentY = currentY <= bounds.top ? bounds.top : bounds.bottom;
           // Add slight variation on bounce
           velocityX += gsap.utils.random(-5, 5);
+          rotationVelocity += gsap.utils.random(-3, 3);
         }
         
         // Slight random drift
         if (Math.random() < 0.01) {
           velocityX += gsap.utils.random(-2, 2);
           velocityY += gsap.utils.random(-2, 2);
+          rotationVelocity += gsap.utils.random(-1, 1);
         }
         
-        // Apply transform
-        gsap.set(logoRef.current, { x: currentX, y: currentY });
+        // Apply transform with rotation
+        gsap.set(logoRef.current, { x: currentX, y: currentY, rotation: currentRotation });
       };
       
       // Run animation at 60fps
