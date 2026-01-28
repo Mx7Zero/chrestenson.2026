@@ -166,6 +166,12 @@ export const Hero = () => {
           letter.vy *= 0.9995;
           letter.rotationSpeed *= 0.998;
           
+          // Random energy injection to prevent stagnation
+          if (Math.random() < 0.01) {
+            letter.vx += gsap.utils.random(-15, 15);
+            letter.vy += gsap.utils.random(-15, 15);
+          }
+          
           // Update position
           letter.x += letter.vx * 0.016;
           letter.y += letter.vy * 0.016;
@@ -221,50 +227,61 @@ export const Hero = () => {
             }
           }
           
-          // Bounce off boundaries - keep letters in the logo area
+          // Bounce off boundaries - energetic bounces
           if (letter.x < letterBounds.left) {
-            letter.vx = Math.abs(letter.vx) * 0.7;
+            letter.vx = Math.abs(letter.vx) * 0.9 + 20; // Add energy
             letter.x = letterBounds.left;
+            letter.rotationSpeed += gsap.utils.random(-10, 10);
           } else if (letter.x > letterBounds.right) {
-            letter.vx = -Math.abs(letter.vx) * 0.7;
+            letter.vx = -Math.abs(letter.vx) * 0.9 - 20;
             letter.x = letterBounds.right;
+            letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           if (letter.y < letterBounds.top) {
-            letter.vy = Math.abs(letter.vy) * 0.7;
+            letter.vy = Math.abs(letter.vy) * 0.9 + 15;
             letter.y = letterBounds.top;
+            letter.rotationSpeed += gsap.utils.random(-10, 10);
           } else if (letter.y > letterBounds.bottom) {
-            letter.vy = -Math.abs(letter.vy) * 0.7;
+            letter.vy = -Math.abs(letter.vy) * 0.9 - 15;
             letter.y = letterBounds.bottom;
+            letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - gentle pushes
+          // Letter-to-letter collision - push apart firmly
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2;
+            const minDist = (letter.size + other.size) / 2 + 8; // Extra spacing
             
             if (dist < minDist && dist > 0) {
-              // Very gentle push apart
+              // Strong push apart
               const nx = dx / dist;
               const ny = dy / dist;
               const overlap = minDist - dist;
               
-              letter.x -= nx * overlap * 0.15;
-              letter.y -= ny * overlap * 0.15;
-              other.x += nx * overlap * 0.15;
-              other.y += ny * overlap * 0.15;
+              // Push both letters apart
+              letter.x -= nx * overlap * 0.6;
+              letter.y -= ny * overlap * 0.6;
+              other.x += nx * overlap * 0.6;
+              other.y += ny * overlap * 0.6;
               
-              // Gentle velocity exchange
+              // Bounce velocities apart
               const dvx = letter.vx - other.vx;
               const dvy = letter.vy - other.vy;
               const dot = dvx * nx + dvy * ny;
               
-              letter.vx -= dot * nx * 0.3;
-              letter.vy -= dot * ny * 0.3;
-              other.vx += dot * nx * 0.3;
-              other.vy += dot * ny * 0.3;
+              if (dot > 0) { // Only if approaching
+                letter.vx -= dot * nx * 0.8;
+                letter.vy -= dot * ny * 0.8;
+                other.vx += dot * nx * 0.8;
+                other.vy += dot * ny * 0.8;
+              }
+              
+              // Add spin from collision
+              letter.rotationSpeed += gsap.utils.random(-8, 8);
+              other.rotationSpeed += gsap.utils.random(-8, 8);
             }
           }
           
