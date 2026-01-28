@@ -14,7 +14,9 @@ export const Hero = () => {
   const lettersContainerRef = useRef<HTMLDivElement>(null);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
 
-  const letters = ['C', 'H', 'R', 'E', 'S', 'T', 'E', 'N', 'S', 'O', 'N'];
+  // 4 sets of CHRESTENSON letters
+  const letterSet = ['C', 'H', 'R', 'E', 'S', 'T', 'E', 'N', 'S', 'O', 'N'];
+  const letters = [...letterSet, ...letterSet, ...letterSet, ...letterSet];
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -115,16 +117,22 @@ export const Hero = () => {
       }> = [];
 
       if (lettersContainerRef.current) {
-        const letterDivs = lettersContainerRef.current.children;
+        const letterContainer = lettersContainerRef.current.querySelector('div');
+        if (!letterContainer) return;
+        const letterDivs = letterContainer.children;
+        const size = 40; // All same large size
         letters.forEach((_, idx) => {
           const el = letterDivs[idx] as HTMLElement;
-          const size = 20 + Math.random() * 20; // Random size between 20-40px
+          if (!el) return;
+          // Spread letters across entire container area, avoiding center where logo is
+          const angle = (idx / letters.length) * Math.PI * 2 + gsap.utils.random(-0.5, 0.5);
+          const radius = gsap.utils.random(200, 450);
           letterElements.push({
             el,
-            x: gsap.utils.random(-300, 300),
-            y: gsap.utils.random(-150, 100),
-            vx: gsap.utils.random(-30, 30),
-            vy: gsap.utils.random(-30, 30),
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius * 0.6, // Compress vertically
+            vx: gsap.utils.random(-60, 60),
+            vy: gsap.utils.random(-60, 60),
             size
           });
           el.style.fontSize = `${size}px`;
@@ -132,42 +140,52 @@ export const Hero = () => {
       }
 
       const updateLetters = () => {
-        const logoRadius = 60; // Approximate radius of C logo
+        // Larger collision radius for the C logo (based on actual logo size ~384px on desktop)
+        const logoRadius = 180; // Slightly larger than half for better collision feel
         
         letterElements.forEach(letter => {
           // Update position
           letter.x += letter.vx * 0.016;
           letter.y += letter.vy * 0.016;
           
-          // Bounce off boundaries
-          if (letter.x < -400 || letter.x > 400) {
-            letter.vx *= -1;
-            letter.x = letter.x < -400 ? -400 : 400;
+          // Bounce off boundaries (larger area)
+          if (letter.x < -500 || letter.x > 500) {
+            letter.vx *= -0.9;
+            letter.x = letter.x < -500 ? -500 : 500;
           }
-          if (letter.y < -150 || letter.y > 100) {
-            letter.vy *= -1;
-            letter.y = letter.y < -150 ? -150 : 100;
+          if (letter.y < -300 || letter.y > 300) {
+            letter.vy *= -0.9;
+            letter.y = letter.y < -300 ? -300 : 300;
           }
           
           // Collision detection with main C logo
           const dx = letter.x - currentX;
           const dy = letter.y - currentY;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          const minDistance = logoRadius + letter.size / 2;
+          const minDistance = logoRadius + letter.size;
           
-          if (distance < minDistance) {
+          if (distance < minDistance && distance > 0) {
             // Collision! Bounce off
             const angle = Math.atan2(dy, dx);
             const overlap = minDistance - distance;
             
             // Push letter away from logo
-            letter.x += Math.cos(angle) * overlap;
-            letter.y += Math.sin(angle) * overlap;
+            letter.x += Math.cos(angle) * (overlap + 5);
+            letter.y += Math.sin(angle) * (overlap + 5);
             
-            // Bounce velocity
-            const speed = Math.sqrt(letter.vx * letter.vx + letter.vy * letter.vy);
-            letter.vx = Math.cos(angle) * speed * 0.8;
-            letter.vy = Math.sin(angle) * speed * 0.8;
+            // Reflect velocity off the collision surface
+            const normalX = dx / distance;
+            const normalY = dy / distance;
+            const dotProduct = letter.vx * normalX + letter.vy * normalY;
+            
+            // Only bounce if moving toward the logo
+            if (dotProduct < 0) {
+              letter.vx = letter.vx - 2 * dotProduct * normalX;
+              letter.vy = letter.vy - 2 * dotProduct * normalY;
+              // Add some energy loss
+              letter.vx *= 0.85;
+              letter.vy *= 0.85;
+            }
           }
           
           // Apply transform
@@ -396,14 +414,17 @@ export const Hero = () => {
             decoding="async"
           />
           
-          {/* Floating letters */}
-          <div ref={lettersContainerRef} className="absolute inset-0 pointer-events-none">
+        </div>
+        
+        {/* Floating letters - positioned across full hero section */}
+        <div ref={lettersContainerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ top: '10%', bottom: '30%' }}>
+          <div className="relative w-full h-full flex items-center justify-center">
             {letters.map((letter, index) => (
               <span
                 key={index}
                 data-letter-index={index}
-                className="absolute text-2xl md:text-3xl font-black text-[#6E6E73]/30 select-none"
-                style={{ willChange: 'transform' }}
+                className="absolute text-4xl font-black text-[#1D1D1F] select-none"
+                style={{ willChange: 'transform', left: '50%', top: '50%' }}
               >
                 {letter}
               </span>
