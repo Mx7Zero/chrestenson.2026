@@ -21,12 +21,24 @@ export const Hero = () => {
       let currentRotation = 0;
       let isDraggingRef = false;
       
-      const bounds = {
-        left: -300,
-        right: 300,
-        top: -100,
-        bottom: 100,
+      // Responsive bounds based on screen width
+      const getResponsiveBounds = () => {
+        const isMobile = window.innerWidth < 768;
+        return {
+          left: isMobile ? -window.innerWidth * 0.35 : -400,
+          right: isMobile ? window.innerWidth * 0.35 : 400,
+          top: -120,
+          bottom: isMobile ? 60 : 80, // Bounce off top of CHRESTENSON
+        };
       };
+      
+      let bounds = getResponsiveBounds();
+      
+      // Update bounds on resize
+      const handleResize = () => {
+        bounds = getResponsiveBounds();
+      };
+      window.addEventListener('resize', handleResize);
       
       const updateFloat = () => {
         if (isDraggingRef || !logoRef.current) return;
@@ -233,7 +245,7 @@ export const Hero = () => {
             ref={logoRef}
             src="/black-letter-c.png" 
             alt="C" 
-            className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 object-contain"
+            className="w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain"
             fetchPriority="high"
             decoding="async"
           />
