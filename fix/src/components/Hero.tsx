@@ -162,14 +162,15 @@ export const Hero = () => {
         
         letterElements.forEach((letter, i) => {
           // Less friction for more sustained movement
-          letter.vx *= 0.9995;
-          letter.vy *= 0.9995;
-          letter.rotationSpeed *= 0.998;
+          letter.vx *= 0.999;
+          letter.vy *= 0.999;
+          letter.rotationSpeed *= 0.997;
           
-          // Random energy injection to prevent stagnation
-          if (Math.random() < 0.01) {
-            letter.vx += gsap.utils.random(-15, 15);
-            letter.vy += gsap.utils.random(-15, 15);
+          // Random energy injection to prevent stagnation - more frequent and stronger
+          if (Math.random() < 0.03) {
+            letter.vx += gsap.utils.random(-30, 30);
+            letter.vy += gsap.utils.random(-30, 30);
+            letter.rotationSpeed += gsap.utils.random(-5, 5);
           }
           
           // Update position
@@ -247,13 +248,13 @@ export const Hero = () => {
             letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - push apart firmly
+          // Letter-to-letter collision - strong repulsion to prevent bunching
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2 + 8; // Extra spacing
+            const minDist = (letter.size + other.size) / 2 + 15; // More spacing
             
             if (dist < minDist && dist > 0) {
               // Strong push apart
@@ -261,22 +262,29 @@ export const Hero = () => {
               const ny = dy / dist;
               const overlap = minDist - dist;
               
-              // Push both letters apart
-              letter.x -= nx * overlap * 0.6;
-              letter.y -= ny * overlap * 0.6;
-              other.x += nx * overlap * 0.6;
-              other.y += ny * overlap * 0.6;
+              // Push both letters apart firmly
+              const pushForce = overlap * 0.8 + 5;
+              letter.x -= nx * pushForce;
+              letter.y -= ny * pushForce;
+              other.x += nx * pushForce;
+              other.y += ny * pushForce;
               
-              // Bounce velocities apart
+              // Bounce velocities apart with minimum separation speed
               const dvx = letter.vx - other.vx;
               const dvy = letter.vy - other.vy;
               const dot = dvx * nx + dvy * ny;
               
-              if (dot > 0) { // Only if approaching
-                letter.vx -= dot * nx * 0.8;
-                letter.vy -= dot * ny * 0.8;
-                other.vx += dot * nx * 0.8;
-                other.vy += dot * ny * 0.8;
+              // Always add some separation velocity
+              letter.vx -= nx * 20;
+              letter.vy -= ny * 20;
+              other.vx += nx * 20;
+              other.vy += ny * 20;
+              
+              if (dot > 0) {
+                letter.vx -= dot * nx * 0.6;
+                letter.vy -= dot * ny * 0.6;
+                other.vx += dot * nx * 0.6;
+                other.vy += dot * ny * 0.6;
               }
               
               // Add spin from collision
