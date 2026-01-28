@@ -128,7 +128,7 @@ export const Hero = () => {
 
       if (lettersContainerRef.current) {
         const letterDivs = lettersContainerRef.current.children;
-        const size = 24; // Smaller letters
+        const size = 20; // Smaller letters for less crowding
         letters.forEach((_, idx) => {
           const el = letterDivs[idx] as HTMLElement;
           if (!el) return;
@@ -201,23 +201,29 @@ export const Hero = () => {
             if (distLogo > 0) {
               const nx = dxLogo / distLogo;
               const ny = dyLogo / distLogo;
+              const overlap = minDistLogo - distLogo;
               
-              // Gentle push to edge
-              letter.x = currentX + nx * (minDistLogo + 2);
-              letter.y = currentY + ny * (minDistLogo + 2);
+              // Very gradual push outward
+              letter.x += nx * overlap * 0.15;
+              letter.y += ny * overlap * 0.15;
               
-              // Softer outward bounce
-              const speed = Math.sqrt(letter.vx * letter.vx + letter.vy * letter.vy);
-              const bounceSpeed = Math.max(speed * 0.6, 35); // Lower minimum, preserve some velocity
-              letter.vx = nx * bounceSpeed;
-              letter.vy = ny * bounceSpeed;
+              // Gentle velocity redirect outward
+              const dot = letter.vx * nx + letter.vy * ny;
+              if (dot < 0) {
+                // Soft reflect - don't reverse too hard
+                letter.vx -= dot * nx * 0.3;
+                letter.vy -= dot * ny * 0.3;
+              }
+              // Small outward nudge
+              letter.vx += nx * 3;
+              letter.vy += ny * 3;
               
-              // Gentle spin
-              letter.rotationSpeed += gsap.utils.random(-10, 10);
+              // Minimal spin
+              letter.rotationSpeed += gsap.utils.random(-2, 2);
               
               // Minimal push on logo
-              logoPushX -= nx * 0.3;
-              logoPushY -= ny * 0.3;
+              logoPushX -= nx * 0.1;
+              logoPushY -= ny * 0.1;
             } else {
               // Letter at logo center, push gently
               const angle = Math.random() * Math.PI * 2;
@@ -529,7 +535,7 @@ export const Hero = () => {
                   willChange: 'transform', 
                   left: '50%', 
                   top: '50%',
-                  fontSize: '24px'
+                  fontSize: '20px'
                 }}
               >
                 {letter}
