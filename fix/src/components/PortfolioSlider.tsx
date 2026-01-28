@@ -280,7 +280,8 @@ export const PortfolioSlider = () => {
                         height: '200px',
                         transform: `scale(${scale})`,
                         transformOrigin: 'bottom center',
-                        willChange: 'transform'
+                        willChange: 'transform',
+                        zIndex: Math.round(scale * 100)
                       }}
                       onClick={(e) => {
                         if (!isDraggingRef.current) {
