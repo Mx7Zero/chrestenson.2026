@@ -195,9 +195,13 @@ export const Hero = () => {
             <span className="text-[#6E6E73]">(six successful ventures from concept to exit)</span>, 
             and current <span className="font-semibold text-[#1D1D1F]">AI-first strategic advisory</span> across health technology, hospitality, and consumer goods.
           </DockText>
-          <DockText className="font-medium text-[#0071E3] text-lg md:text-xl border-l-2 border-[#0071E3] pl-6 py-2 bg-gradient-to-r from-[#0071E3]/5 to-transparent text-left">
-            Not just AI-literate—AI-native: using these tools as thinking partners, not just productivity shortcuts.
-          </DockText>
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <div className="h-px w-8 bg-[#0071E3]/40" />
+            <span className="text-xs font-mono tracking-[0.2em] uppercase text-[#0071E3]">
+              AI-native — not just AI-literate
+            </span>
+            <div className="h-px w-8 bg-[#0071E3]/40" />
+          </div>
         </div>
 
         {/* CTA Buttons */}
