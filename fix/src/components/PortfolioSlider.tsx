@@ -212,7 +212,6 @@ export const PortfolioSlider = () => {
     
     if (distance > maxDistance) return 1;
     
-    // Smooth easing curve for natural falloff
     const normalizedDistance = distance / maxDistance;
     const easedDistance = 1 - Math.pow(normalizedDistance, 2);
     const scale = 1 + easedDistance * 0.25;
@@ -250,17 +249,17 @@ export const PortfolioSlider = () => {
   return (
     <>
       <section 
-        className="relative bg-white overflow-hidden"16">
+        className="relative bg-white overflow-hidden"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing py-16">
           <div 
             ref={scrollRef}
             className="flex will-change-transform items-end"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
-            style={{ minHeight: '250px' }
-            ref={scrollRef}
-            className="flex will-change-transform items-end"
-            onMouseDown={handleDragStart}
-            onTouchStart={handleDragStart}
+            style={{ minHeight: '250px' }}
           >
             {[0, 1, 2].map((setIndex) => (
               <div 
@@ -275,12 +274,13 @@ export const PortfolioSlider = () => {
                     <div 
                       key={`${setIndex}-${idx}`}
                       ref={(el) => itemRefs.current[globalIndex] = el}
-                      className="relative shrink-0 overflow-visible transition-transform duration-200 ease-out cursor-pointer group"
+                      className="relative shrink-0 overflow-visible transition-all duration-150 ease-out cursor-pointer group"
                       style={{
                         width: '200px',
-                        height: `${200 * scale}px`,
+                        height: '200px',
                         transform: `scale(${scale})`,
-                        transformOrigin: 'bottom center'
+                        transformOrigin: 'bottom center',
+                        willChange: 'transform'
                       }}
                       onClick={(e) => {
                         if (!isDraggingRef.current) {
@@ -295,7 +295,6 @@ export const PortfolioSlider = () => {
                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                         draggable="false"
                       />
-                      {/* Magnifying glass overlay */}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all duration-300 opacity-0 group-hover:opacity-100">
                         <svg 
                           className="w-12 h-12 text-white"
@@ -320,7 +319,6 @@ export const PortfolioSlider = () => {
         </div>
       </section>
 
-      {/* Modal */}
       {selectedImage && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
