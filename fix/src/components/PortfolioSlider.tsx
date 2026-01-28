@@ -187,6 +187,8 @@ export const PortfolioSlider = () => {
     }
     
     dragDataRef.current = null;
+  }, [startAutoScroll]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDraggingRef.current) {
       setMouseX(e.clientX);
@@ -214,19 +216,17 @@ export const PortfolioSlider = () => {
     return scale;
   };
 
-  }, [startAutoScroll]);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       startAutoScroll(0);
     }, 100);
 
-    const handleMouseMove = (e: MouseEvent) => handleDragMove(e);
+    const handleMouseMoveDoc = (e: MouseEvent) => handleDragMove(e);
     const handleMouseUp = () => handleDragEnd();
     const handleTouchMove = (e: TouchEvent) => handleDragMove(e);
     const handleTouchEnd = () => handleDragEnd();
 
-    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mousemove', handleMouseMoveDoc);
     document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
@@ -236,7 +236,7 @@ export const PortfolioSlider = () => {
       if (animationRef.current) {
         animationRef.current.kill();
       }
-      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mousemove', handleMouseMoveDoc);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
@@ -245,54 +245,70 @@ export const PortfolioSlider = () => {
 
   return (
     <>
-      <section className="relative bg-white overflow-hidden">
-        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing">
+      <section 
+        className="relative bg-white overflow-hidden"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing py-8">
           <div 
             ref={scrollRef}
-            className="flex will-change-transform"
+            className="flex will-change-transform items-end"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
           >
             {[0, 1, 2].map((setIndex) => (
               <div 
                 key={setIndex} 
-                className="portfolio-set flex shrink-0"
+                className="portfolio-set flex shrink-0 items-end"
               >
-                {portfolioImages.map((image, idx) => (
-                  <div 
-                    key={`${setIndex}-${idx}`} 
-                    className="relative h-[200px] w-[200px] shrink-0 overflow-hidden bg-white cursor-pointer group"
-                    onClick={(e) => {
-                      if (!isDraggingRef.current) {
-                        e.stopPropagation();
-                        setSelectedImage(image);
-                      }
-                    }}
-                  >
-                    <img
-                      src={`/portfolio/${encodeURIComponent(image)}`}
-                      alt={`Portfolio item ${idx + 1}`}
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
-                      draggable="false"
-                    />
-                    {/* Magnifying glass overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all duration-300 opacity-0 group-hover:opacity-100">
-                      <svg 
-                        className="w-12 h-12 text-white"
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" 
-                        />
-                      </svg>
+                {portfolioImages.map((image, idx) => {
+                  const globalIndex = setIndex * portfolioImages.length + idx;
+                  const scale = getScale(globalIndex);
+                  
+                  return (
+                    <div 
+                      key={`${setIndex}-${idx}`}
+                      ref={(el) => itemRefs.current[globalIndex] = el}
+                      className="relative shrink-0 overflow-visible transition-transform duration-200 ease-out cursor-pointer group"
+                      style={{
+                        width: '200px',
+                        height: `${200 * scale}px`,
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'bottom center'
+                      }}
+                      onClick={(e) => {
+                        if (!isDraggingRef.current) {
+                          e.stopPropagation();
+                          setSelectedImage(image);
+                        }
+                      }}
+                    >
+                      <img
+                        src={`/portfolio/${encodeURIComponent(image)}`}
+                        alt={`Portfolio item ${idx + 1}`}
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
+                        draggable="false"
+                      />
+                      {/* Magnifying glass overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all duration-300 opacity-0 group-hover:opacity-100">
+                        <svg 
+                          className="w-12 h-12 text-white"
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" 
+                          />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </div>
