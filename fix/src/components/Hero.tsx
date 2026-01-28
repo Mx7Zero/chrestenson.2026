@@ -13,15 +13,15 @@ export const Hero = () => {
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Zero gravity floating animation
-      let velocityX = gsap.utils.random(-20, 20);
-      let velocityY = gsap.utils.random(-20, 20);
+      let velocityX = gsap.utils.random(-50, 50);
+      let velocityY = gsap.utils.random(-50, 50);
       let currentX = 0;
       let currentY = 0;
       let isDraggingRef = false;
       
       const bounds = {
-        left: -150,
-        right: 150,
+        left: -300,
+        right: 300,
         top: -100,
         bottom: 100,
       };
@@ -227,7 +227,7 @@ export const Hero = () => {
             ref={logoRef}
             src="/black-letter-c.png" 
             alt="C" 
-            className="w-40 h-40 md:w-52 md:h-52 lg:w-64 lg:h-64 object-contain"
+            className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 object-contain"
             fetchPriority="high"
             decoding="async"
           />
