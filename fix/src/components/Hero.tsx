@@ -587,8 +587,8 @@ export const Hero = () => {
               </span>
             ))}
             
-            {/* Physics Controls - inside the letters window, bottom-right */}
-            <div className="absolute bottom-2 right-2 z-20">
+            {/* Physics Controls - inside the letters window, top-right */}
+            <div className="absolute top-2 right-2 z-20">
               <button
                 onClick={() => setShowControls(!showControls)}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
@@ -615,14 +615,14 @@ export const Hero = () => {
                 </svg>
               </button>
               
-              {/* Panel slides up from button */}
-              <div className={`absolute bottom-10 right-0 transition-all duration-300 origin-bottom-right ${
+              {/* Panel slides down from button - 2 column layout */}
+              <div className={`absolute top-10 right-0 transition-all duration-300 origin-top-right ${
                 showControls 
                   ? 'opacity-100 scale-100 translate-y-0' 
-                  : 'opacity-0 scale-95 translate-y-2 pointer-events-none'
+                  : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
               }`}>
-                <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-lg p-4 w-56 border border-gray-100/50">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-lg p-4 border border-gray-100/50">
+                  <div className="flex items-center justify-between mb-3">
                     <span className="text-[#1D1D1F] font-medium text-[10px] tracking-wide uppercase">Physics</span>
                     <button
                       onClick={() => setPhysics({
@@ -639,100 +639,104 @@ export const Hero = () => {
                     </button>
                   </div>
                   
-                  {/* Logo Speed */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-[10px] mb-1.5">
-                      <span className="text-gray-500">Logo Speed</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.logoSpeed}</span>
+                  {/* 2 Column Grid */}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3" style={{ width: '280px' }}>
+                    {/* Column 1 */}
+                    {/* Logo Speed */}
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span className="text-gray-500">Logo</span>
+                        <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.logoSpeed}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="200"
+                        value={physics.logoSpeed}
+                        onChange={(e) => setPhysics(p => ({ ...p, logoSpeed: Number(e.target.value) }))}
+                        className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="200"
-                      value={physics.logoSpeed}
-                      onChange={(e) => setPhysics(p => ({ ...p, logoSpeed: Number(e.target.value) }))}
-                      className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
-                  </div>
-                  
-                  {/* Letter Speed */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-[10px] mb-1.5">
-                      <span className="text-gray-500">Letter Speed</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.letterSpeed}</span>
+                    
+                    {/* Bounce */}
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span className="text-gray-500">Bounce</span>
+                        <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.bounce}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={physics.bounce}
+                        onChange={(e) => setPhysics(p => ({ ...p, bounce: Number(e.target.value) }))}
+                        className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="200"
-                      value={physics.letterSpeed}
-                      onChange={(e) => setPhysics(p => ({ ...p, letterSpeed: Number(e.target.value) }))}
-                      className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
-                  </div>
-                  
-                  {/* Bounce */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-[10px] mb-1.5">
-                      <span className="text-gray-500">Bounce</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.bounce}</span>
+                    
+                    {/* Letter Speed */}
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span className="text-gray-500">Letters</span>
+                        <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.letterSpeed}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="200"
+                        value={physics.letterSpeed}
+                        onChange={(e) => setPhysics(p => ({ ...p, letterSpeed: Number(e.target.value) }))}
+                        className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={physics.bounce}
-                      onChange={(e) => setPhysics(p => ({ ...p, bounce: Number(e.target.value) }))}
-                      className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
-                  </div>
-                  
-                  {/* Repulsion */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-[10px] mb-1.5">
-                      <span className="text-gray-500">Repulsion</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.repulsion}</span>
+                    
+                    {/* Repulsion */}
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span className="text-gray-500">Repulsion</span>
+                        <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.repulsion}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={physics.repulsion}
+                        onChange={(e) => setPhysics(p => ({ ...p, repulsion: Number(e.target.value) }))}
+                        className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={physics.repulsion}
-                      onChange={(e) => setPhysics(p => ({ ...p, repulsion: Number(e.target.value) }))}
-                      className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
-                  </div>
-                  
-                  {/* Friction */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-[10px] mb-1.5">
-                      <span className="text-gray-500">Friction</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.friction}</span>
+                    
+                    {/* Friction */}
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span className="text-gray-500">Friction</span>
+                        <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.friction}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={physics.friction}
+                        onChange={(e) => setPhysics(p => ({ ...p, friction: Number(e.target.value) }))}
+                        className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={physics.friction}
-                      onChange={(e) => setPhysics(p => ({ ...p, friction: Number(e.target.value) }))}
-                      className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
-                  </div>
-                  
-                  {/* Gravity */}
-                  <div>
-                    <div className="flex justify-between text-[10px] mb-1.5">
-                      <span className="text-gray-500">Gravity</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.gravity > 0 ? '+' : ''}{physics.gravity}</span>
+                    
+                    {/* Gravity */}
+                    <div>
+                      <div className="flex justify-between text-[10px] mb-1">
+                        <span className="text-gray-500">Gravity</span>
+                        <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.gravity > 0 ? '+' : ''}{physics.gravity}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-50"
+                        max="50"
+                        value={physics.gravity}
+                        onChange={(e) => setPhysics(p => ({ ...p, gravity: Number(e.target.value) }))}
+                        className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
                     </div>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      value={physics.gravity}
-                      onChange={(e) => setPhysics(p => ({ ...p, gravity: Number(e.target.value) }))}
-                      className="w-full h-0.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer"
-                    />
                   </div>
                 </div>
               </div>
