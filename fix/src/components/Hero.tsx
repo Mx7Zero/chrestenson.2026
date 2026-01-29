@@ -587,8 +587,8 @@ export const Hero = () => {
               </span>
             ))}
             
-            {/* Physics Controls - inside the letters window, top-right */}
-            <div className="absolute top-2 right-2 z-20">
+            {/* Physics Controls - inside the letters window, bottom-right */}
+            <div className="absolute bottom-2 right-2 z-20">
               <button
                 onClick={() => setShowControls(!showControls)}
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
@@ -615,11 +615,11 @@ export const Hero = () => {
                 </svg>
               </button>
               
-              {/* Panel slides down from button - 2 column layout */}
-              <div className={`absolute top-10 right-0 transition-all duration-300 origin-top-right ${
+              {/* Panel slides up from button - 2 column layout */}
+              <div className={`absolute bottom-10 right-0 transition-all duration-300 origin-bottom-right ${
                 showControls 
                   ? 'opacity-100 scale-100 translate-y-0' 
-                  : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                  : 'opacity-0 scale-95 translate-y-2 pointer-events-none'
               }`}>
                 <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-lg p-4 border border-gray-100/50">
                   <div className="flex items-center justify-between mb-3">
