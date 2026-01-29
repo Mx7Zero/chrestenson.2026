@@ -147,23 +147,29 @@ export const Hero = () => {
         size: number;
       }> = [];
 
-      // Letter bounds - constrain to area around the logo only
+      // Responsive letter bounds based on screen size
+      const isMobile = window.innerWidth < 768;
+      const containerWidth = isMobile ? window.innerWidth * 0.9 : 700;
+      const containerHeight = isMobile ? 280 : 400;
       const letterBounds = {
-        left: -320,
-        right: 320,
-        top: -180,
-        bottom: 140
+        left: -containerWidth / 2 + 20,
+        right: containerWidth / 2 - 20,
+        top: -containerHeight / 2 + 20,
+        bottom: containerHeight / 2 - 40
       };
+      
+      // Logo collision radius - much smaller so letters get close
+      const logoCollisionRadius = isMobile ? 50 : 80;
 
       if (lettersContainerRef.current) {
         const letterDivs = lettersContainerRef.current.children;
-        const size = 20; // Smaller letters for less crowding
+        const size = isMobile ? 14 : 20; // Smaller letters on mobile
         letters.forEach((_, idx) => {
           const el = letterDivs[idx] as HTMLElement;
           if (!el) return;
-          // Start letters in a ring OUTSIDE the logo (logo collision is 200px)
+          // Start letters in a ring OUTSIDE the logo collision zone
           const angle = (idx / letters.length) * Math.PI * 2;
-          const radius = gsap.utils.random(220, 300); // Outside collision zone
+          const radius = gsap.utils.random(logoCollisionRadius + 30, logoCollisionRadius + 80);
           letterElements.push({
             el,
             x: Math.cos(angle) * radius,
@@ -181,7 +187,7 @@ export const Hero = () => {
         const p = physicsRef.current;
         
         // Dynamic physics values from sliders
-        const logoRadius = 200;
+        const logoRadius = logoCollisionRadius;
         const maxSpeed = 40 + p.letterSpeed * 0.8; // 40-120
         const maxRotationSpeed = 20;
         const frictionFactor = 1 - (p.friction * 0.0002); // 0.98-1.0
@@ -563,8 +569,8 @@ export const Hero = () => {
             ref={lettersContainerRef} 
             className="absolute"
             style={{ 
-              width: '700px', 
-              height: '400px', 
+              width: 'min(90vw, 700px)', 
+              height: 'min(280px, 400px)', 
               left: '50%', 
               top: '50%', 
               transform: 'translate(-50%, -50%)',
@@ -575,12 +581,11 @@ export const Hero = () => {
             {letters.map((letter, index) => (
               <span
                 key={index}
-                className="absolute font-black text-[#1D1D1F] select-none pointer-events-none"
+                className="absolute font-black text-[#1D1D1F] select-none pointer-events-none text-sm md:text-xl"
                 style={{ 
                   willChange: 'transform', 
                   left: '50%', 
-                  top: '50%',
-                  fontSize: '20px'
+                  top: '50%'
                 }}
               >
                 {letter}
@@ -589,7 +594,7 @@ export const Hero = () => {
           </div>
           
           {/* Physics Controls - positioned relative to logo wrapper, bottom-right */}
-          <div className="absolute z-20" style={{ right: 'calc(50% - 350px)', bottom: '0' }}>
+          <div className="absolute z-20" style={{ right: 'max(8px, calc(50% - min(45vw, 350px)))', bottom: '0' }}>
             <button
               onClick={() => setShowControls(!showControls)}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
