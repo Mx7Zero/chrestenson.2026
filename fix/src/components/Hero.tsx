@@ -253,8 +253,11 @@ export const Hero = () => {
           }
           
           // Collision detection with main C logo FIRST (before boundary check)
-          const dxLogo = letter.x - currentX;
-          const dyLogo = letter.y - currentY;
+          // In fullscreen mode, logo is centered at 0,0; otherwise use floating position
+          const logoX = isFullscreenRef.current ? 0 : currentX;
+          const logoY = isFullscreenRef.current ? 0 : currentY;
+          const dxLogo = letter.x - logoX;
+          const dyLogo = letter.y - logoY;
           const distLogo = Math.sqrt(dxLogo * dxLogo + dyLogo * dyLogo);
           const minDistLogo = logoRadius + letter.size / 2;
           
@@ -643,9 +646,10 @@ export const Hero = () => {
               </button>
             </div>
             
-            {/* C Logo in fullscreen mode */}
+            {/* C Logo in fullscreen mode - uses same ref for collision detection */}
             {isFullscreen && (
               <img 
+                ref={logoRef}
                 src="/black-letter-c.png" 
                 alt="C" 
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain z-10 pointer-events-none"
