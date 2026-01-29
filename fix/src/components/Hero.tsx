@@ -2,6 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ResumeModal } from './ResumeModal';
 
+// Physics controls interface
+interface PhysicsSettings {
+  logoSpeed: number;      // 0-200
+  letterSpeed: number;    // 0-200
+  bounce: number;         // 0-100 (elasticity)
+  repulsion: number;      // 0-100
+  friction: number;       // 0-100 (higher = more friction)
+  gravity: number;        // -50 to 50
+}
+
 // Floating letters animation with collision detection - v1.0
 export const Hero = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -13,6 +23,19 @@ export const Hero = () => {
   const ctaRef = useRef<HTMLDivElement>(null);
   const lettersContainerRef = useRef<HTMLDivElement>(null);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  
+  // Physics settings with refs for real-time updates
+  const [physics, setPhysics] = useState<PhysicsSettings>({
+    logoSpeed: 100,
+    letterSpeed: 100,
+    bounce: 50,
+    repulsion: 50,
+    friction: 50,
+    gravity: 0
+  });
+  const physicsRef = useRef(physics);
+  physicsRef.current = physics;
 
   // 2 sets of CHRESTENSON letters for fluid movement
   const letterSet = ['C', 'H', 'R', 'E', 'S', 'T', 'E', 'N', 'S', 'O', 'N'];
@@ -155,11 +178,16 @@ export const Hero = () => {
       }
 
       const updateLetters = () => {
-        // Logo collision radius - lg:w-96 = 384px, so radius = 192px
-        // Add some buffer for visual match
-        const logoRadius = 200; // Match the actual logo size
-        const maxSpeed = 80; // Higher max velocity for more movement
-        const maxRotationSpeed = 20; // More spin allowed
+        const p = physicsRef.current;
+        
+        // Dynamic physics values from sliders
+        const logoRadius = 200;
+        const maxSpeed = 40 + p.letterSpeed * 0.8; // 40-120
+        const maxRotationSpeed = 20;
+        const frictionFactor = 1 - (p.friction * 0.0002); // 0.98-1.0
+        const repulsionForce = p.repulsion * 0.1; // 0-10
+        const bounceStrength = p.bounce * 0.02; // 0-2
+        const gravityForce = p.gravity * 0.5; // -25 to 25
         
         // Accumulate push force from letters to logo
         let logoPushX = 0;
@@ -167,17 +195,21 @@ export const Hero = () => {
         let collisionCount = 0;
         
         letterElements.forEach((letter, i) => {
-          // Less friction for more sustained movement
-          letter.vx *= 0.999;
-          letter.vy *= 0.999;
-          letter.rotationSpeed *= 0.997;
+          // Apply friction
+          letter.vx *= frictionFactor;
+          letter.vy *= frictionFactor;
+          letter.rotationSpeed *= frictionFactor;
           
-          // Random energy injection to prevent stagnation - more frequent and stronger
-          if (Math.random() < 0.03) {
-            letter.vx += gsap.utils.random(-30, 30);
-            letter.vy += gsap.utils.random(-30, 30);
+          // Random energy injection based on letter speed setting
+          if (Math.random() < 0.02 + p.letterSpeed * 0.0002) {
+            const energyAmount = 15 + p.letterSpeed * 0.3;
+            letter.vx += gsap.utils.random(-energyAmount, energyAmount);
+            letter.vy += gsap.utils.random(-energyAmount, energyAmount);
             letter.rotationSpeed += gsap.utils.random(-5, 5);
           }
+          
+          // Apply gravity
+          letter.vy += gravityForce * 0.016;
           
           // Update position
           letter.x += letter.vx * 0.016;
@@ -209,25 +241,24 @@ export const Hero = () => {
               const ny = dyLogo / distLogo;
               const overlap = minDistLogo - distLogo;
               
-              // Very gradual push outward
-              letter.x += nx * overlap * 0.15;
-              letter.y += ny * overlap * 0.15;
+              // Push outward based on bounce setting
+              letter.x += nx * overlap * (0.1 + bounceStrength * 0.1);
+              letter.y += ny * overlap * (0.1 + bounceStrength * 0.1);
               
-              // Gentle velocity redirect outward
+              // Velocity redirect based on bounce
               const dot = letter.vx * nx + letter.vy * ny;
               if (dot < 0) {
-                // Soft reflect - don't reverse too hard
-                letter.vx -= dot * nx * 0.3;
-                letter.vy -= dot * ny * 0.3;
+                letter.vx -= dot * nx * (0.2 + bounceStrength * 0.4);
+                letter.vy -= dot * ny * (0.2 + bounceStrength * 0.4);
               }
-              // Small outward nudge
-              letter.vx += nx * 3;
-              letter.vy += ny * 3;
+              // Outward push based on bounce
+              letter.vx += nx * (2 + bounceStrength * 3);
+              letter.vy += ny * (2 + bounceStrength * 3);
               
-              // Minimal spin
+              // Spin on collision
               letter.rotationSpeed += gsap.utils.random(-2, 2);
               
-              // Minimal push on logo
+              // Push on logo
               logoPushX -= nx * 0.1;
               logoPushY -= ny * 0.1;
             } else {
@@ -260,31 +291,32 @@ export const Hero = () => {
             letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - stronger repulsion
+          // Letter-to-letter collision - dynamic repulsion
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2 + 20; // More spacing
+            const minDist = (letter.size + other.size) / 2 + 10 + repulsionForce; // Dynamic spacing
             
             if (dist < minDist && dist > 0) {
               const nx = dx / dist;
               const ny = dy / dist;
               const overlap = minDist - dist;
               
-              // Stronger position push
-              const nudge = overlap * 0.4;
+              // Position push based on repulsion
+              const nudge = overlap * (0.2 + repulsionForce * 0.05);
               letter.x -= nx * nudge;
               letter.y -= ny * nudge;
               other.x += nx * nudge;
               other.y += ny * nudge;
               
-              // Add separation velocity
-              letter.vx -= nx * 5;
-              letter.vy -= ny * 5;
-              other.vx += nx * 5;
-              other.vy += ny * 5;
+              // Separation velocity based on repulsion
+              const sepVel = 2 + repulsionForce * 0.5;
+              letter.vx -= nx * sepVel;
+              letter.vy -= ny * sepVel;
+              other.vx += nx * sepVel;
+              other.vy += ny * sepVel;
             }
           }
           
@@ -313,11 +345,18 @@ export const Hero = () => {
 
         const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
         lastTime = currentTime;
+        
+        const p = physicsRef.current;
+        const logoSpeedMult = p.logoSpeed / 100; // 0-2
+        const logoFriction = 1 - (p.friction * 0.00015); // Very subtle friction
 
         if (!isDraggingRef) {
-          currentX += velocityX * deltaTime;
-          currentY += velocityY * deltaTime;
+          currentX += velocityX * deltaTime * logoSpeedMult;
+          currentY += velocityY * deltaTime * logoSpeedMult;
           currentRotation += rotationVelocity * deltaTime;
+          
+          // Apply gravity to logo
+          velocityY += p.gravity * 0.3 * deltaTime;
           
           if (currentX <= bounds.left || currentX >= bounds.right) {
             velocityX *= -0.8;
@@ -333,15 +372,14 @@ export const Hero = () => {
             rotationVelocity += gsap.utils.random(-3, 3);
           }
           
-          // Smooth organic movement - gentle continuous drift
-          // Small constant drift for fluid motion
-          velocityX += Math.sin(currentTime * 0.001) * 0.3;
-          velocityY += Math.cos(currentTime * 0.0013) * 0.3;
+          // Smooth organic movement - scaled by logo speed
+          velocityX += Math.sin(currentTime * 0.001) * 0.3 * logoSpeedMult;
+          velocityY += Math.cos(currentTime * 0.0013) * 0.3 * logoSpeedMult;
           rotationVelocity += Math.sin(currentTime * 0.0007) * 0.05;
           
-          // Very slight friction to prevent runaway speed
-          velocityX *= 0.9995;
-          velocityY *= 0.9995;
+          // Apply friction
+          velocityX *= logoFriction;
+          velocityY *= logoFriction;
           rotationVelocity *= 0.999;
           
           logoRef.current.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotation}deg) translateZ(0)`;
@@ -514,6 +552,147 @@ export const Hero = () => {
       id="hero" 
       className="min-h-screen flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-32 relative overflow-hidden"
     >
+      {/* Physics Controls Panel */}
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setShowControls(!showControls)}
+          className="bg-[#1D1D1F] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:bg-[#2D2D2F] transition-colors flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v10"/>
+            <path d="m4.22 4.22 4.24 4.24m7.08 7.08 4.24 4.24"/>
+            <path d="M1 12h6m6 0h10"/>
+            <path d="m4.22 19.78 4.24-4.24m7.08-7.08 4.24-4.24"/>
+          </svg>
+          Physics Lab
+        </button>
+        
+        {showControls && (
+          <div className="absolute top-12 right-0 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-5 w-72 border border-gray-200">
+            <h3 className="text-[#1D1D1F] font-bold text-sm mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              Physics Controls
+            </h3>
+            
+            {/* Logo Speed */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 font-medium">Logo Speed</span>
+                <span className="text-[#1D1D1F] font-mono">{physics.logoSpeed}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                value={physics.logoSpeed}
+                onChange={(e) => setPhysics(p => ({ ...p, logoSpeed: Number(e.target.value) }))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+            </div>
+            
+            {/* Letter Speed */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 font-medium">Letter Speed</span>
+                <span className="text-[#1D1D1F] font-mono">{physics.letterSpeed}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                value={physics.letterSpeed}
+                onChange={(e) => setPhysics(p => ({ ...p, letterSpeed: Number(e.target.value) }))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+              />
+            </div>
+            
+            {/* Bounce */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 font-medium">Bounce</span>
+                <span className="text-[#1D1D1F] font-mono">{physics.bounce}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={physics.bounce}
+                onChange={(e) => setPhysics(p => ({ ...p, bounce: Number(e.target.value) }))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+              />
+            </div>
+            
+            {/* Repulsion */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 font-medium">Repulsion</span>
+                <span className="text-[#1D1D1F] font-mono">{physics.repulsion}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={physics.repulsion}
+                onChange={(e) => setPhysics(p => ({ ...p, repulsion: Number(e.target.value) }))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              />
+            </div>
+            
+            {/* Friction */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 font-medium">Friction</span>
+                <span className="text-[#1D1D1F] font-mono">{physics.friction}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={physics.friction}
+                onChange={(e) => setPhysics(p => ({ ...p, friction: Number(e.target.value) }))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500"
+              />
+            </div>
+            
+            {/* Gravity */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 font-medium">Gravity</span>
+                <span className="text-[#1D1D1F] font-mono">{physics.gravity > 0 ? '+' : ''}{physics.gravity}</span>
+              </div>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                value={physics.gravity}
+                onChange={(e) => setPhysics(p => ({ ...p, gravity: Number(e.target.value) }))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              />
+            </div>
+            
+            {/* Reset Button */}
+            <button
+              onClick={() => setPhysics({
+                logoSpeed: 100,
+                letterSpeed: 100,
+                bounce: 50,
+                repulsion: 50,
+                friction: 50,
+                gravity: 0
+              })}
+              className="w-full mt-2 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              Reset to Defaults
+            </button>
+            
+            <p className="mt-3 text-[10px] text-gray-400 text-center">
+              Adjust sliders to experiment with physics
+            </p>
+          </div>
+        )}
+      </div>
+      
       {/* Subtle gradient background accent */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
       
