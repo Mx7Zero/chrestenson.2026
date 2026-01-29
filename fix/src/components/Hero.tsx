@@ -260,36 +260,31 @@ export const Hero = () => {
             letter.rotationSpeed += gsap.utils.random(-10, 10);
           }
           
-          // Letter-to-letter collision - ultra smooth
+          // Letter-to-letter collision - stronger repulsion
           for (let j = i + 1; j < letterElements.length; j++) {
             const other = letterElements[j];
             const dx = other.x - letter.x;
             const dy = other.y - letter.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const minDist = (letter.size + other.size) / 2 + 10; // More spacing
+            const minDist = (letter.size + other.size) / 2 + 20; // More spacing
             
             if (dist < minDist && dist > 0) {
               const nx = dx / dist;
               const ny = dy / dist;
               const overlap = minDist - dist;
               
-              // Minimal position nudge
-              const nudge = overlap * 0.1;
+              // Stronger position push
+              const nudge = overlap * 0.4;
               letter.x -= nx * nudge;
               letter.y -= ny * nudge;
               other.x += nx * nudge;
               other.y += ny * nudge;
               
-              // Very gentle velocity adjustment
-              const relVelDot = (letter.vx - other.vx) * nx + (letter.vy - other.vy) * ny;
-              
-              if (relVelDot < 0) {
-                const impulse = relVelDot * 0.25; // Softer
-                letter.vx -= impulse * nx;
-                letter.vy -= impulse * ny;
-                other.vx += impulse * nx;
-                other.vy += impulse * ny;
-              }
+              // Add separation velocity
+              letter.vx -= nx * 5;
+              letter.vy -= ny * 5;
+              other.vx += nx * 5;
+              other.vy += ny * 5;
             }
           }
           
@@ -338,18 +333,16 @@ export const Hero = () => {
             rotationVelocity += gsap.utils.random(-3, 3);
           }
           
-          // Frequent random drift for unpredictable movement
-          if (Math.random() < 0.03) {
-            velocityX += gsap.utils.random(-15, 15);
-            velocityY += gsap.utils.random(-15, 15);
-            rotationVelocity += gsap.utils.random(-5, 5);
-          }
+          // Smooth organic movement - gentle continuous drift
+          // Small constant drift for fluid motion
+          velocityX += Math.sin(currentTime * 0.001) * 0.3;
+          velocityY += Math.cos(currentTime * 0.0013) * 0.3;
+          rotationVelocity += Math.sin(currentTime * 0.0007) * 0.05;
           
-          // Occasional bigger direction change
-          if (Math.random() < 0.005) {
-            velocityX += gsap.utils.random(-40, 40);
-            velocityY += gsap.utils.random(-40, 40);
-          }
+          // Very slight friction to prevent runaway speed
+          velocityX *= 0.9995;
+          velocityY *= 0.9995;
+          rotationVelocity *= 0.999;
           
           logoRef.current.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${currentRotation}deg) translateZ(0)`;
         }
