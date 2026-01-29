@@ -25,6 +25,8 @@ export const Hero = () => {
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isFullscreenRef = useRef(isFullscreen);
+  isFullscreenRef.current = isFullscreen;
   
   // Physics settings with refs for real-time updates
   const [physics, setPhysics] = useState<PhysicsSettings>({
@@ -148,16 +150,29 @@ export const Hero = () => {
         size: number;
       }> = [];
 
-      // Responsive letter bounds based on screen size
+      // Responsive letter bounds based on screen size and fullscreen mode
       const isMobile = window.innerWidth < 768;
-      const containerWidth = isMobile ? window.innerWidth * 0.9 : 700;
-      const containerHeight = isMobile ? 280 : 400;
-      const letterBounds = {
-        left: -containerWidth / 2 + 20,
-        right: containerWidth / 2 - 20,
-        top: -containerHeight / 2 + 20,
-        bottom: containerHeight / 2 - 40
+      const getLetterBounds = () => {
+        if (isFullscreenRef.current) {
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          return {
+            left: -w / 2 + 40,
+            right: w / 2 - 40,
+            top: -h / 2 + 40,
+            bottom: h / 2 - 40
+          };
+        }
+        const containerWidth = isMobile ? window.innerWidth * 0.9 : 700;
+        const containerHeight = isMobile ? 280 : 400;
+        return {
+          left: -containerWidth / 2 + 20,
+          right: containerWidth / 2 - 20,
+          top: -containerHeight / 2 + 20,
+          bottom: containerHeight / 2 - 40
+        };
       };
+      let letterBounds = getLetterBounds();
       
       // Logo collision radius - sized to match the visible logo
       const logoCollisionRadius = isMobile ? 85 : 150;
@@ -186,6 +201,9 @@ export const Hero = () => {
 
       const updateLetters = () => {
         const p = physicsRef.current;
+        
+        // Recalculate bounds on each frame (for fullscreen transitions)
+        letterBounds = getLetterBounds();
         
         // Dynamic physics values from sliders
         const logoRadius = logoCollisionRadius;
@@ -593,41 +611,49 @@ export const Hero = () => {
               </span>
             ))}
             
-            {/* Fullscreen Toggle - bottom left */}
-            <button
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className={`absolute z-30 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                isFullscreen
-                  ? 'bottom-4 left-4 bg-[#1D1D1F] text-white'
-                  : 'bottom-2 left-2 bg-white/60 text-[#1D1D1F]/60 hover:bg-white/90 hover:text-[#1D1D1F]'
-              }`}
-              style={!isFullscreen ? { left: 'max(8px, calc(50% - min(45vw, 350px) + 8px))' } : {}}
-              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            >
-              {isFullscreen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+            {/* Fullscreen Toggle - bottom left, matches gear icon style */}
+            <div className="absolute z-30" style={isFullscreen ? { bottom: '16px', left: '16px' } : { bottom: '8px', left: 'max(8px, calc(50% - min(45vw, 350px) + 8px))' }}>
+              <button
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isFullscreen
+                    ? 'bg-[#1D1D1F] text-white'
+                    : 'bg-white/60 text-[#1D1D1F]/60 hover:bg-white/90 hover:text-[#1D1D1F]'
+                }`}
+                aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="1.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className={`transition-transform duration-300 ${isFullscreen ? 'rotate-180' : ''}`}
+                >
+                  {isFullscreen ? (
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                  ) : (
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                  )}
                 </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-                </svg>
-              )}
-            </button>
+              </button>
+            </div>
             
             {/* C Logo in fullscreen mode */}
             {isFullscreen && (
               <img 
-                ref={logoRef}
                 src="/black-letter-c.png" 
                 alt="C" 
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain z-10"
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain z-10 pointer-events-none"
               />
             )}
-          </div>
-          
-          {/* Physics Controls - positioned relative to logo wrapper, bottom-right */}
-          <div className="absolute z-20" style={{ right: 'max(8px, calc(50% - min(45vw, 350px)))', bottom: '0' }}>
+            
+            {/* Physics Controls - inside letters container, bottom-right */}
+            <div className="absolute z-30" style={isFullscreen ? { bottom: '16px', right: '16px' } : { right: 'max(8px, calc(50% - min(45vw, 350px) + 8px))', bottom: '8px' }}>
             <button
               onClick={() => setShowControls(!showControls)}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
@@ -778,6 +804,7 @@ export const Hero = () => {
                 </div>
               </div>
             </div>
+          </div>
           </div>
           
           {/* C Logo */}
