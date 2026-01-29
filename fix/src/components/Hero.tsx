@@ -883,14 +883,16 @@ export const Hero = () => {
         </div>
 
         {/* CTA Buttons */}
-        <div ref={ctaRef} className="flex flex-wrap justify-center gap-4">
+        <div ref={ctaRef} className="flex flex-wrap justify-center gap-4 md:gap-6">
+          {/* Primary CTA - Start a Conversation */}
           <a
             href="mailto:matthew@chrestenson.com"
-            className="group inline-flex items-center gap-3 bg-[#0071E3] text-white px-8 py-4 text-base font-medium hover:bg-[#0077ED] transition-all duration-300 hover:shadow-lg hover:shadow-[#0071E3]/25 hover:-translate-y-0.5"
+            className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-[#0071E3] to-[#00A3FF] text-white px-8 py-4 rounded-full text-base font-medium overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-[#0071E3]/30 hover:-translate-y-1 hover:scale-[1.02]"
           >
-            <span>Start a Conversation</span>
+            <span className="absolute inset-0 bg-gradient-to-r from-[#00A3FF] to-[#0071E3] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <span className="relative z-10">Start a Conversation</span>
             <svg 
-              className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
+              className="relative z-10 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -898,23 +900,30 @@ export const Hero = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </a>
+          
+          {/* Secondary CTA - View Resume */}
           <button
             onClick={() => setIsResumeOpen(true)}
-            className="group inline-flex items-center gap-3 border-2 border-[#0071E3] text-[#0071E3] px-8 py-4 text-base font-medium hover:bg-[#0071E3] hover:text-white transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full text-base font-medium overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02]"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="absolute inset-0 rounded-full border-2 border-[#1D1D1F]/20 group-hover:border-[#0071E3] transition-colors duration-300" />
+            <span className="absolute inset-0 rounded-full bg-white/80 backdrop-blur-sm group-hover:bg-[#0071E3]/5 transition-colors duration-300" />
+            <svg className="relative z-10 w-5 h-5 text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span>View Resume</span>
+            <span className="relative z-10 text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors duration-300">View Resume</span>
           </button>
+          
+          {/* Tertiary CTA - Call Now */}
           <a
             href="tel:+18054528932"
-            className="group inline-flex items-center gap-3 bg-[#1D1D1F] text-white px-8 py-4 text-base font-medium hover:bg-[#2D2D2F] transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full text-base font-medium overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02]"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span className="absolute inset-0 rounded-full bg-[#1D1D1F] group-hover:bg-[#2D2D2F] transition-colors duration-300" />
+            <svg className="relative z-10 w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
-            <span>Call Now</span>
+            <span className="relative z-10 text-white">Call Now</span>
           </a>
         </div>
       </div>
