@@ -882,48 +882,50 @@ export const Hero = () => {
           </div>
         </div>
 
-        {/* CTA Buttons */}
-        <div ref={ctaRef} className="flex flex-wrap justify-center gap-4 md:gap-6">
-          {/* Primary CTA - Start a Conversation */}
+        {/* CTA Buttons - Architectural, Minimal */}
+        <div ref={ctaRef} className="flex flex-col sm:flex-row items-center justify-center gap-6 md:gap-8">
+          {/* Primary - Clean line button */}
           <a
             href="mailto:matthew@chrestenson.com"
-            className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-[#0071E3] to-[#00A3FF] text-white px-8 py-4 rounded-full text-base font-medium overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-[#0071E3]/30 hover:-translate-y-1 hover:scale-[1.02]"
+            className="group relative inline-flex items-center gap-4 text-[#1D1D1F] text-sm font-medium tracking-wide uppercase"
           >
-            <span className="absolute inset-0 bg-gradient-to-r from-[#00A3FF] to-[#0071E3] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <span className="relative z-10">Start a Conversation</span>
+            <span className="relative">
+              Start a Conversation
+              <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#1D1D1F] transition-all duration-500 group-hover:w-full" />
+            </span>
+            <span className="w-10 h-px bg-[#1D1D1F]/30 group-hover:w-16 group-hover:bg-[#1D1D1F] transition-all duration-500" />
             <svg 
-              className="relative z-10 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
+              className="w-4 h-4 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>
           
-          {/* Secondary CTA - View Resume */}
+          {/* Divider */}
+          <span className="hidden sm:block w-px h-6 bg-[#1D1D1F]/10" />
+          
+          {/* Secondary - Resume */}
           <button
             onClick={() => setIsResumeOpen(true)}
-            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full text-base font-medium overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02]"
+            className="group relative inline-flex items-center gap-3 text-[#86868B] text-sm font-medium tracking-wide uppercase hover:text-[#1D1D1F] transition-colors duration-300"
           >
-            <span className="absolute inset-0 rounded-full border-2 border-[#1D1D1F]/20 group-hover:border-[#0071E3] transition-colors duration-300" />
-            <span className="absolute inset-0 rounded-full bg-white/80 backdrop-blur-sm group-hover:bg-[#0071E3]/5 transition-colors duration-300" />
-            <svg className="relative z-10 w-5 h-5 text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="relative z-10 text-[#1D1D1F] group-hover:text-[#0071E3] transition-colors duration-300">View Resume</span>
+            <span className="w-2 h-2 border border-current rotate-45 group-hover:bg-[#1D1D1F] group-hover:border-[#1D1D1F] transition-all duration-300" />
+            <span>View Resume</span>
           </button>
           
-          {/* Tertiary CTA - Call Now */}
+          {/* Divider */}
+          <span className="hidden sm:block w-px h-6 bg-[#1D1D1F]/10" />
+          
+          {/* Tertiary - Call */}
           <a
             href="tel:+18054528932"
-            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full text-base font-medium overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02]"
+            className="group relative inline-flex items-center gap-3 text-[#86868B] text-sm font-medium tracking-wide uppercase hover:text-[#1D1D1F] transition-colors duration-300"
           >
-            <span className="absolute inset-0 rounded-full bg-[#1D1D1F] group-hover:bg-[#2D2D2F] transition-colors duration-300" />
-            <svg className="relative z-10 w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-            </svg>
-            <span className="relative z-10 text-white">Call Now</span>
+            <span className="w-2 h-2 border border-current rotate-45 group-hover:bg-[#1D1D1F] group-hover:border-[#1D1D1F] transition-all duration-300" />
+            <span>805.452.8932</span>
           </a>
         </div>
       </div>
