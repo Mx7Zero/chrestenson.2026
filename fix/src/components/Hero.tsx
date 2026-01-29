@@ -159,7 +159,7 @@ export const Hero = () => {
       };
       
       // Logo collision radius - sized to match the visible logo
-      const logoCollisionRadius = isMobile ? 85 : 130;
+      const logoCollisionRadius = isMobile ? 85 : 150;
 
       if (lettersContainerRef.current) {
         const letterDivs = lettersContainerRef.current.children;
