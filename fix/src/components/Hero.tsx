@@ -24,6 +24,7 @@ export const Hero = () => {
   const lettersContainerRef = useRef<HTMLDivElement>(null);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Physics settings with refs for real-time updates
   const [physics, setPhysics] = useState<PhysicsSettings>({
@@ -567,8 +568,8 @@ export const Hero = () => {
           {/* Floating letters - positioned relative to logo center */}
           <div 
             ref={lettersContainerRef} 
-            className="absolute"
-            style={{ 
+            className={`${isFullscreen ? 'fixed inset-0 bg-white z-50' : 'absolute'} transition-all duration-500`}
+            style={isFullscreen ? {} : { 
               width: 'min(90vw, 700px)', 
               height: 'min(280px, 400px)', 
               left: '50%', 
@@ -591,6 +592,38 @@ export const Hero = () => {
                 {letter}
               </span>
             ))}
+            
+            {/* Fullscreen Toggle - bottom left */}
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className={`absolute z-30 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                isFullscreen
+                  ? 'bottom-4 left-4 bg-[#1D1D1F] text-white'
+                  : 'bottom-2 left-2 bg-white/60 text-[#1D1D1F]/60 hover:bg-white/90 hover:text-[#1D1D1F]'
+              }`}
+              style={!isFullscreen ? { left: 'max(8px, calc(50% - min(45vw, 350px) + 8px))' } : {}}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            >
+              {isFullscreen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              )}
+            </button>
+            
+            {/* C Logo in fullscreen mode */}
+            {isFullscreen && (
+              <img 
+                ref={logoRef}
+                src="/black-letter-c.png" 
+                alt="C" 
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain z-10"
+              />
+            )}
           </div>
           
           {/* Physics Controls - positioned relative to logo wrapper, bottom-right */}
@@ -752,7 +785,7 @@ export const Hero = () => {
             ref={logoRef}
             src="/black-letter-c.png" 
             alt="C" 
-            className="w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain relative z-10"
+            className={`w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain relative z-10 ${isFullscreen ? 'opacity-0' : ''}`}
             fetchPriority="high"
             decoding="async"
           />
