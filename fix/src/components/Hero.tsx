@@ -552,34 +552,66 @@ export const Hero = () => {
       id="hero" 
       className="min-h-screen flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-32 relative overflow-hidden"
     >
-      {/* Physics Controls Panel */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* Subtle gradient background accent */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
+      
+      {/* Physics Controls - positioned in the hero frame */}
+      <div className="absolute bottom-8 right-8 z-20">
         <button
           onClick={() => setShowControls(!showControls)}
-          className="bg-[#1D1D1F] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:bg-[#2D2D2F] transition-colors flex items-center gap-2"
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+            showControls 
+              ? 'bg-[#1D1D1F] text-white shadow-lg' 
+              : 'bg-white/80 text-[#1D1D1F] hover:bg-white shadow-md border border-gray-200/50'
+          }`}
+          aria-label="Physics controls"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="18" 
+            height="18" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            className={`transition-transform duration-300 ${showControls ? 'rotate-90' : ''}`}
+          >
             <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6m0 6v10"/>
-            <path d="m4.22 4.22 4.24 4.24m7.08 7.08 4.24 4.24"/>
-            <path d="M1 12h6m6 0h10"/>
-            <path d="m4.22 19.78 4.24-4.24m7.08-7.08 4.24-4.24"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
-          Physics Lab
         </button>
         
-        {showControls && (
-          <div className="absolute top-12 right-0 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-5 w-72 border border-gray-200">
-            <h3 className="text-[#1D1D1F] font-bold text-sm mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              Physics Controls
-            </h3>
+        {/* Panel slides up from button */}
+        <div className={`absolute bottom-14 right-0 transition-all duration-300 origin-bottom-right ${
+          showControls 
+            ? 'opacity-100 scale-100 translate-y-0' 
+            : 'opacity-0 scale-95 translate-y-2 pointer-events-none'
+        }`}>
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl p-6 w-64 border border-gray-100">
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-[#1D1D1F] font-semibold text-xs tracking-wide uppercase">Physics</span>
+              <button
+                onClick={() => setPhysics({
+                  logoSpeed: 100,
+                  letterSpeed: 100,
+                  bounce: 50,
+                  repulsion: 50,
+                  friction: 50,
+                  gravity: 0
+                })}
+                className="text-[10px] text-gray-400 hover:text-[#1D1D1F] transition-colors"
+              >
+                Reset
+              </button>
+            </div>
             
             {/* Logo Speed */}
             <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 font-medium">Logo Speed</span>
-                <span className="text-[#1D1D1F] font-mono">{physics.logoSpeed}%</span>
+              <div className="flex justify-between text-[11px] mb-2">
+                <span className="text-gray-500">Logo Speed</span>
+                <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.logoSpeed}</span>
               </div>
               <input
                 type="range"
@@ -587,15 +619,15 @@ export const Hero = () => {
                 max="200"
                 value={physics.logoSpeed}
                 onChange={(e) => setPhysics(p => ({ ...p, logoSpeed: Number(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
               />
             </div>
             
             {/* Letter Speed */}
             <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 font-medium">Letter Speed</span>
-                <span className="text-[#1D1D1F] font-mono">{physics.letterSpeed}%</span>
+              <div className="flex justify-between text-[11px] mb-2">
+                <span className="text-gray-500">Letter Speed</span>
+                <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.letterSpeed}</span>
               </div>
               <input
                 type="range"
@@ -603,15 +635,15 @@ export const Hero = () => {
                 max="200"
                 value={physics.letterSpeed}
                 onChange={(e) => setPhysics(p => ({ ...p, letterSpeed: Number(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
               />
             </div>
             
             {/* Bounce */}
             <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 font-medium">Bounce</span>
-                <span className="text-[#1D1D1F] font-mono">{physics.bounce}%</span>
+              <div className="flex justify-between text-[11px] mb-2">
+                <span className="text-gray-500">Bounce</span>
+                <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.bounce}</span>
               </div>
               <input
                 type="range"
@@ -619,15 +651,15 @@ export const Hero = () => {
                 max="100"
                 value={physics.bounce}
                 onChange={(e) => setPhysics(p => ({ ...p, bounce: Number(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
               />
             </div>
             
             {/* Repulsion */}
             <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 font-medium">Repulsion</span>
-                <span className="text-[#1D1D1F] font-mono">{physics.repulsion}%</span>
+              <div className="flex justify-between text-[11px] mb-2">
+                <span className="text-gray-500">Repulsion</span>
+                <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.repulsion}</span>
               </div>
               <input
                 type="range"
@@ -635,15 +667,15 @@ export const Hero = () => {
                 max="100"
                 value={physics.repulsion}
                 onChange={(e) => setPhysics(p => ({ ...p, repulsion: Number(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
               />
             </div>
             
             {/* Friction */}
             <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 font-medium">Friction</span>
-                <span className="text-[#1D1D1F] font-mono">{physics.friction}%</span>
+              <div className="flex justify-between text-[11px] mb-2">
+                <span className="text-gray-500">Friction</span>
+                <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.friction}</span>
               </div>
               <input
                 type="range"
@@ -651,15 +683,15 @@ export const Hero = () => {
                 max="100"
                 value={physics.friction}
                 onChange={(e) => setPhysics(p => ({ ...p, friction: Number(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500"
+                className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
               />
             </div>
             
             {/* Gravity */}
-            <div className="mb-4">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 font-medium">Gravity</span>
-                <span className="text-[#1D1D1F] font-mono">{physics.gravity > 0 ? '+' : ''}{physics.gravity}</span>
+            <div>
+              <div className="flex justify-between text-[11px] mb-2">
+                <span className="text-gray-500">Gravity</span>
+                <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.gravity > 0 ? '+' : ''}{physics.gravity}</span>
               </div>
               <input
                 type="range"
@@ -667,34 +699,12 @@ export const Hero = () => {
                 max="50"
                 value={physics.gravity}
                 onChange={(e) => setPhysics(p => ({ ...p, gravity: Number(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#1D1D1F] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
               />
             </div>
-            
-            {/* Reset Button */}
-            <button
-              onClick={() => setPhysics({
-                logoSpeed: 100,
-                letterSpeed: 100,
-                bounce: 50,
-                repulsion: 50,
-                friction: 50,
-                gravity: 0
-              })}
-              className="w-full mt-2 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Reset to Defaults
-            </button>
-            
-            <p className="mt-3 text-[10px] text-gray-400 text-center">
-              Adjust sliders to experiment with physics
-            </p>
           </div>
-        )}
+        </div>
       </div>
-      
-      {/* Subtle gradient background accent */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
       
       <div className="max-w-full relative z-10 text-center px-4">
         {/* C Logo and Floating Letters Container */}
