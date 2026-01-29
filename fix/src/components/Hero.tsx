@@ -158,8 +158,8 @@ export const Hero = () => {
         bottom: containerHeight / 2 - 40
       };
       
-      // Logo collision radius - much smaller so letters get close
-      const logoCollisionRadius = isMobile ? 50 : 80;
+      // Logo collision radius - sized to match the visible logo
+      const logoCollisionRadius = isMobile ? 65 : 100;
 
       if (lettersContainerRef.current) {
         const letterDivs = lettersContainerRef.current.children;
