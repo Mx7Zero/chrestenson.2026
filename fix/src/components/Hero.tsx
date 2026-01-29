@@ -882,50 +882,50 @@ export const Hero = () => {
           </div>
         </div>
 
-        {/* CTA Buttons - Architectural, Minimal */}
-        <div ref={ctaRef} className="flex flex-col sm:flex-row items-center justify-center gap-6 md:gap-8">
-          {/* Primary - Clean line button */}
+        {/* CTA Buttons - Architectural with thin borders */}
+        <div ref={ctaRef} className="flex flex-col sm:flex-row items-stretch justify-center gap-3 md:gap-4">
+          {/* Primary - Start a Conversation */}
           <a
             href="mailto:matthew@chrestenson.com"
-            className="group relative inline-flex items-center gap-4 text-[#1D1D1F] text-sm font-medium tracking-wide uppercase"
+            className="group relative flex items-center justify-center gap-3 px-6 py-4 border border-[#1D1D1F]/15 bg-[#FAFAFA] hover:bg-[#1D1D1F] hover:border-[#1D1D1F] transition-all duration-300"
           >
-            <span className="relative">
+            <span className="text-xs font-medium tracking-widest uppercase text-[#1D1D1F] group-hover:text-white transition-colors duration-300">
               Start a Conversation
-              <span className="absolute -bottom-1 left-0 w-0 h-px bg-[#1D1D1F] transition-all duration-500 group-hover:w-full" />
             </span>
-            <span className="w-10 h-px bg-[#1D1D1F]/30 group-hover:w-16 group-hover:bg-[#1D1D1F] transition-all duration-500" />
             <svg 
-              className="w-4 h-4 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500" 
+              className="w-4 h-4 text-[#1D1D1F] group-hover:text-white transition-colors duration-300" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>
           
-          {/* Divider */}
-          <span className="hidden sm:block w-px h-6 bg-[#1D1D1F]/10" />
-          
-          {/* Secondary - Resume */}
+          {/* Secondary - View Resume */}
           <button
             onClick={() => setIsResumeOpen(true)}
-            className="group relative inline-flex items-center gap-3 text-[#86868B] text-sm font-medium tracking-wide uppercase hover:text-[#1D1D1F] transition-colors duration-300"
+            className="group relative flex items-center justify-center gap-3 px-6 py-4 border border-[#1D1D1F]/15 bg-white hover:bg-[#F5F5F7] hover:border-[#1D1D1F]/30 transition-all duration-300"
           >
-            <span className="w-2 h-2 border border-current rotate-45 group-hover:bg-[#1D1D1F] group-hover:border-[#1D1D1F] transition-all duration-300" />
-            <span>View Resume</span>
+            <svg className="w-4 h-4 text-[#86868B] group-hover:text-[#1D1D1F] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="text-xs font-medium tracking-widest uppercase text-[#86868B] group-hover:text-[#1D1D1F] transition-colors duration-300">
+              View Resume
+            </span>
           </button>
-          
-          {/* Divider */}
-          <span className="hidden sm:block w-px h-6 bg-[#1D1D1F]/10" />
           
           {/* Tertiary - Call */}
           <a
             href="tel:+18054528932"
-            className="group relative inline-flex items-center gap-3 text-[#86868B] text-sm font-medium tracking-wide uppercase hover:text-[#1D1D1F] transition-colors duration-300"
+            className="group relative flex items-center justify-center gap-3 px-6 py-4 border border-[#1D1D1F]/15 bg-white hover:bg-[#F5F5F7] hover:border-[#1D1D1F]/30 transition-all duration-300"
           >
-            <span className="w-2 h-2 border border-current rotate-45 group-hover:bg-[#1D1D1F] group-hover:border-[#1D1D1F] transition-all duration-300" />
-            <span>805.452.8932</span>
+            <svg className="w-4 h-4 text-[#86868B] group-hover:text-[#1D1D1F] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            <span className="text-xs font-medium tracking-widest uppercase text-[#86868B] group-hover:text-[#1D1D1F] transition-colors duration-300">
+              805.452.8932
+            </span>
           </a>
         </div>
       </div>
