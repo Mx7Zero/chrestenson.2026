@@ -5,6 +5,7 @@
   "routes": [
     { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
     { "src": "/robots.txt", "dest": "/robots.txt" },
+    { "src": "/14db7e8cb9c5483fa748096297fd7702.txt", "dest": "/14db7e8cb9c5483fa748096297fd7702.txt" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
