@@ -40,7 +40,7 @@ JSON-LD schema includes Organization markup linking to:
 - Request to be added to the "Alumni" or "Past Employees" section on LinkedIn company pages
 - Links from LinkedIn company pages are high-authority backlinks
 - Target companies:
-  - Disney Interactive (now Disney Digital)
+  - Disney
   - National Geographic
   - Ridley Scott Associates (RSA Films)
 
