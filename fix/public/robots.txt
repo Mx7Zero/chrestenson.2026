@@ -6,7 +6,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.chrestenson.com/sitemap.xml
+Sitemap: https://chrestenson.com/sitemap.xml
 
 # AI Search Crawlers - explicitly allow
 User-agent: GPTBot
