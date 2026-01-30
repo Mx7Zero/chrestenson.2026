@@ -1,0 +1,35 @@
+# Robots.txt for chrestenson.com
+# Matthew Chrestenson - Executive Strategist Portfolio
+
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.chrestenson.com/sitemap.xml
+
+# AI Search Crawlers - explicitly allow
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Crawl-delay for politeness (optional, most ignore)
+User-agent: *
+Crawl-delay: 1
