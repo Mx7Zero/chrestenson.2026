@@ -603,6 +603,8 @@ export const Hero = () => {
             {letters.map((letter, index) => (
               <span
                 key={index}
+                aria-hidden="true"
+                role="presentation"
                 className="absolute font-black text-[#1D1D1F] select-none pointer-events-none text-sm md:text-xl"
                 style={{ 
                   willChange: 'transform', 
@@ -651,7 +653,7 @@ export const Hero = () => {
               <img 
                 ref={logoRef}
                 src="/black-letter-c.png" 
-                alt="C" 
+                alt="Chrestenson logo" 
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain z-10 pointer-events-none"
               />
             )}
@@ -815,7 +817,7 @@ export const Hero = () => {
           <img 
             ref={logoRef}
             src="/black-letter-c.png" 
-            alt="C" 
+            alt="Matthew Chrestenson logo" 
             className={`w-48 h-48 md:w-72 md:h-72 lg:w-96 lg:h-96 object-contain relative z-10 ${isFullscreen ? 'opacity-0' : ''}`}
             fetchPriority="high"
             decoding="async"

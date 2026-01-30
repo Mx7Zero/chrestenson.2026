@@ -292,7 +292,7 @@ export const PortfolioSlider = () => {
                     >
                       <img
                         src={`/portfolio/${encodeURIComponent(image)}`}
-                        alt={`Portfolio item ${idx + 1}`}
+                        alt={`Brand design work: ${image.replace(/\.(png|jpg|jpeg|gif|webp)$/i, '').replace(/[-_]/g, ' ')}`}
                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                         draggable="false"
                       />
@@ -334,7 +334,7 @@ export const PortfolioSlider = () => {
           <div className="relative max-w-[90vw] max-h-[90vh] p-4">
             <img
               src={`/portfolio/${encodeURIComponent(selectedImage)}`}
-              alt="Portfolio detail"
+              alt={`Brand design detail: ${selectedImage.replace(/\.(png|jpg|jpeg|gif|webp)$/i, '').replace(/[-_]/g, ' ')}`}
               className="max-w-full max-h-[90vh] object-contain"
               onClick={(e) => e.stopPropagation()}
             />

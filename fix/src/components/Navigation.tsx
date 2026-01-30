@@ -19,7 +19,7 @@ export const Navigation = () => {
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
         <div className="flex items-center justify-between h-16">
           <a href="#hero" className="flex items-center">
-            <img src="/black-letter-c.png" alt="C" className="h-8 w-8 object-contain" />
+            <img src="/black-letter-c.png" alt="Chrestenson - Home" className="h-8 w-8 object-contain" />
           </a>
           
           {/* Desktop Nav */}
