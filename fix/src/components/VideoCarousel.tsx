@@ -35,7 +35,7 @@ export const VideoCarousel = () => {
   const normalizePosition = useCallback((x: number, setWidth: number) => {
     if (setWidth === 0) return x;
     let normalized = x % setWidth;
-    if (normalized < 0) normalized += setWidth;
+    if (normalized > 0) normalized -= setWidth;
     return normalized;
   }, []);
 
@@ -53,9 +53,9 @@ export const VideoCarousel = () => {
     
     gsap.set(scrollRef.current, { x: normalizedX });
     
-    // Scroll left to right (negative direction in x)
+    // Same as portfolio but opposite direction - videos scroll left to right
     animationRef.current = gsap.to(scrollRef.current, {
-      x: normalizedX - setWidth,
+      x: normalizedX + setWidth,
       duration: 80,
       ease: 'none',
       repeat: -1,
@@ -224,6 +224,7 @@ export const VideoCarousel = () => {
         className="relative bg-white overflow-hidden"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        style={{ transform: 'scaleX(-1)' }}
       >
         <div className="relative overflow-hidden cursor-grab active:cursor-grabbing py-16">
           <div 
@@ -250,7 +251,7 @@ export const VideoCarousel = () => {
                       style={{
                         width: '320px',
                         height: '180px',
-                        transform: `scale(${scale})`,
+                        transform: `scaleX(-1) scale(${scale})`,
                         transformOrigin: 'bottom center',
                         willChange: 'transform',
                         zIndex: Math.round(scale * 100)
