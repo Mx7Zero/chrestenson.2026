@@ -253,7 +253,7 @@ export const PortfolioSlider = () => {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing py-16">
+        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing pb-0">
           <div 
             ref={scrollRef}
             className="flex will-change-transform items-end"

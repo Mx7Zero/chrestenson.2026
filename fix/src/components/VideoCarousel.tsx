@@ -56,7 +56,7 @@ export const VideoCarousel = () => {
     // Same as portfolio but opposite direction - videos scroll left to right
     animationRef.current = gsap.to(scrollRef.current, {
       x: normalizedX + setWidth,
-      duration: 80,
+      duration: 100,
       ease: 'none',
       repeat: -1,
       modifiers: {
@@ -226,7 +226,7 @@ export const VideoCarousel = () => {
         onMouseLeave={handleMouseLeave}
         style={{ transform: 'scaleX(-1)' }}
       >
-        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing py-16">
+        <div className="relative overflow-hidden cursor-grab active:cursor-grabbing">
           <div 
             ref={scrollRef}
             className="flex will-change-transform items-end"
@@ -247,7 +247,7 @@ export const VideoCarousel = () => {
                     <div 
                       key={`${setIndex}-${idx}`}
                       ref={(el) => itemRefs.current[globalIndex] = el}
-                      className="relative shrink-0 overflow-visible transition-all duration-150 ease-out cursor-pointer group mx-2"
+                      className="relative shrink-0 overflow-visible transition-all duration-150 ease-out cursor-pointer group"
                       style={{
                         width: '320px',
                         height: '180px',
@@ -266,7 +266,7 @@ export const VideoCarousel = () => {
                       <img
                         src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
                         alt="Video thumbnail"
-                        className="w-full h-full object-cover rounded-lg grayscale group-hover:grayscale-0 transition-all duration-300"
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                         draggable="false"
                         onError={(e) => {
                           // Fallback to hqdefault if maxresdefault doesn't exist
@@ -276,7 +276,7 @@ export const VideoCarousel = () => {
                           }
                         }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all duration-300 rounded-lg">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all duration-300">
                         <div className="opacity-50 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
                           <svg 
                             className="w-16 h-16 text-white drop-shadow-lg"
