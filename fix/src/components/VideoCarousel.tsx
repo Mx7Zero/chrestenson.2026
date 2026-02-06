@@ -56,7 +56,7 @@ export const VideoCarousel = () => {
     // Same as portfolio but opposite direction - videos scroll left to right
     animationRef.current = gsap.to(scrollRef.current, {
       x: normalizedX + setWidth,
-      duration: 100,
+      duration: 23,
       ease: 'none',
       repeat: -1,
       modifiers: {
