@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import { ResumeModal } from './ResumeModal';
 
 // Physics controls interface
 interface PhysicsSettings {
@@ -22,7 +21,6 @@ export const Hero = () => {
   const summaryRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const lettersContainerRef = useRef<HTMLDivElement>(null);
-  const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isFullscreenRef = useRef(isFullscreen);
@@ -968,18 +966,19 @@ export const Hero = () => {
             </svg>
           </a>
           
-          {/* Secondary - View Resume - Sky Blue */}
-          <button
-            onClick={() => setIsResumeOpen(true)}
+          {/* Secondary - Download Resume - Sky Blue */}
+          <a
+            href="/MATTHEW-CHRESTENSON.pdf"
+            download="MATTHEW-CHRESTENSON.pdf"
             className="group relative flex items-center justify-center gap-3 px-6 py-4 border border-[#34AADC]/20 bg-[#34AADC]/5 hover:bg-[#1D1D1F] hover:border-[#1D1D1F] transition-all duration-300"
           >
             <svg className="w-4 h-4 text-[#34AADC] group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span className="text-xs font-medium tracking-widest uppercase text-[#34AADC] group-hover:text-white transition-colors duration-300">
-              View Resume
+              Download Resume
             </span>
-          </button>
+          </a>
           
           {/* Tertiary - Call - Indigo Blue */}
           <a
@@ -1003,8 +1002,6 @@ export const Hero = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
       </div>
-      
-      <ResumeModal isOpen={isResumeOpen} onClose={() => setIsResumeOpen(false)} />
     </section>
   );
 };
