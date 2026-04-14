@@ -8,21 +8,25 @@ import { ExpertiseAccordion } from './components/ExpertiseAccordion'
 import { TechStack } from './components/TechStack'
 import { Contact } from './components/Contact'
 import { CustomCursor } from './components/CustomCursor'
+import { GrassBallScene } from './components/GrassBallScene'
 
 function App() {
   return (
-    <div className="relative bg-[#FAFAFA]">
-      <CustomCursor />
-      <Navigation />
-      <Hero />
-      <CredibilityBar />
-      <CompetencyGrid />
-      <PortfolioSlider />
-      <VideoCarousel />
-      <ExpertiseAccordion />
-      <TechStack />
-      <Contact />
-    </div>
+    <>
+      <GrassBallScene />
+      <div className="relative" style={{ zIndex: 1 }}>
+        <CustomCursor />
+        <Navigation />
+        <Hero />
+        <CredibilityBar />
+        <CompetencyGrid />
+        <PortfolioSlider />
+        <VideoCarousel />
+        <ExpertiseAccordion />
+        <TechStack />
+        <Contact />
+      </div>
+    </>
   )
 }
 

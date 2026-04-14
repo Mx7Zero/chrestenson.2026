@@ -86,3 +86,18 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #0071E3;
 }
+
+/* leva panel: restore native cursor (CustomCursor sets cursor:none on *) */
+#leva-wrapper,
+#leva-wrapper * {
+  cursor: auto !important;
+}
+#leva-wrapper input,
+#leva-wrapper [role="slider"],
+#leva-wrapper button {
+  cursor: pointer !important;
+}
+#leva-wrapper {
+  position: relative;
+  z-index: 99999;
+}

@@ -576,10 +576,9 @@ export const Hero = () => {
     <section 
       ref={sectionRef}
       id="hero" 
-      className="min-h-screen flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-32 relative overflow-hidden"
+      className="min-h-screen flex flex-col items-center justify-center px-6 md:px-12 lg:px-24 py-32 relative overflow-hidden font-bold"
     >
-      {/* Subtle gradient background accent */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAFA] to-[#F0F5FF] opacity-50" />
+      {/* gradient overlay removed so the 3D ball shows through */}
       
       <div className="max-w-full relative z-10 text-center px-4">
         {/* C Logo and Floating Letters Container */}
@@ -692,7 +691,7 @@ export const Hero = () => {
             }`}>
               <div className="bg-white/95 backdrop-blur-xl rounded-xl shadow-lg p-4 border border-gray-100/50">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[#1D1D1F] font-medium text-[10px] tracking-wide uppercase">Physics</span>
+                  <span className="text-[#1D1D1F] font-bold text-[10px] tracking-wide uppercase">Physics</span>
                   <button
                     onClick={() => setPhysics({
                       logoSpeed: 100,
@@ -714,7 +713,7 @@ export const Hero = () => {
                   <div>
                     <div className="flex justify-between text-[10px] mb-1">
                       <span className="text-gray-500">Logo</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.logoSpeed}</span>
+                      <span className="text-[#1D1D1F] font-bold tabular-nums">{physics.logoSpeed}</span>
                     </div>
                     <input
                       type="range"
@@ -730,7 +729,7 @@ export const Hero = () => {
                   <div>
                     <div className="flex justify-between text-[10px] mb-1">
                       <span className="text-gray-500">Bounce</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.bounce}</span>
+                      <span className="text-[#1D1D1F] font-bold tabular-nums">{physics.bounce}</span>
                     </div>
                     <input
                       type="range"
@@ -746,7 +745,7 @@ export const Hero = () => {
                   <div>
                     <div className="flex justify-between text-[10px] mb-1">
                       <span className="text-gray-500">Letters</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.letterSpeed}</span>
+                      <span className="text-[#1D1D1F] font-bold tabular-nums">{physics.letterSpeed}</span>
                     </div>
                     <input
                       type="range"
@@ -762,7 +761,7 @@ export const Hero = () => {
                   <div>
                     <div className="flex justify-between text-[10px] mb-1">
                       <span className="text-gray-500">Repulsion</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.repulsion}</span>
+                      <span className="text-[#1D1D1F] font-bold tabular-nums">{physics.repulsion}</span>
                     </div>
                     <input
                       type="range"
@@ -778,7 +777,7 @@ export const Hero = () => {
                   <div>
                     <div className="flex justify-between text-[10px] mb-1">
                       <span className="text-gray-500">Friction</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.friction}</span>
+                      <span className="text-[#1D1D1F] font-bold tabular-nums">{physics.friction}</span>
                     </div>
                     <input
                       type="range"
@@ -794,7 +793,7 @@ export const Hero = () => {
                   <div>
                     <div className="flex justify-between text-[10px] mb-1">
                       <span className="text-gray-500">Gravity</span>
-                      <span className="text-[#1D1D1F] font-medium tabular-nums">{physics.gravity > 0 ? '+' : ''}{physics.gravity}</span>
+                      <span className="text-[#1D1D1F] font-bold tabular-nums">{physics.gravity > 0 ? '+' : ''}{physics.gravity}</span>
                     </div>
                     <input
                       type="range"
@@ -825,13 +824,13 @@ export const Hero = () => {
         {/* Name - Brand Hierarchy */}
         <div ref={nameRef} className="mb-8">
           {/* CHRESTENSON - Primary */}
-          <h1 className="text-[10vw] md:text-[8vw] lg:text-[7vw] font-black text-[#6E6E73] uppercase tracking-tight leading-none mb-2">
+          <h1 className="text-[10vw] md:text-[8vw] lg:text-[7vw] font-black text-[#1D1D1F] uppercase tracking-tight leading-none mb-2">
             CHRESTENSON
           </h1>
           {/* MATTHEW - Secondary with underline */}
           <div className="flex items-center justify-center gap-4 mb-1">
             <div className="h-px w-20 bg-[#1D1D1F]" />
-            <p className="text-2xl md:text-3xl lg:text-4xl font-light text-[#1D1D1F] uppercase tracking-[0.3em]">
+            <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#1D1D1F] uppercase tracking-[0.3em]">
               MATTHEW
             </p>
             <div className="h-px w-20 bg-[#1D1D1F]" />
@@ -841,7 +840,7 @@ export const Hero = () => {
         {/* Title */}
         <p 
           ref={titleRef}
-          className="text-sm md:text-base lg:text-lg text-[#6E6E73] font-normal mb-8 tracking-[0.2em] uppercase"
+          className="text-sm md:text-base lg:text-lg text-[#1D1D1F] font-bold mb-8 tracking-[0.2em] uppercase"
         >
           Executive Strategist{' '}
           <span className="text-[#D1D1D6]">|</span>{' '}
@@ -862,16 +861,16 @@ export const Hero = () => {
                   href={link.href}
                   target={link.href.startsWith('http') ? '_blank' : undefined}
                   rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="flex items-center gap-2 text-[#6E6E73] hover:text-[#0071E3] transition-colors duration-300 group"
+                  className="flex items-center gap-2 text-[#1D1D1F] hover:text-[#1D1D1F] transition-colors duration-300 group"
                 >
-                  <span className="text-[#86868B] group-hover:text-[#0071E3] transition-colors duration-300">
+                  <span className="text-[#1D1D1F] group-hover:text-[#1D1D1F] transition-colors duration-300">
                     {link.icon}
                   </span>
                   <span>{link.label}</span>
                 </a>
               ) : (
-                <span className="flex items-center gap-2 text-[#6E6E73]">
-                  <span className="text-[#86868B]">{link.icon}</span>
+                <span className="flex items-center gap-2 text-[#1D1D1F]">
+                  <span className="text-[#1D1D1F]">{link.icon}</span>
                   <span>{link.label}</span>
                 </span>
               )}
@@ -890,7 +889,7 @@ export const Hero = () => {
           {/* Section Label */}
           <div className="flex items-center justify-center gap-4 mb-10">
             <div className="h-px flex-1 max-w-24 bg-gradient-to-r from-transparent to-[#E5E5E5]" />
-            <span className="text-xs font-mono tracking-[0.3em] uppercase text-[#0071E3]">
+            <span className="text-xs font-mono tracking-[0.3em] uppercase text-[#1D1D1F]">
               The Short Version
             </span>
             <div className="h-px flex-1 max-w-24 bg-gradient-to-l from-transparent to-[#E5E5E5]" />
@@ -902,13 +901,13 @@ export const Hero = () => {
             <div className="py-8 md:py-10 border-b border-[#E5E5E5] group">
               <div className="flex gap-4 md:gap-6">
                 <div className="flex-shrink-0 w-10 h-10 border border-[#E5E5E5] flex items-center justify-center group-hover:border-[#0071E3] group-hover:bg-[#0071E3] transition-all">
-                  <span className="text-xs font-mono text-[#86868B] group-hover:text-white transition-colors">01</span>
+                  <span className="text-xs font-mono text-[#1D1D1F] group-hover:text-white transition-colors">01</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm md:text-base text-[#424245] leading-relaxed">
-                    <span className="text-[#1D1D1F] font-medium">AI-augmented strategist</span> and <span className="text-[#1D1D1F] font-medium">brand architect</span> with <span className="text-[#0071E3] font-mono text-sm">30+ years</span> of creative leadership, using LLMs and generative AI to accelerate research, content production, and visual asset creation at enterprise scale.
+                  <p className="text-sm md:text-base text-[#1D1D1F] leading-relaxed">
+                    <span className="text-[#1D1D1F] font-bold">AI-augmented strategist</span> and <span className="text-[#1D1D1F] font-bold">brand architect</span> with <span className="text-[#1D1D1F] font-mono text-sm">30+ years</span> of creative leadership, using LLMs and generative AI to accelerate research, content production, and visual asset creation at enterprise scale.
                   </p>
-                  <p className="text-sm md:text-base text-[#6E6E73] leading-relaxed mt-3">
+                  <p className="text-sm md:text-base text-[#1D1D1F] leading-relaxed mt-3">
                     Demonstrated ability to transform complex market intelligence into investor-ready documentation, brand strategies, and full-stack digital products—work that previously required teams, now executed with AI-assisted workflows.
                   </p>
                 </div>
@@ -919,17 +918,17 @@ export const Hero = () => {
             <div className="py-8 md:py-10 border-b border-[#E5E5E5] group">
               <div className="flex gap-4 md:gap-6">
                 <div className="flex-shrink-0 w-10 h-10 border border-[#E5E5E5] flex items-center justify-center group-hover:border-[#0071E3] group-hover:bg-[#0071E3] transition-all">
-                  <span className="text-xs font-mono text-[#86868B] group-hover:text-white transition-colors">02</span>
+                  <span className="text-xs font-mono text-[#1D1D1F] group-hover:text-white transition-colors">02</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm md:text-base text-[#424245] leading-relaxed">
-                    Unique combination of <span className="text-[#1D1D1F] font-medium">studio-grade production</span> experience and <span className="text-[#1D1D1F] font-medium">hospitality brand-building</span> with current <span className="text-[#1D1D1F] font-medium">AI-first strategic advisory</span> across health technology, hospitality, and consumer goods.
+                  <p className="text-sm md:text-base text-[#1D1D1F] leading-relaxed">
+                    Unique combination of <span className="text-[#1D1D1F] font-bold">studio-grade production</span> experience and <span className="text-[#1D1D1F] font-bold">hospitality brand-building</span> with current <span className="text-[#1D1D1F] font-bold">AI-first strategic advisory</span> across health technology, hospitality, and consumer goods.
                   </p>
                   <div className="flex flex-wrap gap-3 mt-4">
-                    <span className="text-xs font-mono tracking-wider text-[#86868B] border border-[#E5E5E5] px-3 py-1.5">DISNEY</span>
-                    <span className="text-xs font-mono tracking-wider text-[#86868B] border border-[#E5E5E5] px-3 py-1.5">NATIONAL GEOGRAPHIC</span>
-                    <span className="text-xs font-mono tracking-wider text-[#86868B] border border-[#E5E5E5] px-3 py-1.5">RIDLEY SCOTT ASSOCIATES</span>
-                    <span className="text-xs font-mono tracking-wider text-[#0071E3] border border-[#0071E3]/30 px-3 py-1.5">6 VENTURES → EXIT</span>
+                    <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#E5E5E5] px-3 py-1.5">DISNEY</span>
+                    <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#E5E5E5] px-3 py-1.5">NATIONAL GEOGRAPHIC</span>
+                    <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#E5E5E5] px-3 py-1.5">RIDLEY SCOTT ASSOCIATES</span>
+                    <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#0071E3]/30 px-3 py-1.5">6 VENTURES → EXIT</span>
                   </div>
                 </div>
               </div>
@@ -939,7 +938,7 @@ export const Hero = () => {
           {/* Tagline */}
           <div className="pt-8 flex items-center justify-center gap-4">
             <div className="h-px w-12 bg-[#0071E3]/30" />
-            <span className="text-xs font-mono tracking-[0.25em] uppercase text-[#0071E3]">
+            <span className="text-xs font-mono tracking-[0.25em] uppercase text-[#1D1D1F]">
               AI-native — not just AI-literate
             </span>
             <div className="h-px w-12 bg-[#0071E3]/30" />
@@ -953,11 +952,11 @@ export const Hero = () => {
             href="mailto:matthew@chrestenson.com"
             className="group relative flex items-center justify-center gap-3 px-6 py-4 border border-[#0071E3]/20 bg-[#0071E3]/5 hover:bg-[#1D1D1F] hover:border-[#1D1D1F] transition-all duration-300"
           >
-            <span className="text-xs font-medium tracking-widest uppercase text-[#0071E3] group-hover:text-white transition-colors duration-300">
+            <span className="text-xs font-bold tracking-widest uppercase text-[#1D1D1F] group-hover:text-white transition-colors duration-300">
               Start a Conversation
             </span>
             <svg 
-              className="w-4 h-4 text-[#0071E3] group-hover:text-white transition-colors duration-300" 
+              className="w-4 h-4 text-[#1D1D1F] group-hover:text-white transition-colors duration-300" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -972,10 +971,10 @@ export const Hero = () => {
             download="MATTHEW-CHRESTENSON.pdf"
             className="group relative flex items-center justify-center gap-3 px-6 py-4 border border-[#34AADC]/20 bg-[#34AADC]/5 hover:bg-[#1D1D1F] hover:border-[#1D1D1F] transition-all duration-300"
           >
-            <svg className="w-4 h-4 text-[#34AADC] group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[#1D1D1F] group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span className="text-xs font-medium tracking-widest uppercase text-[#34AADC] group-hover:text-white transition-colors duration-300">
+            <span className="text-xs font-bold tracking-widest uppercase text-[#1D1D1F] group-hover:text-white transition-colors duration-300">
               Download Resume
             </span>
           </a>
@@ -985,10 +984,10 @@ export const Hero = () => {
             href="tel:+18054528932"
             className="group relative flex items-center justify-center gap-3 px-6 py-4 border border-[#5856D6]/20 bg-[#5856D6]/5 hover:bg-[#1D1D1F] hover:border-[#1D1D1F] transition-all duration-300"
           >
-            <svg className="w-4 h-4 text-[#5856D6] group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[#1D1D1F] group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
-            <span className="text-xs font-medium tracking-widest uppercase text-[#5856D6] group-hover:text-white transition-colors duration-300">
+            <span className="text-xs font-bold tracking-widest uppercase text-[#1D1D1F] group-hover:text-white transition-colors duration-300">
               805.452.8932
             </span>
           </a>
@@ -996,7 +995,7 @@ export const Hero = () => {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[#86868B] animate-bounce">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[#1D1D1F] animate-bounce">
         <span className="text-xs tracking-wider uppercase">Scroll</span>
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
