@@ -214,8 +214,57 @@ export const Contact = () => {
           </div>
         </div>
 
+        {/* Credits */}
+        <div className="mt-24 pt-8 border-t border-[#E5E5E5]">
+          <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-[#86868B] mb-3">
+            3D Model Credits
+          </p>
+          <ul className="space-y-1 text-[11px] font-mono text-[#86868B] leading-relaxed">
+            <li>
+              <a
+                href="https://skfb.ly/o9rHy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#1D1D1F] transition-colors"
+              >
+                "Animated Hovering Flying Hummingbird Loop"
+              </a>
+              {' by LasquetiSpice is licensed under '}
+              <a
+                href="https://creativecommons.org/licenses/by/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#1D1D1F] transition-colors"
+              >
+                CC BY 4.0
+              </a>
+              .
+            </li>
+            <li>
+              <a
+                href="https://skfb.ly/oz7ZN"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#1D1D1F] transition-colors"
+              >
+                "Asteroid low poly"
+              </a>
+              {' by pasquill is licensed under '}
+              <a
+                href="https://creativecommons.org/licenses/by/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#1D1D1F] transition-colors"
+              >
+                CC BY 4.0
+              </a>
+              .
+            </li>
+          </ul>
+        </div>
+
         {/* Footer */}
-        <div className="mt-24 pt-8 border-t border-[#E5E5E5] flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mt-12 pt-8 border-t border-[#E5E5E5] flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs font-mono tracking-wider text-[#86868B]">
             © 2026 MATTHEW CHRESTENSON
           </p>

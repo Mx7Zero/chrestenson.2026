@@ -110,7 +110,7 @@ function SceneContent({
 
 export function GrassBallScene() {
   const groupRef = useRef<THREE.Group>(null!)
-  const [sphere, setSphere] = useState<SphereVariant>('concrete')
+  const [sphere, setSphere] = useState<SphereVariant>('mars')
   const [hidePlanet, setHidePlanet] = useState(false)
   const [hideSatellites, setHideSatellites] = useState(false)
   const post = useControls('Post v2', {

@@ -928,7 +928,7 @@ export const Hero = () => {
                     <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#E5E5E5] px-3 py-1.5">DISNEY</span>
                     <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#E5E5E5] px-3 py-1.5">NATIONAL GEOGRAPHIC</span>
                     <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#E5E5E5] px-3 py-1.5">RIDLEY SCOTT ASSOCIATES</span>
-                    <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#0071E3]/30 px-3 py-1.5">6 VENTURES → EXIT</span>
+                    <span className="text-xs font-mono tracking-wider text-[#1D1D1F] border border-[#E5E5E5] px-3 py-1.5">6 VENTURES → EXIT</span>
                   </div>
                 </div>
               </div>

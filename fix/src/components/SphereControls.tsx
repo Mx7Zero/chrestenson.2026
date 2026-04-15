@@ -3,6 +3,8 @@
  * toggling planet/satellite visibility. Fixed top-right of the viewport.
  */
 
+import { useEffect, useState } from 'react'
+
 export type SphereVariant = 'concrete' | 'earth' | 'moon' | 'mars'
 
 type Props = {
@@ -32,6 +34,19 @@ export function SphereControls({
   hideSatellites,
   onHideSatellitesChange,
 }: Props) {
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    const hero = document.getElementById('hero')
+    if (!hero) return
+    const obs = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0.1 },
+    )
+    obs.observe(hero)
+    return () => obs.disconnect()
+  }, [])
+
   return (
     <div
       style={{
@@ -55,8 +70,11 @@ export function SphereControls({
         textTransform: 'uppercase',
         boxShadow:
           '0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-        pointerEvents: 'auto',
+        pointerEvents: visible ? 'auto' : 'none',
         userSelect: 'none',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(-8px)',
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
       }}
     >
       <select
