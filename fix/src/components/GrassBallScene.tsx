@@ -1,11 +1,17 @@
 import { Canvas } from '@react-three/fiber'
-import { Component, Suspense, useEffect, useRef } from 'react'
+import { Component, Suspense, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import * as THREE from 'three'
 import { Environment } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { Leva, useControls } from 'leva'
 import { ConcreteSphere } from './ConcreteSphere'
+import { EarthSphere } from './EarthSphere'
+import { MoonSphere } from './MoonSphere'
+import { MarsSphere } from './MarsSphere'
+import { OrbitingSatellites } from './OrbitingSatellites'
+import { SphereControls } from './SphereControls'
+import type { SphereVariant } from './SphereControls'
 
 type SectionPose = {
   id: string
@@ -34,19 +40,29 @@ const POSES: SectionPose[] = [
 // total y rotations across the entire scroll height
 const SCROLL_FULL_TURNS = 1.5
 
-function SceneContent({ targetRef }: { targetRef: React.RefObject<THREE.Group> }) {
+function SceneContent({
+  targetRef,
+  sphere,
+  hidePlanet,
+  hideSatellites,
+}: {
+  targetRef: React.RefObject<THREE.Group>
+  sphere: SphereVariant
+  hidePlanet: boolean
+  hideSatellites: boolean
+}) {
   const lights = useControls('Lighting v3', {
     useEnvironment: true,
     environmentPreset: {
-      value: 'lobby',
+      value: 'warehouse',
       options: ['park', 'sunset', 'dawn', 'night', 'warehouse', 'forest', 'apartment', 'studio', 'city', 'lobby'],
     },
     ambient: { value: 0.0, min: 0, max: 3, step: 0.02 },
-    keyIntensity: { value: 7.3, min: 0, max: 12, step: 0.1 },
+    keyIntensity: { value: 0.0, min: 0, max: 12, step: 0.1 },
     keyColor: '#ffffff',
     keyPosX: { value: -10, min: -10, max: 10, step: 0.5 },
-    keyPosY: { value: -10, min: -10, max: 20, step: 0.5 },
-    keyPosZ: { value: 10, min: -10, max: 10, step: 0.5 },
+    keyPosY: { value: -9.5, min: -10, max: 20, step: 0.5 },
+    keyPosZ: { value: -10, min: -10, max: 10, step: 0.5 },
     fillIntensity: { value: 2.0, min: 0, max: 2, step: 0.05 },
   })
 
@@ -78,7 +94,15 @@ function SceneContent({ targetRef }: { targetRef: React.RefObject<THREE.Group> }
           intensity={lights.fillIntensity}
           color="#90a8b0"
         />
-        <ConcreteSphere />
+        {!hidePlanet && (
+          <>
+            {sphere === 'concrete' && <ConcreteSphere />}
+            {sphere === 'earth' && <EarthSphere />}
+            {sphere === 'moon' && <MoonSphere />}
+            {sphere === 'mars' && <MarsSphere />}
+          </>
+        )}
+        {!hideSatellites && <OrbitingSatellites />}
       </group>
     </>
   )
@@ -86,6 +110,9 @@ function SceneContent({ targetRef }: { targetRef: React.RefObject<THREE.Group> }
 
 export function GrassBallScene() {
   const groupRef = useRef<THREE.Group>(null!)
+  const [sphere, setSphere] = useState<SphereVariant>('concrete')
+  const [hidePlanet, setHidePlanet] = useState(false)
+  const [hideSatellites, setHideSatellites] = useState(false)
   const post = useControls('Post v2', {
     exposure: { value: 0.0, min: 0, max: 3, step: 0.05 },
     bloomIntensity: { value: 0.0, min: 0, max: 2, step: 0.05 },
@@ -217,7 +244,12 @@ export function GrassBallScene() {
           }}
         >
           <Suspense fallback={null}>
-            <SceneContent targetRef={groupRef} />
+            <SceneContent
+              targetRef={groupRef}
+              sphere={sphere}
+              hidePlanet={hidePlanet}
+              hideSatellites={hideSatellites}
+            />
             <EffectComposer>
               <Bloom
                 intensity={post.bloomIntensity}
@@ -230,6 +262,14 @@ export function GrassBallScene() {
         </Canvas>
       </CanvasBoundary>
       </div>
+      <SphereControls
+        sphere={sphere}
+        onSphereChange={setSphere}
+        hidePlanet={hidePlanet}
+        onHidePlanetChange={setHidePlanet}
+        hideSatellites={hideSatellites}
+        onHideSatellitesChange={setHideSatellites}
+      />
     </>
   )
 }

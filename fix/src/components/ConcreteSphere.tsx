@@ -22,6 +22,7 @@ export function ConcreteSphere() {
   })
 
   const knobs = useControls('Concrete', {
+    scale: { value: 1.0, min: 0.5, max: 2.5, step: 0.01 },
     displacementScale: { value: 0.5, min: 0, max: 1, step: 0.01 },
     displacementBias: { value: 0.3, min: -0.5, max: 0.5, step: 0.01 },
     normalScale: { value: 3.0, min: 0, max: 5, step: 0.05 },
@@ -49,7 +50,10 @@ export function ConcreteSphere() {
   }, [diff, normal, rough, disp, knobs.tiling])
 
   useFrame((_, delta) => {
-    if (groupRef.current) groupRef.current.rotation.y += delta * knobs.rotateSpeed
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * knobs.rotateSpeed
+      groupRef.current.scale.setScalar(knobs.scale)
+    }
     material.displacementScale = knobs.displacementScale
     material.displacementBias = knobs.displacementBias
     material.normalScale.set(knobs.normalScale, knobs.normalScale)
