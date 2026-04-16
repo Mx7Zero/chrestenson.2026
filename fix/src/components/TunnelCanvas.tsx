@@ -567,9 +567,9 @@ void main() {
     // Target mask: which fragments are affected
     float affected = 1.0;
     if (uStrobeTarget > 0.5 && uStrobeTarget < 1.5)
-      affected = 1.0 - checker;  // cell A only
+      affected = 1.0 - checkerG;  // cell A only
     else if (uStrobeTarget > 1.5)
-      affected = checker;  // cell B only
+      affected = checkerG;  // cell B only
 
     // Envelope shape
     float envelope;
@@ -590,7 +590,7 @@ void main() {
       strobeCol = mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), 1.0);
     } else if (uStrobeMode > 2.5 && uStrobeMode < 3.5) {
       // Alternate: swap cell colors
-      strobeCol = mix(uColorB, uColorA, checker);
+      strobeCol = mix(uColorB, uColorA, checkerG);
     } else if (uStrobeMode > 3.5) {
       // Invert
       strobeCol = vec3(1.0) - color;
