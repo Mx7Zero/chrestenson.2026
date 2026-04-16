@@ -957,18 +957,18 @@ export function AsteroidScene({
               >
                 {(
                   [
-                    { key: 'speed', label: 'SPEED', min: 0, max: 1.5, step: 0.01 },
-                    { key: 'roll', label: 'ROLL', min: -12, max: 12, step: 0.1 },
-                    { key: 'wobble', label: 'WOBBLE', min: 0, max: 1.8, step: 0.05 },
-                    { key: 'fov', label: 'FOV', min: 30, max: 140, step: 1 },
-                    { key: 'fogFar', label: 'DEPTH', min: 8, max: 120, step: 1 },
+                    { key: 'speed', label: 'SPEED', min: 0, max: 1.5, step: 0.01, stepper: true },
+                    { key: 'roll', label: 'ROLL', min: -12, max: 12, step: 0.1, stepper: true },
+                    { key: 'wobble', label: 'WOBBLE', min: 0, max: 1.8, step: 0.05, stepper: true },
+                    { key: 'fov', label: 'FOV', min: 30, max: 140, step: 1, stepper: true },
+                    { key: 'fogFar', label: 'DEPTH', min: 8, max: 120, step: 1, stepper: true },
                     { key: 'density', label: 'DENSITY', min: 1, max: 200, step: 1, stepper: true },
                     { key: 'rings', label: 'RINGS', min: 1, max: 150, step: 1, stepper: true },
-                    { key: 'hole', label: 'HOLE', min: 1, max: 12, step: 0.1 },
-                    { key: 'helix', label: 'HELIX', min: 0, max: 20, step: 0.1 },
-                    { key: 'wave', label: 'WAVE', min: 0, max: 5, step: 0.05 },
-                    { key: 'bend', label: 'BEND', min: 0, max: 360, step: 1 },
-                    { key: 'bendDir', label: 'BEND DIR', min: 0, max: 360, step: 1 },
+                    { key: 'hole', label: 'HOLE', min: 1, max: 12, step: 0.1, stepper: true },
+                    { key: 'helix', label: 'HELIX', min: 0, max: 20, step: 0.1, stepper: true },
+                    { key: 'wave', label: 'WAVE', min: 0, max: 5, step: 0.05, stepper: true },
+                    { key: 'bend', label: 'BEND', min: 0, max: 360, step: 1, stepper: true },
+                    { key: 'bendDir', label: 'BEND DIR', min: 0, max: 360, step: 1, stepper: true },
                   ] as const
                 ).map((k) => (
                   <TuneRow

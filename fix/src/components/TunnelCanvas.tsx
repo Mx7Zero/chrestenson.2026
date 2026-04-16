@@ -57,6 +57,9 @@ export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] =
   { name: 'LINES', values: { rings: 10, density: 2, patternA: 'hlines', patternB: 'vlines' } },
   { name: 'TRIBAL', values: { rings: 6, density: 6, patternA: 'diagonal', patternB: 'diagonal', colorA: '#ffcc00', colorB: '#4a0e60' } },
   { name: 'DECO', values: { rings: 4, density: 4, patternA: 'diamond', patternB: 'cross', colorA: '#ffd700', colorB: '#000000' } },
+  { name: 'JULIA', values: { rings: 3, density: 3, patternA: 'fractal', patternB: 'fractal', colorA: '#000000', colorB: '#00e5ff', speed: 0.02 } },
+  { name: 'LAVA', values: { rings: 2, density: 2, patternA: 'marble', patternB: 'noise', colorA: '#ff1a00', colorB: '#ffcc00', speed: 0.03 } },
+  { name: 'ZEN', values: { rings: 6, density: 1, patternA: 'spiral', patternB: 'radialGrad', colorA: '#ffffff', colorB: '#0a1f2f', speed: 0.01, roll: 0.1 } },
 ]
 
 export const TEST_IMAGES: { name: string; url: string }[] = [
@@ -75,8 +78,14 @@ export type PatternName =
   | 'rings'
   | 'diamond'
   | 'grid'
+  | 'fractal'
+  | 'noise'
+  | 'marble'
+  | 'gradient'
+  | 'radialGrad'
+  | 'spiral'
 
-export const PATTERNS: { id: PatternName; label: string }[] = [
+export const PATTERNS: { id: PatternName; label: string; shader?: boolean }[] = [
   { id: 'hlines', label: '═' },
   { id: 'vlines', label: '║' },
   { id: 'dot', label: '●' },
@@ -87,7 +96,22 @@ export const PATTERNS: { id: PatternName; label: string }[] = [
   { id: 'rings', label: '◎' },
   { id: 'diamond', label: '◆' },
   { id: 'grid', label: '▦' },
+  { id: 'fractal', label: 'F', shader: true },
+  { id: 'noise', label: '~', shader: true },
+  { id: 'marble', label: 'M', shader: true },
+  { id: 'gradient', label: '▓', shader: true },
+  { id: 'radialGrad', label: '◉', shader: true },
+  { id: 'spiral', label: '@', shader: true },
 ]
+
+const SHADER_PAT_MAP: Record<string, number> = {
+  fractal: 1,
+  noise: 2,
+  marble: 3,
+  gradient: 4,
+  radialGrad: 5,
+  spiral: 6,
+}
 
 function generatePattern(
   type: PatternName,
@@ -310,6 +334,9 @@ uniform sampler2D uImageA;
 uniform sampler2D uImageB;
 uniform float uHasImageA;
 uniform float uHasImageB;
+uniform float uShaderPatA;
+uniform float uShaderPatB;
+uniform float uTime;
 
 uniform vec3 uFogColor;
 uniform float uFogNear;
@@ -318,8 +345,64 @@ uniform float uFogFar;
 varying vec2 vUv;
 varying float vFogDepth;
 
-// Iñigo Quilez's analytic anti-aliased checkerboard
-// https://iquilezles.org/articles/checkerfiltering/
+// --- Noise helpers ---
+float hash21(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+float valNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash21(i), hash21(i + vec2(1, 0)), f.x),
+    mix(hash21(i + vec2(0, 1)), hash21(i + vec2(1, 1)), f.x),
+    f.y
+  );
+}
+float fbm(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 5; i++) { v += a * valNoise(p); p *= 2.0; a *= 0.5; }
+  return v;
+}
+
+// --- Shader-based patterns: return mix factor 0→col1 / 1→col2 ---
+float shaderPattern(float id, vec2 uv, float time) {
+  // 1 = fractal (Julia set)
+  if (id < 1.5) {
+    vec2 c = vec2(-0.7 + sin(time * 0.15) * 0.1, 0.27 + cos(time * 0.12) * 0.08);
+    vec2 z = (uv - 0.5) * 3.0;
+    float it = 0.0;
+    for (int i = 0; i < 80; i++) {
+      z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+      if (dot(z, z) > 4.0) break;
+      it += 1.0;
+    }
+    return it / 80.0;
+  }
+  // 2 = noise (flowing)
+  if (id < 2.5) {
+    return fbm((uv - 0.5) * 4.0 + time * 0.4);
+  }
+  // 3 = marble (veined)
+  if (id < 3.5) {
+    float n = fbm(uv * 6.0 + time * 0.2);
+    return 0.5 + 0.5 * sin(uv.x * 12.0 + n * 8.0);
+  }
+  // 4 = gradient (linear top to bottom)
+  if (id < 4.5) {
+    return uv.y;
+  }
+  // 5 = radial gradient
+  if (id < 5.5) {
+    return clamp(length(uv - 0.5) * 2.0, 0.0, 1.0);
+  }
+  // 6 = spiral
+  float a = atan(uv.y - 0.5, uv.x - 0.5);
+  float r = length(uv - 0.5);
+  return 0.5 + 0.5 * sin(a * 4.0 + r * 12.0 - time * 2.0);
+}
+
+// --- Anti-aliased checkerboard ---
 float aaChecker(vec2 p) {
   vec2 w = fwidth(p) + 0.001;
   vec2 i = 2.0 * (
@@ -329,15 +412,24 @@ float aaChecker(vec2 p) {
   return 0.5 - 0.5 * i.x * i.y;
 }
 
+vec3 getCellColor(vec2 localUv, float shaderPat, float hasImage,
+                  sampler2D img, vec3 solidCol, vec3 otherCol, float time) {
+  if (shaderPat > 0.5) {
+    float t = shaderPattern(shaderPat, localUv, time);
+    return mix(solidCol, otherCol, t);
+  }
+  if (hasImage > 0.5) {
+    return texture2D(img, localUv).rgb;
+  }
+  return solidCol;
+}
+
 void main() {
   vec2 tileUv = vec2(
     vUv.x * uRings * 2.0,
     (vUv.y + uTexScroll) * uDensityY * 2.0
   );
 
-  // Temporal motion blur: sample the checker at a few positions along the
-  // scroll direction and average. Kills stroboscopic aliasing when the
-  // per-frame cell shift exceeds 1.
   float checker = 0.0;
   for (int i = 0; i < 4; i++) {
     float t = (float(i) + 0.5) / 4.0 - 0.5;
@@ -348,12 +440,10 @@ void main() {
 
   vec2 localUv = fract(tileUv);
 
-  vec3 colA = uHasImageA > 0.5
-    ? texture2D(uImageA, localUv).rgb
-    : uColorA;
-  vec3 colB = uHasImageB > 0.5
-    ? texture2D(uImageB, localUv).rgb
-    : uColorB;
+  vec3 colA = getCellColor(localUv, uShaderPatA, uHasImageA, uImageA,
+                           uColorA, uColorB, uTime);
+  vec3 colB = getCellColor(localUv, uShaderPatB, uHasImageB, uImageB,
+                           uColorB, uColorA, uTime);
   vec3 color = mix(colA, colB, checker);
 
   float fogFactor = clamp(
@@ -417,10 +507,14 @@ function Tunnel({ params }: { params: TunnelParams }) {
     }
   }, [geometry])
 
-  const patternATex = usePatternTexture(params.patternA, params.colorB, params.colorA)
-  const patternBTex = usePatternTexture(params.patternB, params.colorA, params.colorB)
-  const imageATex = useImageTexture(params.patternA ? null : params.imageA)
-  const imageBTex = useImageTexture(params.patternB ? null : params.imageB)
+  const shaderPatA = SHADER_PAT_MAP[params.patternA ?? ''] ?? 0
+  const shaderPatB = SHADER_PAT_MAP[params.patternB ?? ''] ?? 0
+  const canvasPatA = shaderPatA ? null : params.patternA
+  const canvasPatB = shaderPatB ? null : params.patternB
+  const patternATex = usePatternTexture(canvasPatA, params.colorB, params.colorA)
+  const patternBTex = usePatternTexture(canvasPatB, params.colorA, params.colorB)
+  const imageATex = useImageTexture(canvasPatA || shaderPatA ? null : params.imageA)
+  const imageBTex = useImageTexture(canvasPatB || shaderPatB ? null : params.imageB)
   const effectiveA = patternATex ?? imageATex
   const effectiveB = patternBTex ?? imageBTex
 
@@ -440,6 +534,9 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uImageB: { value: WHITE_PIXEL as THREE.Texture },
     uHasImageA: { value: 0 },
     uHasImageB: { value: 0 },
+    uShaderPatA: { value: 0 },
+    uShaderPatB: { value: 0 },
+    uTime: { value: 0 },
     uFogColor: { value: new THREE.Color('#000000') },
     uFogNear: { value: 2 },
     uFogFar: { value: 35 },
@@ -468,15 +565,17 @@ function Tunnel({ params }: { params: TunnelParams }) {
     return () => material.dispose()
   }, [material])
 
-  // Push textures (pattern or image) into uniforms whenever they change
+  // Push textures and shader-pattern IDs into uniforms
   useEffect(() => {
     uniformsRef.current.uImageA.value = effectiveA ?? WHITE_PIXEL
     uniformsRef.current.uHasImageA.value = effectiveA ? 1 : 0
-  }, [effectiveA])
+    uniformsRef.current.uShaderPatA.value = shaderPatA
+  }, [effectiveA, shaderPatA])
   useEffect(() => {
     uniformsRef.current.uImageB.value = effectiveB ?? WHITE_PIXEL
     uniformsRef.current.uHasImageB.value = effectiveB ? 1 : 0
-  }, [effectiveB])
+    uniformsRef.current.uShaderPatB.value = shaderPatB
+  }, [effectiveB, shaderPatB])
 
   const phaseRef = useRef(0)
   const scrollRef = useRef(0)
@@ -520,6 +619,7 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uPhase.value = phaseRef.current
     uniformsRef.current.uTexScroll.value = scrollRef.current
     uniformsRef.current.uMotion.value = Math.abs(step * 0.08)
+    uniformsRef.current.uTime.value = elapsed
 
     rollPhaseRef.current += safeDelta * params.roll
 
