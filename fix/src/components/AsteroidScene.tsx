@@ -173,6 +173,41 @@ function AnimatedModel({
   )
 }
 
+function ModuleHeader({ title, enabled, solo, onToggle, onSolo }: {
+  title: string
+  enabled?: boolean
+  solo?: boolean
+  onToggle?: () => void
+  onSolo?: () => void
+}) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, paddingBottom: 4,
+      borderBottom: '1px solid rgba(255,255,255,0.12)',
+    }}>
+      <span style={{ flex: 1, fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
+        {title}
+      </span>
+      {onToggle && (
+        <button onClick={onToggle} style={{
+          padding: '2px 6px', fontSize: 7, fontFamily: 'monospace',
+          background: enabled ? 'rgba(80,200,120,0.3)' : 'rgba(255,60,60,0.2)',
+          border: `1px solid ${enabled ? 'rgba(80,200,120,0.5)' : 'rgba(255,60,60,0.3)'}`,
+          color: enabled ? '#7f7' : '#f77', cursor: 'pointer', letterSpacing: '0.1em',
+        }}>{enabled ? 'ON' : 'OFF'}</button>
+      )}
+      {onSolo && (
+        <button onClick={onSolo} style={{
+          padding: '2px 6px', fontSize: 7, fontFamily: 'monospace',
+          background: solo ? 'rgba(255,200,0,0.3)' : 'transparent',
+          border: `1px solid ${solo ? 'rgba(255,200,0,0.5)' : 'rgba(255,255,255,0.15)'}`,
+          color: solo ? '#ff0' : 'rgba(255,255,255,0.4)', cursor: 'pointer', letterSpacing: '0.1em',
+        }}>S</button>
+      )}
+    </div>
+  )
+}
+
 const stepperBtnStyle: React.CSSProperties = {
   width: 18,
   height: 18,
@@ -600,18 +635,18 @@ export function AsteroidScene({
           <div
             style={{
               overflow: 'hidden',
-              width: tunePanelOpen ? 360 : 0,
+              width: tunePanelOpen ? 480 : 0,
               transition: 'width 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
               flexShrink: 0,
             }}
           >
             <div
               style={{
-                background: 'rgba(0,0,0,0.75)',
+                background: 'rgba(0,0,0,0.82)',
                 border: '1px solid rgba(255,255,255,0.22)',
                 borderRight: 'none',
                 padding: '14px 18px',
-                width: 360,
+                width: 480,
                 maxHeight: '80vh',
                 overflowY: 'auto',
                 boxSizing: 'border-box',
@@ -793,8 +828,90 @@ export function AsteroidScene({
                 <span style={{ minWidth: 36 }} />
               </div>
 
-              {/* === MANDALA CONTROLS (completely separate from tunnel) === */}
-              {visualMode === 'mandala' && (
+              {/* === SUPR MODULE PANELS (composition system) === */}
+              {visualMode === 'mandala' && (<div>
+
+                {/* ─── STAGE ─── */}
+                <ModuleHeader title="STAGE" />
+                <div style={{ marginBottom: 12, display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
+                  <TuneRow label="DRIFT" min={0} max={2} step={0.05} stepper value={stageParams.cameraDrift} onChange={(v) => setStageParams((p) => ({ ...p, cameraDrift: v }))} />
+                  <TuneRow label="SPEED" min={0.1} max={3} step={0.05} stepper value={stageParams.masterSpeed} onChange={(v) => setStageParams((p) => ({ ...p, masterSpeed: v }))} />
+                </div>
+
+                {/* ─── LOTUS FIELD ─── */}
+                <ModuleHeader title="LOTUS" enabled={lotusParams.enabled} solo={lotusParams.solo}
+                  onToggle={() => setLotusParams((p) => ({ ...p, enabled: !p.enabled }))}
+                  onSolo={() => setLotusParams((p) => ({ ...p, solo: !p.solo }))} />
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 6 }}>
+                    {(['seedOfLife','flowerOfLife','metatron','sriYantra','hexGrid','concentricRings'] as const).map((pat) => (
+                      <button key={pat} onClick={() => setLotusParams((p) => ({ ...p, pattern: pat }))}
+                        style={{ padding: '3px 5px', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.1em',
+                          background: lotusParams.pattern === pat ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.04)',
+                          border: lotusParams.pattern === pat ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                          color: lotusParams.pattern === pat ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                        {pat.replace(/([A-Z])/g, ' $1').trim().toUpperCase().slice(0,8)}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                      FG <input type="color" value={lotusParams.colorFg} onChange={(e) => setLotusParams((p) => ({ ...p, colorFg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                      BG <input type="color" value={lotusParams.colorBg} onChange={(e) => setLotusParams((p) => ({ ...p, colorBg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                    </label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
+                    <TuneRow label="OPACITY" min={0} max={1} step={0.02} stepper value={lotusParams.opacity} onChange={(v) => setLotusParams((p) => ({ ...p, opacity: v }))} />
+                    <TuneRow label="FOLDS" min={0} max={24} step={1} stepper value={lotusParams.folds} onChange={(v) => setLotusParams((p) => ({ ...p, folds: v }))} />
+                    <TuneRow label="SPEED" min={0} max={1} step={0.01} stepper value={lotusParams.speed} onChange={(v) => setLotusParams((p) => ({ ...p, speed: v }))} />
+                    <TuneRow label="ZOOM" min={0.5} max={8} step={0.1} stepper value={lotusParams.zoom} onChange={(v) => setLotusParams((p) => ({ ...p, zoom: v }))} />
+                    <TuneRow label="LINE" min={0.5} max={6} step={0.1} stepper value={lotusParams.lineWidth} onChange={(v) => setLotusParams((p) => ({ ...p, lineWidth: v }))} />
+                    <TuneRow label="GLOW" min={0} max={1} step={0.02} stepper value={lotusParams.glow} onChange={(v) => setLotusParams((p) => ({ ...p, glow: v }))} />
+                    <TuneRow label="DEPTH" min={-30} max={0} step={0.5} stepper value={lotusParams.zDepth} onChange={(v) => setLotusParams((p) => ({ ...p, zDepth: v }))} />
+                  </div>
+                </div>
+
+                {/* ─── FOLD FIELD (Q-900) ─── */}
+                <ModuleHeader title="Q-900 FOLD" enabled={foldParams.enabled} solo={foldParams.solo}
+                  onToggle={() => setFoldParams((p) => ({ ...p, enabled: !p.enabled }))}
+                  onSolo={() => setFoldParams((p) => ({ ...p, solo: !p.solo }))} />
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+                    {(['mono', 'spectrum'] as const).map((m) => (
+                      <button key={m} onClick={() => setFoldParams((prev) => ({ ...prev, colorMode: m }))}
+                        style={{ flex: 1, padding: '4px 0', fontSize: 8, fontFamily: 'monospace', letterSpacing: '0.15em', textTransform: 'uppercase',
+                          background: foldParams.colorMode === m ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
+                          border: foldParams.colorMode === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                          color: foldParams.colorMode === m ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                      FG <input type="color" value={foldParams.colorFg} onChange={(e) => setFoldParams((p) => ({ ...p, colorFg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                      BG <input type="color" value={foldParams.colorBg} onChange={(e) => setFoldParams((p) => ({ ...p, colorBg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                    </label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
+                    <TuneRow label="OPACITY" min={0} max={1} step={0.02} stepper value={foldParams.opacity} onChange={(v) => setFoldParams((p) => ({ ...p, opacity: v }))} />
+                    <TuneRow label="FOLDS" min={2} max={24} step={1} stepper value={foldParams.folds} onChange={(v) => setFoldParams((p) => ({ ...p, folds: v }))} />
+                    <TuneRow label="DEPTH" min={2} max={14} step={1} stepper value={foldParams.iters} onChange={(v) => setFoldParams((p) => ({ ...p, iters: v }))} />
+                    <TuneRow label="SPEED" min={0} max={1} step={0.01} stepper value={foldParams.speed} onChange={(v) => setFoldParams((p) => ({ ...p, speed: v }))} />
+                    <TuneRow label="ZOOM" min={0.5} max={6} step={0.1} stepper value={foldParams.zoom} onChange={(v) => setFoldParams((p) => ({ ...p, zoom: v }))} />
+                    <TuneRow label="SCALE" min={1.2} max={2.5} step={0.02} stepper value={foldParams.scale} onChange={(v) => setFoldParams((p) => ({ ...p, scale: v }))} />
+                    <TuneRow label="Z" min={-30} max={0} step={0.5} stepper value={foldParams.zDepth} onChange={(v) => setFoldParams((p) => ({ ...p, zDepth: v }))} />
+                  </div>
+                </div>
+
+              </div>)}
+
+              {/* === LEGACY: old mandala controls (keeping for reference, hidden) === */}
+              {false && visualMode === 'mandala' && (
                 <div>
                   <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>ANIMATION</div>
                   <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
@@ -1373,8 +1490,8 @@ export function AsteroidScene({
               >
                 {(
                   [
-                    { key: 'density', label: 'DENSITY', min: 1, max: 200, step: 1, stepper: true },
-                    { key: 'rings', label: 'RINGS', min: 1, max: 150, step: 1, stepper: true },
+                    { key: 'density', label: 'RINGS', min: 2, max: 3000, step: 2, stepper: true },
+                    { key: 'rings', label: 'SECTION', min: 1, max: 200, step: 1, stepper: true },
                     { key: 'hole', label: 'HOLE', min: 1, max: 12, step: 0.1, stepper: true },
                     { key: 'cellBlur', label: 'BLUR', min: 0, max: 0.5, step: 0.01, stepper: true },
                     { key: 'helix', label: 'HELIX', min: 0, max: 20, step: 0.1, stepper: true },
@@ -1395,7 +1512,15 @@ export function AsteroidScene({
                     value={tunnelParams[k.key]}
                     stepper={'stepper' in k && !!(k as any).stepper}
                     onChange={(v) =>
-                      setTunnelParams((p) => ({ ...p, [k.key]: v }))
+                      setTunnelParams((p) => ({
+                        ...p,
+                        [k.key]:
+                          k.key === 'density'
+                            ? Math.min(3000, Math.max(2, Math.round(v / 2) * 2))
+                            : k.key === 'rings'
+                              ? Math.min(200, Math.max(1, Math.round(v)))
+                              : v,
+                      }))
                     }
                   />
                 ))}
