@@ -16,6 +16,10 @@ export type TunnelParams = {
   wave: number
   bend: number
   bendDir: number
+  cellBlur: number // 0 = hard cell edges, 0.5 = fully blended
+  strobeRate: number // flashes per second (0 = off)
+  strobeDuty: number // duty cycle 0.05–0.95 (short flash to mostly on)
+  strobeColor: string
   colorA: string
   colorB: string
   imageA: string | null
@@ -38,6 +42,10 @@ export const TUNNEL_DEFAULTS: TunnelParams = {
   wave: 0,
   bend: 0,
   bendDir: 0,
+  cellBlur: 0,
+  strobeRate: 0,
+  strobeDuty: 0.15,
+  strobeColor: '#ffffff',
   colorA: '#ffffff',
   colorB: '#000000',
   imageA: null,
@@ -60,6 +68,11 @@ export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] =
   { name: 'JULIA', values: { rings: 3, density: 3, patternA: 'fractal', patternB: 'fractal', colorA: '#000000', colorB: '#00e5ff', speed: 0.02 } },
   { name: 'LAVA', values: { rings: 2, density: 2, patternA: 'marble', patternB: 'noise', colorA: '#ff1a00', colorB: '#ffcc00', speed: 0.03 } },
   { name: 'ZEN', values: { rings: 6, density: 1, patternA: 'spiral', patternB: 'radialGrad', colorA: '#ffffff', colorB: '#0a1f2f', speed: 0.01, roll: 0.1 } },
+  { name: 'MELT', values: { rings: 4, density: 4, cellBlur: 0.35, patternA: 'noise', patternB: null, colorA: '#ff1493', colorB: '#000000', speed: 0.04 } },
+  { name: 'COSMIC', values: { rings: 3, density: 3, patternA: 'radialGrad', patternB: 'spiral', colorA: '#4a0e60', colorB: '#ffd700', cellBlur: 0.15, speed: 0.02 } },
+  { name: 'CIRCUIT', values: { rings: 8, density: 8, patternA: 'grid', patternB: 'dot', colorA: '#00ff41', colorB: '#050a05', cellBlur: 0, speed: 0.03 } },
+  { name: 'DREAM', values: { rings: 2, density: 10, patternA: 'fractal', patternB: 'marble', colorA: '#00e5ff', colorB: '#2d1b4e', cellBlur: 0.25, speed: 0.015, roll: 0.5 } },
+  { name: 'VOID', values: { rings: 20, density: 1, cellBlur: 0.4, colorA: '#000000', colorB: '#111111', speed: 0.08, roll: 1.5, helix: 2 } },
 ]
 
 export const TEST_IMAGES: { name: string; url: string }[] = [
@@ -330,6 +343,10 @@ uniform float uRings;
 uniform float uDensityY;
 uniform float uTexScroll;
 uniform float uMotion;
+uniform float uCellBlur;
+uniform float uStrobeRate;
+uniform float uStrobeDuty;
+uniform vec3 uStrobeColor;
 uniform sampler2D uImageA;
 uniform sampler2D uImageB;
 uniform float uHasImageA;
@@ -438,6 +455,16 @@ void main() {
   }
   checker *= 0.25;
 
+  // Soften cell edges: blend checker toward 0.5 near cell boundaries.
+  // uCellBlur 0 = razor edges, 0.5 = everything melts together.
+  if (uCellBlur > 0.001) {
+    vec2 f = fract(tileUv);
+    vec2 edgeDist = min(f, 1.0 - f);
+    float minDist = min(edgeDist.x, edgeDist.y);
+    float edgeMask = smoothstep(0.0, uCellBlur, minDist);
+    checker = mix(0.5, checker, edgeMask);
+  }
+
   vec2 localUv = fract(tileUv);
 
   vec3 colA = getCellColor(localUv, uShaderPatA, uHasImageA, uImageA,
@@ -445,6 +472,13 @@ void main() {
   vec3 colB = getCellColor(localUv, uShaderPatB, uHasImageB, uImageB,
                            uColorB, uColorA, uTime);
   vec3 color = mix(colA, colB, checker);
+
+  // Strobe: periodic flash. Rate=0 means off.
+  if (uStrobeRate > 0.01) {
+    float strobePhase = fract(uTime * uStrobeRate);
+    float strobeOn = 1.0 - step(uStrobeDuty, strobePhase);
+    color = mix(color, uStrobeColor, strobeOn);
+  }
 
   float fogFactor = clamp(
     (vFogDepth - uFogNear) / (uFogFar - uFogNear),
@@ -530,6 +564,10 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uDensityY: { value: 8 },
     uTexScroll: { value: 0 },
     uMotion: { value: 0 },
+    uCellBlur: { value: 0 },
+    uStrobeRate: { value: 0 },
+    uStrobeDuty: { value: 0.15 },
+    uStrobeColor: { value: new THREE.Color('#ffffff') },
     uImageA: { value: WHITE_PIXEL as THREE.Texture },
     uImageB: { value: WHITE_PIXEL as THREE.Texture },
     uHasImageA: { value: 0 },
@@ -619,6 +657,10 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uPhase.value = phaseRef.current
     uniformsRef.current.uTexScroll.value = scrollRef.current
     uniformsRef.current.uMotion.value = Math.abs(step * 0.08)
+    uniformsRef.current.uCellBlur.value = params.cellBlur
+    uniformsRef.current.uStrobeRate.value = params.strobeRate
+    uniformsRef.current.uStrobeDuty.value = params.strobeDuty
+    uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
     uniformsRef.current.uTime.value = elapsed
 
     rollPhaseRef.current += safeDelta * params.roll

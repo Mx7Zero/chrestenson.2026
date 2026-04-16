@@ -285,6 +285,7 @@ export function AsteroidScene({
     return TUNNEL_DEFAULTS
   })
   const [tunePanelOpen, setTunePanelOpen] = useState(false)
+  const [tuneTab, setTuneTab] = useState<'play' | 'design'>('play')
   const [hideModel, setHideModel] = useState(false)
 
   useEffect(() => {
@@ -566,6 +567,49 @@ export function AsteroidScene({
                 boxSizing: 'border-box',
               }}
             >
+              {/* Tab switcher */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 0,
+                  marginBottom: 10,
+                  border: '1px solid rgba(255,255,255,0.2)',
+                }}
+              >
+                {(['play', 'design'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setTuneTab(tab)}
+                    style={{
+                      flex: 1,
+                      padding: '6px 0',
+                      background:
+                        tuneTab === tab
+                          ? 'rgba(255,255,255,0.15)'
+                          : 'transparent',
+                      border: 'none',
+                      borderRight:
+                        tab === 'play'
+                          ? '1px solid rgba(255,255,255,0.2)'
+                          : 'none',
+                      color:
+                        tuneTab === tab
+                          ? '#ffffff'
+                          : 'rgba(255,255,255,0.5)',
+                      fontFamily: 'monospace',
+                      fontSize: 10,
+                      letterSpacing: '0.3em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {tab === 'play' ? '▶ PLAY' : '◆ DESIGN'}
+                  </button>
+                ))}
+              </div>
+
+              {/* --- PLAY TAB --- */}
+              <div style={{ display: tuneTab === 'play' ? 'block' : 'none' }}>
               <div
                 style={{
                   display: 'grid',
@@ -696,6 +740,96 @@ export function AsteroidScene({
                   ))}
                 </div>
               </div>
+
+              {/* PLAY tab: motion sliders + strobe */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr auto',
+                  columnGap: 12,
+                  rowGap: 10,
+                  alignItems: 'center',
+                }}
+              >
+                {(
+                  [
+                    { key: 'speed', label: 'SPEED', min: 0, max: 1.5, step: 0.01, stepper: true },
+                    { key: 'roll', label: 'ROLL', min: -12, max: 12, step: 0.1, stepper: true },
+                    { key: 'wobble', label: 'WOBBLE', min: 0, max: 1.8, step: 0.05, stepper: true },
+                    { key: 'fov', label: 'FOV', min: 30, max: 140, step: 1, stepper: true },
+                    { key: 'fogFar', label: 'DEPTH', min: 8, max: 120, step: 1, stepper: true },
+                    { key: 'strobeRate', label: 'STROBE', min: 0, max: 20, step: 0.5, stepper: true },
+                    { key: 'strobeDuty', label: 'FLASH', min: 0.05, max: 0.95, step: 0.05, stepper: true },
+                  ] as const
+                ).map((k) => (
+                  <TuneRow
+                    key={k.key}
+                    label={k.label}
+                    min={k.min}
+                    max={k.max}
+                    step={k.step}
+                    value={tunnelParams[k.key]}
+                    stepper={'stepper' in k && !!(k as any).stepper}
+                    onChange={(v) =>
+                      setTunnelParams((p) => ({ ...p, [k.key]: v }))
+                    }
+                  />
+                ))}
+              </div>
+              <div style={{ marginTop: 8, marginBottom: 4 }}>
+                <div
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 9,
+                    letterSpacing: '0.25em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.55)',
+                    marginBottom: 4,
+                  }}
+                >
+                  STROBE COLOR
+                </div>
+                <input
+                  type="color"
+                  value={tunnelParams.strobeColor}
+                  onChange={(e) =>
+                    setTunnelParams((p) => ({
+                      ...p,
+                      strobeColor: e.target.value,
+                    }))
+                  }
+                  style={{
+                    width: 48,
+                    height: 22,
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    background: 'transparent',
+                    padding: 0,
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+              <button
+                onClick={() => setTunnelParams(TUNNEL_DEFAULTS)}
+                style={{
+                  width: '100%',
+                  marginTop: 10,
+                  padding: '6px 0',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.6)',
+                  fontFamily: 'monospace',
+                  fontSize: 10,
+                  letterSpacing: '0.25em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                }}
+              >
+                RESET
+              </button>
+              </div>
+
+              {/* --- DESIGN TAB --- */}
+              <div style={{ display: tuneTab === 'design' ? 'block' : 'none' }}>
 
               {/* Color palettes */}
               <div style={{ marginBottom: 10 }}>
@@ -957,14 +1091,10 @@ export function AsteroidScene({
               >
                 {(
                   [
-                    { key: 'speed', label: 'SPEED', min: 0, max: 1.5, step: 0.01, stepper: true },
-                    { key: 'roll', label: 'ROLL', min: -12, max: 12, step: 0.1, stepper: true },
-                    { key: 'wobble', label: 'WOBBLE', min: 0, max: 1.8, step: 0.05, stepper: true },
-                    { key: 'fov', label: 'FOV', min: 30, max: 140, step: 1, stepper: true },
-                    { key: 'fogFar', label: 'DEPTH', min: 8, max: 120, step: 1, stepper: true },
                     { key: 'density', label: 'DENSITY', min: 1, max: 200, step: 1, stepper: true },
                     { key: 'rings', label: 'RINGS', min: 1, max: 150, step: 1, stepper: true },
                     { key: 'hole', label: 'HOLE', min: 1, max: 12, step: 0.1, stepper: true },
+                    { key: 'cellBlur', label: 'BLUR', min: 0, max: 0.5, step: 0.01, stepper: true },
                     { key: 'helix', label: 'HELIX', min: 0, max: 20, step: 0.1, stepper: true },
                     { key: 'wave', label: 'WAVE', min: 0, max: 5, step: 0.05, stepper: true },
                     { key: 'bend', label: 'BEND', min: 0, max: 360, step: 1, stepper: true },
@@ -1003,6 +1133,7 @@ export function AsteroidScene({
               >
                 RESET
               </button>
+              </div>
             </div>
           </div>
           <button
