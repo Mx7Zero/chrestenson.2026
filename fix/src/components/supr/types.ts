@@ -50,7 +50,7 @@ export interface StageParams {
 
 export const LOTUS_DEFAULTS: LotusFieldParams = {
   enabled: true,
-  solo: false,
+  solo: true,  // BASELINE: solo on load — this is the protected default visual
   opacity: 1,
   blendMode: 'additive',
   zDepth: -20,
@@ -65,7 +65,7 @@ export const LOTUS_DEFAULTS: LotusFieldParams = {
 }
 
 export const FOLD_DEFAULTS: FoldFieldParams = {
-  enabled: true,
+  enabled: false,  // CANDIDATE: off by default — user opts in via panel
   solo: false,
   opacity: 0.7,
   blendMode: 'screen',
