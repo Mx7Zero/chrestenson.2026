@@ -8,7 +8,6 @@ import * as THREE from 'three'
 // RENDERED frame into N-fold radial symmetry — the tunnel renders
 // normally, then the final 2D image is mirrored into mandala geometry.
 const KALEIDO_FRAG = `
-  uniform float segments;
   void mainUv(inout vec2 uv) {
     if (segments < 1.5) return;
     vec2 c = uv - 0.5;
