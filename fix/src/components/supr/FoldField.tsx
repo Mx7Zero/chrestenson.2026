@@ -176,7 +176,7 @@ void main() {
   }
 
   vec3 color = screenBlend(lineComposite, glowComposite);
-  if (uColorMode > 0.5) color = pow(color, vec3(1.08));
+  if (uColorStrategy > 0.5) color = pow(color, vec3(1.08));
 
   float v = 1.0 - 0.28 * length(vUv - 0.5);
   color *= v;
