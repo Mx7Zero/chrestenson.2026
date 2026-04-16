@@ -851,8 +851,18 @@ const KALEIDO_FRAG = `
   uniform float time;
   varying vec2 vUv;
   void main() {
-    // DEBUG: solid red to confirm quad renders at all
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    vec2 uv = vUv;
+    if (segments > 1.5) {
+      vec2 p = uv - 0.5;
+      float a = atan(p.y, p.x);
+      float r = length(p);
+      a += time * 0.08;
+      float seg = 6.28318 / segments;
+      a = abs(mod(a + seg * 0.5, seg) - seg * 0.5);
+      a += sin(r * 6.0 - time * 1.5) * 0.04;
+      uv = vec2(cos(a), sin(a)) * r + 0.5;
+    }
+    gl_FragColor = texture2D(tDiffuse, uv);
   }
 `
 
@@ -883,15 +893,26 @@ function KaleidoscopeWrapper({ params }: { params: TunnelParams }) {
     [],
   )
 
+  const { scene: mainScene } = useThree()
+
   useFrame(() => {
+    // Pass 1: render tunnel (in virtual scene) to FBO
     gl.setRenderTarget(fbo)
     gl.setClearColor(0x000000, 1)
     gl.clear()
     gl.render(virtualScene, camera)
     gl.setRenderTarget(null)
+
+    // Update kaleidoscope quad uniforms
     kaleidoMat.uniforms.tDiffuse.value = fbo.texture
     kaleidoMat.uniforms.segments.value = params.kaleidoscope
     kaleidoMat.uniforms.time.value = clock.elapsedTime
+
+    // Pass 2: render main scene (the quad) to screen.
+    // r3f skips auto-render after a manual gl.render(), so we must do it.
+    gl.setClearColor(0x000000, 1)
+    gl.clear()
+    gl.render(mainScene, camera)
   }, 1)
 
   return (
