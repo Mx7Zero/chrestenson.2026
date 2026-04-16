@@ -1,6 +1,45 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { EffectComposer } from '@react-three/postprocessing'
+import { Effect, BlendFunction } from 'postprocessing'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
+
+// Screen-space kaleidoscope as a postprocessing effect. Folds the
+// RENDERED frame into N-fold radial symmetry — the tunnel renders
+// normally, then the final 2D image is mirrored into mandala geometry.
+const KALEIDO_FRAG = `
+  uniform float segments;
+  void mainUv(inout vec2 uv) {
+    if (segments < 1.5) return;
+    vec2 c = uv - 0.5;
+    float a = atan(c.y, c.x);
+    float r = length(c);
+    float seg = 6.28318 / segments;
+    a = mod(a + seg * 0.5, seg) - seg * 0.5;
+    a = abs(a);
+    uv = vec2(cos(a), sin(a)) * r + 0.5;
+  }
+`
+
+class KaleidoscopeEffect extends Effect {
+  constructor() {
+    super('KaleidoscopeEffect', KALEIDO_FRAG, {
+      blendFunction: BlendFunction.NORMAL,
+      uniforms: new Map([['segments', new THREE.Uniform(0)]]),
+    })
+  }
+  set segments(v: number) {
+    ;(this.uniforms.get('segments') as THREE.Uniform).value = v
+  }
+}
+
+function KaleidoscopePass({ segments }: { segments: number }) {
+  const effect = useMemo(() => new KaleidoscopeEffect(), [])
+  useEffect(() => {
+    effect.segments = segments
+  }, [effect, segments])
+  return <primitive object={effect} dispose={null} />
+}
 
 export type TunnelParams = {
   speed: number
@@ -375,7 +414,6 @@ uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
 uniform float uStrobeTarget;
 uniform float uStrobeMode;
-uniform float uKaleidoscope;
 uniform float uChromatic;
 uniform float uHueShift;
 uniform sampler2D uImageA;
@@ -499,15 +537,9 @@ vec3 getCellColor(vec2 localUv, float shaderPat, float hasImage,
 }
 
 void main() {
-  // Kaleidoscope: fold screen UV into N-fold symmetry before tiling
-  vec2 screenUv = vUv;
-  if (uKaleidoscope > 1.5) {
-    screenUv = kaleidoFold(screenUv, uKaleidoscope);
-  }
-
   vec2 tileUvBase = vec2(
-    screenUv.x * uRings * 2.0,
-    (screenUv.y + uTexScroll) * uDensityY * 2.0
+    vUv.x * uRings * 2.0,
+    (vUv.y + uTexScroll) * uDensityY * 2.0
   );
 
   // Motion blur samples
@@ -696,7 +728,6 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uStrobeColor: { value: new THREE.Color('#ffffff') },
     uStrobeTarget: { value: 0 },
     uStrobeMode: { value: 0 },
-    uKaleidoscope: { value: 0 },
     uChromatic: { value: 0 },
     uHueShift: { value: 0 },
     uImageA: { value: WHITE_PIXEL as THREE.Texture },
@@ -794,7 +825,6 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
     uniformsRef.current.uStrobeTarget.value = params.strobeTarget
     uniformsRef.current.uStrobeMode.value = params.strobeMode
-    uniformsRef.current.uKaleidoscope.value = params.kaleidoscope
     uniformsRef.current.uChromatic.value = params.chromatic
     uniformsRef.current.uHueShift.value = params.hueShift
     uniformsRef.current.uTime.value = elapsed
@@ -879,6 +909,11 @@ export function TunnelCanvas({
       <color attach="background" args={['#000000']} />
       <CameraSync fov={params.fov} />
       <Tunnel params={params} />
+      {params.kaleidoscope > 1 && (
+        <EffectComposer>
+          <KaleidoscopePass segments={params.kaleidoscope} />
+        </EffectComposer>
+      )}
     </Canvas>
   )
 }
