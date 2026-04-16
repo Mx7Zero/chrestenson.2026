@@ -25,6 +25,7 @@ export type TunnelParams = {
   kaleidoscope: number
   chromatic: number
   hueShift: number
+  transparentCell: 'none' | 'a' | 'b'  // make one cell see-through
   colorA: string
   colorB: string
   imageA: string | null
@@ -56,6 +57,7 @@ export const TUNNEL_DEFAULTS: TunnelParams = {
   kaleidoscope: 0,
   chromatic: 0,
   hueShift: 0,
+  transparentCell: 'none',
   colorA: '#ffffff',
   colorB: '#000000',
   imageA: null,
@@ -372,6 +374,7 @@ uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
 uniform float uStrobeTarget;
 uniform float uStrobeMode;
+uniform float uTransparentCell;
 uniform sampler2D uImageA;
 uniform sampler2D uImageB;
 uniform float uHasImageA;
@@ -544,7 +547,14 @@ void main() {
   );
   color = mix(color, uFogColor, fogFactor);
 
-  gl_FragColor = vec4(color, 1.0);
+  // Transparency: make one cell see-through so background image shows
+  float alpha = 1.0;
+  if (uTransparentCell > 0.5 && uTransparentCell < 1.5) {
+    alpha = checkerG; // cell A transparent (checker=0 → alpha=0)
+  } else if (uTransparentCell > 1.5) {
+    alpha = 1.0 - checkerG; // cell B transparent (checker=1 → alpha=0)
+  }
+  gl_FragColor = vec4(color, alpha);
 }
 `
 
@@ -627,6 +637,7 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uStrobeColor: { value: new THREE.Color('#ffffff') },
     uStrobeTarget: { value: 0 },
     uStrobeMode: { value: 0 },
+    uTransparentCell: { value: 0 },
     uImageA: { value: WHITE_PIXEL as THREE.Texture },
     uImageB: { value: WHITE_PIXEL as THREE.Texture },
     uHasImageA: { value: 0 },
@@ -722,6 +733,8 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
     uniformsRef.current.uStrobeTarget.value = params.strobeTarget
     uniformsRef.current.uStrobeMode.value = params.strobeMode
+    uniformsRef.current.uTransparentCell.value =
+      params.transparentCell === 'a' ? 1 : params.transparentCell === 'b' ? 2 : 0
     uniformsRef.current.uTime.value = elapsed
 
     rollPhaseRef.current += safeDelta * params.roll
@@ -798,7 +811,7 @@ export function TunnelCanvas({
     <Canvas
       frameloop={active ? 'always' : 'never'}
       camera={{ position: [0, 0, 0], fov: params.fov, near: 0.1, far: 1000 }}
-      gl={{ antialias: true }}
+      gl={{ antialias: true, alpha: params.transparentCell !== 'none' }}
       style={{ position: 'absolute', inset: 0 }}
     >
       <color attach="background" args={['#000000']} />

@@ -50,6 +50,22 @@ type PaletteEntry = {
   video?: string
 }
 
+function presetMatches<T extends Record<string, unknown>>(
+  state: T,
+  values: Partial<T>,
+) {
+  return Object.entries(values).every(([key, value]) => {
+    const current = state[key as keyof T]
+    if (typeof current === 'number' && typeof value === 'number') {
+      return Math.abs(current - value) < 0.000001
+    }
+    if (typeof current === 'string' && typeof value === 'string') {
+      return current.toLowerCase() === value.toLowerCase()
+    }
+    return current === value
+  })
+}
+
 const BACKGROUND_PALETTE: PaletteEntry[] = [
   { id: 'black', css: '#000000' },
   { id: 'white', css: '#ffffff' },
@@ -758,6 +774,30 @@ export function AsteroidScene({
               {/* === MANDALA CONTROLS (completely separate from tunnel) === */}
               {visualMode === 'mandala' && (
                 <div>
+                  <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>ANIMATION</div>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
+                    {([true, false] as const).map((animate) => (
+                      <button
+                        key={String(animate)}
+                        onClick={() => setMandalaParams((prev) => ({ ...prev, animate }))}
+                        style={{
+                          flex: 1,
+                          padding: '5px 0',
+                          fontSize: 9,
+                          fontFamily: 'monospace',
+                          letterSpacing: '0.15em',
+                          background: mandalaParams.animate === animate ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                          border: mandalaParams.animate === animate ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                          color: mandalaParams.animate === animate ? '#fff' : 'rgba(255,255,255,0.6)',
+                          cursor: 'pointer',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {animate ? 'LIVE' : 'FREEZE'}
+                      </button>
+                    ))}
+                  </div>
+
                   <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>COLOR MODE</div>
                   <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
                     {(['mono', 'spectrum'] as const).map((m) => (
@@ -777,13 +817,28 @@ export function AsteroidScene({
 
                   <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>PRESETS</div>
                   <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 10 }}>
-                    {MANDALA_PRESETS.map((p) => (
-                      <button
-                        key={p.name}
-                        onClick={() => setMandalaParams((prev) => ({ ...prev, ...p.values }))}
-                        style={{ padding: '3px 6px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', fontSize: 7, letterSpacing: '0.12em', cursor: 'pointer' }}
-                      >{p.name}</button>
-                    ))}
+                    {MANDALA_PRESETS.map((p) => {
+                      const active = presetMatches(mandalaParams, p.values)
+                      return (
+                        <button
+                          key={p.name}
+                          onClick={() => setMandalaParams((prev) => ({ ...prev, ...p.values }))}
+                          style={{
+                            padding: '3px 6px',
+                            background: active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                            border: active ? '1.5px solid #ffffff' : '1px solid rgba(255,255,255,0.18)',
+                            color: active ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                            boxShadow: active ? '0 0 0 1px rgba(255,255,255,0.08), 0 0 18px rgba(255,255,255,0.16)' : 'none',
+                            fontFamily: 'monospace',
+                            fontSize: 7,
+                            letterSpacing: '0.12em',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {p.name}
+                        </button>
+                      )
+                    })}
                   </div>
 
                   <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -797,12 +852,20 @@ export function AsteroidScene({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 12, rowGap: 10, alignItems: 'center' }}>
                     {([
-                      { key: 'folds', label: 'FOLDS', min: 2, max: 24, step: 1 },
+                      { key: 'folds', label: 'FOLDS', min: 3, max: 18, step: 1 },
                       { key: 'iters', label: 'DEPTH', min: 2, max: 14, step: 1 },
-                      { key: 'speed', label: 'SPEED', min: 0, max: 1, step: 0.01 },
-                      { key: 'zoom', label: 'ZOOM', min: 0.5, max: 6, step: 0.1 },
-                      { key: 'scale', label: 'SCALE', min: 1.2, max: 2.5, step: 0.05 },
+                      { key: 'speed', label: 'SPEED', min: 0, max: 0.35, step: 0.005 },
+                      { key: 'zoom', label: 'ZOOM', min: 1.1, max: 4.5, step: 0.05 },
+                      { key: 'scale', label: 'SCALE', min: 1.35, max: 2.25, step: 0.01 },
+                      { key: 'lineWidth', label: 'LINES', min: 0.5, max: 2.4, step: 0.05 },
+                      { key: 'glow', label: 'GLOW', min: 0.1, max: 2.2, step: 0.05 },
+                      { key: 'warp', label: 'WARP', min: 0, max: 1.3, step: 0.02 },
+                      { key: 'twist', label: 'TWIST', min: 0, max: 1.2, step: 0.02 },
+                      { key: 'layerSpread', label: 'SPREAD', min: 1.2, max: 1.9, step: 0.01 },
+                      { key: 'contrast', label: 'CONTRAST', min: 0.75, max: 1.5, step: 0.01 },
+                      { key: 'pulse', label: 'PULSE', min: 0, max: 0.6, step: 0.02 },
                       { key: 'strobeRate', label: 'STROBE', min: 0, max: 20, step: 0.5 },
+                      { key: 'strobeDuty', label: 'FLASH', min: 0.05, max: 0.95, step: 0.05 },
                     ] as const).map((k) => (
                       <TuneRow
                         key={k.key}
@@ -842,26 +905,30 @@ export function AsteroidScene({
                   PRESETS
                 </div>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {TUNNEL_PRESETS.map((p) => (
-                    <button
-                      key={p.name}
-                      onClick={() =>
-                        setTunnelParams((prev) => ({ ...prev, ...p.values }))
-                      }
-                      style={{
-                        padding: '4px 8px',
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        color: 'rgba(255,255,255,0.75)',
-                        fontFamily: 'monospace',
-                        fontSize: 8,
-                        letterSpacing: '0.15em',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
+                  {TUNNEL_PRESETS.map((p) => {
+                    const active = presetMatches(tunnelParams, p.values)
+                    return (
+                      <button
+                        key={p.name}
+                        onClick={() =>
+                          setTunnelParams((prev) => ({ ...prev, ...p.values }))
+                        }
+                        style={{
+                          padding: '4px 8px',
+                          background: active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)',
+                          border: active ? '1.5px solid #ffffff' : '1px solid rgba(255,255,255,0.2)',
+                          color: active ? '#ffffff' : 'rgba(255,255,255,0.75)',
+                          boxShadow: active ? '0 0 0 1px rgba(255,255,255,0.08), 0 0 18px rgba(255,255,255,0.16)' : 'none',
+                          fontFamily: 'monospace',
+                          fontSize: 8,
+                          letterSpacing: '0.15em',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {p.name}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -899,6 +966,25 @@ export function AsteroidScene({
                     }
                   />
                 ))}
+              </div>
+              {/* Transparency */}
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', marginBottom: 3, textTransform: 'uppercase' }}>TRANSPARENT CELL</div>
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {([{ v: 'none' as const, l: 'OFF' }, { v: 'a' as const, l: 'A' }, { v: 'b' as const, l: 'B' }]).map((t) => (
+                    <button
+                      key={t.v}
+                      onClick={() => setTunnelParams((p) => ({ ...p, transparentCell: t.v }))}
+                      style={{
+                        flex: 1, padding: '3px 0',
+                        background: tunnelParams.transparentCell === t.v ? 'rgba(255,255,255,0.18)' : 'transparent',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        color: tunnelParams.transparentCell === t.v ? '#fff' : 'rgba(255,255,255,0.5)',
+                        fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.15em', cursor: 'pointer',
+                      }}
+                    >{t.l}</button>
+                  ))}
+                </div>
               </div>
               {/* Strobe controls */}
               <div style={{ marginTop: 8, marginBottom: 4 }}>
@@ -952,19 +1038,28 @@ export function AsteroidScene({
                 <div>
                   <div style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', marginBottom: 3, textTransform: 'uppercase' }}>STROBE PRESETS</div>
                   <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    {STROBE_PRESETS.map((sp) => (
-                      <button
-                        key={sp.name}
-                        onClick={() => setTunnelParams((p) => ({ ...p, ...sp.values }))}
-                        style={{
-                          padding: '3px 6px',
-                          background: 'rgba(255,255,255,0.06)',
-                          border: '1px solid rgba(255,255,255,0.18)',
-                          color: 'rgba(255,255,255,0.7)',
-                          fontFamily: 'monospace', fontSize: 7, letterSpacing: '0.12em', cursor: 'pointer',
-                        }}
-                      >{sp.name}</button>
-                    ))}
+                    {STROBE_PRESETS.map((sp) => {
+                      const active = presetMatches(tunnelParams, sp.values)
+                      return (
+                        <button
+                          key={sp.name}
+                          onClick={() => setTunnelParams((p) => ({ ...p, ...sp.values }))}
+                          style={{
+                            padding: '3px 6px',
+                            background: active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+                            border: active ? '1.5px solid #ffffff' : '1px solid rgba(255,255,255,0.18)',
+                            color: active ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                            boxShadow: active ? '0 0 0 1px rgba(255,255,255,0.08), 0 0 18px rgba(255,255,255,0.16)' : 'none',
+                            fontFamily: 'monospace',
+                            fontSize: 7,
+                            letterSpacing: '0.12em',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {sp.name}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
