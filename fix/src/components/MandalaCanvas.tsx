@@ -3,6 +3,9 @@ import { useMemo } from 'react'
 import * as THREE from 'three'
 
 export type MandalaPattern =
+  | 'interference'
+  | 'orbitTrap'
+  | 'conformal'
   | 'seedOfLife'
   | 'flowerOfLife'
   | 'metatron'
@@ -30,8 +33,8 @@ export type MandalaParams = {
 }
 
 export const MANDALA_DEFAULTS: MandalaParams = {
-  pattern: 'flowerOfLife',
-  folds: 0,
+  pattern: 'interference',
+  folds: 8,
   speed: 0.15,
   zoom: 2.5,
   lineWidth: 2,
@@ -48,16 +51,22 @@ export const MANDALA_DEFAULTS: MandalaParams = {
 }
 
 export const MANDALA_PATTERNS: { id: MandalaPattern; label: string }[] = [
+  { id: 'interference', label: 'PSYCHE' },
+  { id: 'orbitTrap', label: 'ORBIT' },
+  { id: 'conformal', label: 'WARP' },
   { id: 'seedOfLife', label: 'SEED' },
   { id: 'flowerOfLife', label: 'FLOWER' },
   { id: 'metatron', label: 'METATRON' },
-  { id: 'sriYantra', label: 'SRI YANTRA' },
+  { id: 'sriYantra', label: 'YANTRA' },
   { id: 'goldenSpiral', label: 'SPIRAL' },
-  { id: 'hexGrid', label: 'HEX GRID' },
+  { id: 'hexGrid', label: 'HEX' },
   { id: 'concentricRings', label: 'RINGS' },
 ]
 
 export const MANDALA_PRESETS: { name: string; values: Partial<MandalaParams> }[] = [
+  { name: 'PSYCHE', values: { pattern: 'interference', folds: 8, zoom: 2.5, speed: 0.3, layers: 2, colorFg: '#ffffff', colorBg: '#000000' } },
+  { name: 'ORBIT', values: { pattern: 'orbitTrap', folds: 0, zoom: 2, speed: 0.15, colorFg: '#ffffff', colorBg: '#000000' } },
+  { name: 'WARP', values: { pattern: 'conformal', folds: 6, zoom: 2, speed: 0.2, colorFg: '#ff1493', colorBg: '#000000' } },
   { name: 'CLASSIC', values: { pattern: 'flowerOfLife', folds: 0, zoom: 2.5, lineWidth: 2, glow: 0.3, colorFg: '#ffffff', colorBg: '#000000' } },
   { name: 'SACRED', values: { pattern: 'metatron', folds: 0, zoom: 2, lineWidth: 1.5, glow: 0.5, colorFg: '#ffd700', colorBg: '#0a0520' } },
   { name: 'YANTRA', values: { pattern: 'sriYantra', folds: 0, zoom: 2, lineWidth: 2, glow: 0.4, colorFg: '#ff6633', colorBg: '#1a0a00' } },
@@ -71,13 +80,16 @@ export const MANDALA_PRESETS: { name: string; values: Partial<MandalaParams> }[]
 ]
 
 const PATTERN_MAP: Record<MandalaPattern, number> = {
-  seedOfLife: 0,
-  flowerOfLife: 1,
-  metatron: 2,
-  sriYantra: 3,
-  goldenSpiral: 4,
-  hexGrid: 5,
-  concentricRings: 6,
+  interference: 0,
+  orbitTrap: 1,
+  conformal: 2,
+  seedOfLife: 3,
+  flowerOfLife: 4,
+  metatron: 5,
+  sriYantra: 6,
+  goldenSpiral: 7,
+  hexGrid: 8,
+  concentricRings: 9,
 }
 
 const VERT = `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`
@@ -305,17 +317,90 @@ float sdConcentricRings(vec2 p, float scale) {
 }
 
 // ============================================================
+// INTERFERENCE / ORBIT / CONFORMAL PATTERNS
+// (These return COLOR directly, not SDF distance)
+// ============================================================
+
+// Interference: overlapping sin/cos waves thresholded to hard edges
+// This is the PsychedelicDreams technique.
+vec3 interferencePattern(vec2 uv, float time, float folds, vec3 fg, vec3 bg) {
+  float a = atan(uv.y, uv.x);
+  float r = length(uv);
+  // Kaleidoscope fold
+  if (folds > 1.5) {
+    float seg = TAU / folds;
+    a = mod(a, seg);
+    if (a > seg * 0.5) a = seg - a;
+  }
+  vec3 col = vec3(0.0);
+  for (float i = 1.0; i < 7.0; i++) {
+    float s = sin(a * 5.0 + time + i * 0.5) * 0.5 + 0.5;
+    float ring = pow(abs(sin(r * 12.0 - time * 2.0 + i * 1.3)), 18.0);
+    float petal = pow(abs(sin(a * 3.0 + r * 8.0 - time + i)), 14.0);
+    float wave = pow(abs(sin(r * 20.0 * i * 0.5 - time * i * 0.3 + a * i * 2.0)), 16.0);
+    float brightness = (ring + petal + wave) * 0.3;
+    col += brightness * mix(fg, bg, s * 0.5);
+  }
+  col *= smoothstep(3.0, 0.2, r);
+  return col;
+}
+
+// Orbit Trap: Julia fractal with geometric traps
+vec3 orbitTrapPattern(vec2 uv, float time, vec3 fg, vec3 bg) {
+  vec2 z = uv * 2.0;
+  vec2 c = vec2(0.38 * cos(time * 0.15), 0.38 * sin(time * 0.12));
+  float dCirc = 1e9, dLine = 1e9, dMin = 1e9;
+  for (int i = 0; i < 64; i++) {
+    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    dCirc = min(dCirc, abs(length(z) - 0.5));
+    dLine = min(dLine, abs(z.y));
+    dMin = min(dMin, length(z));
+    if (dot(z, z) > 64.0) break;
+  }
+  float edge = smoothstep(0.05, 0.0, dCirc) + smoothstep(0.03, 0.0, dLine) * 0.7;
+  return mix(bg, fg, clamp(edge, 0.0, 1.0));
+}
+
+// Conformal: Mobius transform + log-polar repetition
+vec3 conformalPattern(vec2 uv, float time, float folds, vec3 fg, vec3 bg) {
+  vec2 z = uv * 2.0;
+  // Mobius transform
+  vec2 a2 = vec2(cos(time * 0.2), sin(time * 0.2)) * 0.6;
+  float denom = dot(vec2(1.0, 0.0) - vec2(a2.x * z.x + a2.y * z.y, a2.x * z.y - a2.y * z.x),
+                     vec2(1.0, 0.0) - vec2(a2.x * z.x + a2.y * z.y, a2.x * z.y - a2.y * z.x));
+  if (denom < 0.001) denom = 0.001;
+  vec2 num = z - a2;
+  vec2 den = vec2(1.0 - (a2.x * z.x + a2.y * z.y), -(a2.x * z.y - a2.y * z.x));
+  z = vec2(num.x * den.x + num.y * den.y, num.y * den.x - num.x * den.y) / dot(den, den);
+  // Log-polar
+  z = vec2(log(max(length(z), 0.001)), atan(z.y, z.x));
+  float v = 0.0;
+  for (float i = 1.0; i < 6.0; i++) {
+    v += sin(z.x * 10.0 * i) * sin(z.y * i * 3.0);
+  }
+  float edge = pow(abs(sin(v * 3.0)), 12.0);
+  return mix(bg, fg, edge);
+}
+
+// ============================================================
 // PATTERN DISPATCH
 // ============================================================
 
 float getPattern(float id, vec2 p, float r) {
-  if (id < 0.5) return sdSeedOfLife(p, r);
-  if (id < 1.5) return sdFlowerOfLife(p, r);
-  if (id < 2.5) return sdMetatronsCube(p, r);
-  if (id < 3.5) return sdSriYantra(p, r);
-  if (id < 4.5) return sdGoldenSpiral(p, r * 0.3);
-  if (id < 5.5) return sdHexGrid(p, r * 0.5);
+  if (id < 3.5) return 0.0; // interference/orbit/conformal handle their own color
+  if (id < 4.5) return sdFlowerOfLife(p, r);
+  if (id < 5.5) return sdMetatronsCube(p, r);
+  if (id < 6.5) return sdSriYantra(p, r);
+  if (id < 7.5) return sdGoldenSpiral(p, r * 0.3);
+  if (id < 8.5) return sdHexGrid(p, r * 0.5);
   return sdConcentricRings(p, r * 0.4);
+}
+
+// SDF patterns also need Seed of Life
+float getPatternWithSeed(float id, vec2 p, float r) {
+  if (id < 3.5) return 0.0;
+  if (id < 4.5) return sdSeedOfLife(p, r); // id 3 = seed
+  return getPattern(id, p, r);
 }
 
 // ============================================================
@@ -355,16 +440,40 @@ void main() {
   float totalLine = 0.0;
   float totalGlow = 0.0;
   float layerCount = clamp(uLayers, 1.0, 3.0);
+  vec3 color = uColorBg;
 
   for (int i = 0; i < 3; i++) {
     if (float(i) >= layerCount) break;
     float offset = float(i) * 2.094;
     float scale = 1.0 + float(i) * 0.4;
 
+    vec2 layerUv = uv * scale;
+
+    // For interference/orbit/conformal, handle tiling + color directly
+    if (uPattern < 2.5) {
+      vec3 patColor = vec3(0.0);
+      if (tileSize > 0.01) {
+        vec2 localP = mod(layerUv + tileSize * 0.5, tileSize) - tileSize * 0.5;
+        if (uPattern < 0.5) patColor = interferencePattern(localP, time + offset, uFolds, uColorFg, uColorBg);
+        else if (uPattern < 1.5) patColor = orbitTrapPattern(localP, time + offset, uColorFg, uColorBg);
+        else patColor = conformalPattern(localP, time + offset, uFolds, uColorFg, uColorBg);
+      } else {
+        if (uPattern < 0.5) patColor = interferencePattern(layerUv, time + offset, uFolds, uColorFg, uColorBg);
+        else if (uPattern < 1.5) patColor = orbitTrapPattern(layerUv, time + offset, uColorFg, uColorBg);
+        else patColor = conformalPattern(layerUv, time + offset, uFolds, uColorFg, uColorBg);
+      }
+      float weight = 1.0 - float(i) * 0.25;
+      totalLine += length(patColor) * weight * 0.15; // for glow compat
+      totalGlow += length(patColor) * weight * 0.05;
+      // Direct color accumulation for non-SDF patterns
+      color += patColor * weight * (1.0 / layerCount);
+      continue;
+    }
+
+    // SDF patterns: compute distance
     float d;
     if (tileSize > 0.01) {
-      // Tiled: check current cell + 8 neighbors for seamless lines
-      vec2 localP = mod(uv * scale + tileSize * 0.5, tileSize) - tileSize * 0.5;
+      vec2 localP = mod(layerUv + tileSize * 0.5, tileSize) - tileSize * 0.5;
       d = 1e9;
       for (int ny = -1; ny <= 1; ny++) {
         for (int nx = -1; nx <= 1; nx++) {
@@ -373,7 +482,7 @@ void main() {
         }
       }
     } else {
-      d = mandalaLayer(uv * scale, time, offset);
+      d = mandalaLayer(layerUv, time, offset);
     }
 
     // Anti-aliased line
@@ -385,15 +494,15 @@ void main() {
     // Glow
     float glowVal = exp(-abs(d) * (40.0 / uZoom)) * uGlow;
 
-    // Weight by layer (front = full, back = reduced)
     float weight = 1.0 - float(i) * 0.25;
     totalLine = max(totalLine, line * weight);
     totalGlow += glowVal * weight * 0.3;
   }
 
-  // Composite
-  vec3 color = uColorBg;
-  color = mix(color, uColorFg, totalLine);
+  // Composite SDF lines + glow (interference patterns already wrote to color)
+  if (uPattern > 2.5) {
+    color = mix(color, uColorFg, totalLine);
+  }
   color += uColorFg * totalGlow;
 
   // Strobe
