@@ -85,6 +85,25 @@ export const FOLD_DEFAULTS: FoldFieldParams = {
   colorBg: '#05010a',
 }
 
+/** Candidate preset: inversion fold + gradient fill + angular color.
+ *  Swarm source: Q-1006 (inversion), Q-1001 (gradient), Q-1003 (angular).
+ *  This is candidate-only. Not a baseline replacement. */
+export const FOLD_CANDIDATE_APOLLONIAN: Partial<FoldFieldParams> = {
+  enabled: true,
+  solo: true,
+  foldType: 'inversion',
+  fillMode: 'gradient',
+  colorStrategy: 'angular',
+  folds: 6,
+  iters: 8,
+  scale: 1.7,
+  drift: 0.04,
+  lineWidthDecay: 0.8,
+  fillWeight: 0.3,
+  colorFg: '#f0e8ff',
+  colorBg: '#050010',
+}
+
 export const STAGE_DEFAULTS: StageParams = {
   cameraDrift: 0.3,
   background: '#020104',
