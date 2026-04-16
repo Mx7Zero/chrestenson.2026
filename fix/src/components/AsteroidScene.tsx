@@ -2,8 +2,8 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, useAnimations, useProgress, Html } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { MandalaSceneCanvas } from './MandalaScene'
 import {
+  MandalaCanvas,
   MANDALA_DEFAULTS,
   MANDALA_PRESETS,
   type MandalaParams,
@@ -383,7 +383,7 @@ export function AsteroidScene({
         <TunnelCanvas active={inView} params={tunnelParams} />
       )}
       {currentBg.id === 'optical' && visualMode === 'mandala' && (
-        <MandalaSceneCanvas active={inView} params={mandalaParams} />
+        <MandalaCanvas active={inView} params={mandalaParams} />
       )}
       <Canvas
         shadows
