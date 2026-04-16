@@ -1136,6 +1136,9 @@ export function AsteroidScene({
                     { key: 'wave', label: 'WAVE', min: 0, max: 5, step: 0.05, stepper: true },
                     { key: 'bend', label: 'BEND', min: 0, max: 360, step: 1, stepper: true },
                     { key: 'bendDir', label: 'BEND DIR', min: 0, max: 360, step: 1, stepper: true },
+                    { key: 'kaleidoscope', label: 'KALEIDO', min: 0, max: 16, step: 1, stepper: true },
+                    { key: 'chromatic', label: 'CHROMA', min: 0, max: 0.15, step: 0.005, stepper: true },
+                    { key: 'hueShift', label: 'HUE SPIN', min: 0, max: 2, step: 0.01, stepper: true },
                   ] as const
                 ).map((k) => (
                   <TuneRow

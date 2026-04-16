@@ -22,6 +22,9 @@ export type TunnelParams = {
   strobeColor: string
   strobeTarget: number // 0=all, 1=cellA, 2=cellB
   strobeMode: number // 0=flash, 1=pulse, 2=rainbow, 3=alternate, 4=invert
+  kaleidoscope: number // 0=off, 2-16 fold symmetry
+  chromatic: number // RGB channel offset intensity
+  hueShift: number // hue rotation speed
   colorA: string
   colorB: string
   imageA: string | null
@@ -50,6 +53,9 @@ export const TUNNEL_DEFAULTS: TunnelParams = {
   strobeColor: '#ffffff',
   strobeTarget: 0,
   strobeMode: 0,
+  kaleidoscope: 0,
+  chromatic: 0,
+  hueShift: 0,
   colorA: '#ffffff',
   colorB: '#000000',
   imageA: null,
@@ -77,6 +83,9 @@ export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] =
   { name: 'CIRCUIT', values: { rings: 8, density: 8, patternA: 'grid', patternB: 'dot', colorA: '#00ff41', colorB: '#050a05', cellBlur: 0, speed: 0.03 } },
   { name: 'DREAM', values: { rings: 2, density: 10, patternA: 'fractal', patternB: 'marble', colorA: '#00e5ff', colorB: '#2d1b4e', cellBlur: 0.25, speed: 0.015, roll: 0.5 } },
   { name: 'VOID', values: { rings: 20, density: 1, cellBlur: 0.4, colorA: '#000000', colorB: '#111111', speed: 0.08, roll: 1.5, helix: 2 } },
+  { name: 'MANDALA', values: { kaleidoscope: 8, rings: 6, density: 6, patternA: 'fractal', patternB: 'spiral', chromatic: 0.04, hueShift: 0.15, speed: 0.02, colorA: '#ffffff', colorB: '#000000' } },
+  { name: 'PRISM', values: { kaleidoscope: 6, chromatic: 0.08, hueShift: 0.3, rings: 4, density: 4, patternA: 'diagonal', patternB: 'diamond', speed: 0.03, colorA: '#ff1493', colorB: '#00e1ff' } },
+  { name: 'SACRED', values: { kaleidoscope: 12, rings: 3, density: 3, patternA: 'rings', patternB: 'dot', chromatic: 0.02, cellBlur: 0.1, speed: 0.01, roll: 0.1, colorA: '#ffd700', colorB: '#4a0e60' } },
 ]
 
 export const STROBE_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
@@ -366,6 +375,9 @@ uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
 uniform float uStrobeTarget;
 uniform float uStrobeMode;
+uniform float uKaleidoscope;
+uniform float uChromatic;
+uniform float uHueShift;
 uniform sampler2D uImageA;
 uniform sampler2D uImageB;
 uniform float uHasImageA;
@@ -438,6 +450,32 @@ float shaderPattern(float id, vec2 uv, float time) {
   return 0.5 + 0.5 * sin(a * 4.0 + r * 12.0 - time * 2.0);
 }
 
+// --- Kaleidoscope UV fold ---
+vec2 kaleidoFold(vec2 uv, float segments) {
+  vec2 c = uv - 0.5;
+  float a = atan(c.y, c.x);
+  float r = length(c);
+  float seg = 6.28318 / segments;
+  a = mod(a + seg * 0.5, seg) - seg * 0.5;
+  a = abs(a);
+  return vec2(cos(a), sin(a)) * r + 0.5;
+}
+
+// --- HSV ↔ RGB ---
+vec3 rgb2hsv(vec3 c) {
+  vec4 K = vec4(0.0, -1.0/3.0, 2.0/3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+vec3 hsv2rgb(vec3 c) {
+  vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 // --- Anti-aliased checkerboard ---
 float aaChecker(vec2 p) {
   vec2 w = fwidth(p) + 0.001;
@@ -461,38 +499,68 @@ vec3 getCellColor(vec2 localUv, float shaderPat, float hasImage,
 }
 
 void main() {
-  vec2 tileUv = vec2(
-    vUv.x * uRings * 2.0,
-    (vUv.y + uTexScroll) * uDensityY * 2.0
+  // Kaleidoscope: fold screen UV into N-fold symmetry before tiling
+  vec2 screenUv = vUv;
+  if (uKaleidoscope > 1.5) {
+    screenUv = kaleidoFold(screenUv, uKaleidoscope);
+  }
+
+  vec2 tileUvBase = vec2(
+    screenUv.x * uRings * 2.0,
+    (screenUv.y + uTexScroll) * uDensityY * 2.0
   );
 
-  float checker = 0.0;
+  // Motion blur samples
+  float checkerG = 0.0;
   for (int i = 0; i < 4; i++) {
     float t = (float(i) + 0.5) / 4.0 - 0.5;
-    vec2 sampleUv = tileUv + vec2(0.0, t * uMotion);
-    checker += clamp(aaChecker(sampleUv), 0.0, 1.0);
+    checkerG += clamp(aaChecker(tileUvBase + vec2(0.0, t * uMotion)), 0.0, 1.0);
   }
-  checker *= 0.25;
+  checkerG *= 0.25;
 
-  // Soften cell edges: blend checker toward 0.5 near cell boundaries.
-  // uCellBlur 0 = razor edges, 0.5 = everything melts together.
+  // Chromatic aberration: offset R and B checker
+  float checkerR = checkerG;
+  float checkerB = checkerG;
+  if (uChromatic > 0.001) {
+    vec2 dir = (screenUv - 0.5) * uChromatic * uDensityY;
+    float cR = 0.0;
+    float cB = 0.0;
+    for (int i = 0; i < 4; i++) {
+      float t = (float(i) + 0.5) / 4.0 - 0.5;
+      vec2 mot = vec2(0.0, t * uMotion);
+      cR += clamp(aaChecker(tileUvBase + dir + mot), 0.0, 1.0);
+      cB += clamp(aaChecker(tileUvBase - dir + mot), 0.0, 1.0);
+    }
+    checkerR = cR * 0.25;
+    checkerB = cB * 0.25;
+  }
+
+  // Cell blur
   if (uCellBlur > 0.001) {
-    vec2 f = fract(tileUv);
+    vec2 f = fract(tileUvBase);
     vec2 edgeDist = min(f, 1.0 - f);
     float minDist = min(edgeDist.x, edgeDist.y);
     float edgeMask = smoothstep(0.0, uCellBlur, minDist);
-    checker = mix(0.5, checker, edgeMask);
+    checkerR = mix(0.5, checkerR, edgeMask);
+    checkerG = mix(0.5, checkerG, edgeMask);
+    checkerB = mix(0.5, checkerB, edgeMask);
   }
 
-  vec2 localUv = fract(tileUv);
+  vec2 localUv = fract(tileUvBase);
 
   vec3 colA = getCellColor(localUv, uShaderPatA, uHasImageA, uImageA,
                            uColorA, uColorB, uTime);
   vec3 colB = getCellColor(localUv, uShaderPatB, uHasImageB, uImageB,
                            uColorB, uColorA, uTime);
-  vec3 color = mix(colA, colB, checker);
 
-  // Strobe system: target (all/cellA/cellB), mode (flash/pulse/rainbow/alternate/invert)
+  // Per-channel mix for chromatic aberration
+  vec3 color = vec3(
+    mix(colA.r, colB.r, checkerR),
+    mix(colA.g, colB.g, checkerG),
+    mix(colA.b, colB.b, checkerB)
+  );
+
+  // Strobe system
   if (uStrobeRate > 0.01) {
     float strobePhase = fract(uTime * uStrobeRate);
 
@@ -537,6 +605,13 @@ void main() {
     1.0
   );
   color = mix(color, uFogColor, fogFactor);
+
+  // Hue rotation: smoothly cycle the entire output's hue over time
+  if (uHueShift > 0.001) {
+    vec3 hsv = rgb2hsv(color);
+    hsv.x = fract(hsv.x + uTime * uHueShift);
+    color = hsv2rgb(hsv);
+  }
 
   gl_FragColor = vec4(color, 1.0);
 }
@@ -621,6 +696,9 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uStrobeColor: { value: new THREE.Color('#ffffff') },
     uStrobeTarget: { value: 0 },
     uStrobeMode: { value: 0 },
+    uKaleidoscope: { value: 0 },
+    uChromatic: { value: 0 },
+    uHueShift: { value: 0 },
     uImageA: { value: WHITE_PIXEL as THREE.Texture },
     uImageB: { value: WHITE_PIXEL as THREE.Texture },
     uHasImageA: { value: 0 },
@@ -716,6 +794,9 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
     uniformsRef.current.uStrobeTarget.value = params.strobeTarget
     uniformsRef.current.uStrobeMode.value = params.strobeMode
+    uniformsRef.current.uKaleidoscope.value = params.kaleidoscope
+    uniformsRef.current.uChromatic.value = params.chromatic
+    uniformsRef.current.uHueShift.value = params.hueShift
     uniformsRef.current.uTime.value = elapsed
 
     rollPhaseRef.current += safeDelta * params.roll
