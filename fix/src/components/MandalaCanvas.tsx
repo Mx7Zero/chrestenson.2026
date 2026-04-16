@@ -347,12 +347,9 @@ void main() {
 
   float time = uTime;
 
-  // Tiling: repeat the pattern across the screen
-  vec2 cellUv = uv;
-  if (uTiles > 1.5) {
-    float tileSize = 2.0 / uTiles * uZoom;
-    cellUv = (fract(uv / tileSize + 0.5) - 0.5) * tileSize;
-  }
+  // Infinite seamless tiling: compute SDF for current tile + 8 neighbors
+  // so lines extend across boundaries with no hard box edges.
+  float tileSize = uTiles > 1.5 ? 2.0 / uTiles * uZoom : 0.0;
 
   // Layer compositing
   float totalLine = 0.0;
@@ -361,9 +358,23 @@ void main() {
 
   for (int i = 0; i < 3; i++) {
     if (float(i) >= layerCount) break;
-    float offset = float(i) * 2.094; // ~TAU/3
+    float offset = float(i) * 2.094;
     float scale = 1.0 + float(i) * 0.4;
-    float d = mandalaLayer(cellUv * scale, time, offset);
+
+    float d;
+    if (tileSize > 0.01) {
+      // Tiled: check current cell + 8 neighbors for seamless lines
+      vec2 localP = mod(uv * scale + tileSize * 0.5, tileSize) - tileSize * 0.5;
+      d = 1e9;
+      for (int ny = -1; ny <= 1; ny++) {
+        for (int nx = -1; nx <= 1; nx++) {
+          vec2 neighborP = localP - vec2(float(nx), float(ny)) * tileSize;
+          d = min(d, mandalaLayer(neighborP, time, offset));
+        }
+      }
+    } else {
+      d = mandalaLayer(uv * scale, time, offset);
+    }
 
     // Anti-aliased line
     float fw = fwidth(d);
