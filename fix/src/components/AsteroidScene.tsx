@@ -2,8 +2,8 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, useAnimations, useProgress, Html } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { MandalaSceneCanvas } from './MandalaScene'
 import {
-  MandalaCanvas,
   MANDALA_DEFAULTS,
   MANDALA_PRESETS,
   type MandalaParams,
@@ -383,7 +383,7 @@ export function AsteroidScene({
         <TunnelCanvas active={inView} params={tunnelParams} />
       )}
       {currentBg.id === 'optical' && visualMode === 'mandala' && (
-        <MandalaCanvas active={inView} params={mandalaParams} />
+        <MandalaSceneCanvas active={inView} params={mandalaParams} />
       )}
       <Canvas
         shadows
@@ -853,14 +853,18 @@ export function AsteroidScene({
                   <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 12, rowGap: 10, alignItems: 'center' }}>
                     {([
                       { key: 'folds', label: 'FOLDS', min: 3, max: 18, step: 1 },
-                      { key: 'iters', label: 'DEPTH', min: 2, max: 14, step: 1 },
+                      { key: 'iters', label: 'ITERS', min: 2, max: 14, step: 1 },
                       { key: 'speed', label: 'SPEED', min: 0, max: 0.35, step: 0.005 },
                       { key: 'zoom', label: 'ZOOM', min: 1.1, max: 4.5, step: 0.05 },
                       { key: 'scale', label: 'SCALE', min: 1.35, max: 2.25, step: 0.01 },
                       { key: 'lineWidth', label: 'LINES', min: 0.5, max: 2.4, step: 0.05 },
+                      { key: 'fill', label: 'FILL', min: 0, max: 1, step: 0.02 },
                       { key: 'glow', label: 'GLOW', min: 0.1, max: 2.2, step: 0.05 },
                       { key: 'warp', label: 'WARP', min: 0, max: 1.3, step: 0.02 },
                       { key: 'twist', label: 'TWIST', min: 0, max: 1.2, step: 0.02 },
+                      { key: 'depth', label: 'DEPTH', min: 0, max: 1.2, step: 0.02 },
+                      { key: 'particles', label: 'PARTICLES', min: 0, max: 1, step: 0.02 },
+                      { key: 'bloom', label: 'BLOOM', min: 0, max: 2, step: 0.05 },
                       { key: 'layerSpread', label: 'SPREAD', min: 1.2, max: 1.9, step: 0.01 },
                       { key: 'contrast', label: 'CONTRAST', min: 0.75, max: 1.5, step: 0.01 },
                       { key: 'pulse', label: 'PULSE', min: 0, max: 0.6, step: 0.02 },
