@@ -851,24 +851,8 @@ const KALEIDO_FRAG = `
   uniform float time;
   varying vec2 vUv;
   void main() {
-    vec2 uv = vUv;
-    if (segments > 1.5) {
-      vec2 p = uv - 0.5;
-      float a = atan(p.y, p.x);
-      float r = length(p);
-      // Slow rotation for "living mandala"
-      a += time * 0.08;
-      float seg = 6.28318 / segments;
-      // Mirror fold — abs gives true reflection, not just rotation
-      a = abs(mod(a + seg * 0.5, seg) - seg * 0.5);
-      // Subtle radial ripple
-      a += sin(r * 6.0 - time * 1.5) * 0.04;
-      uv = vec2(cos(a), sin(a)) * r + 0.5;
-    }
-    vec4 texel = texture2D(tDiffuse, uv);
-    // Debug: red means FBO is empty, green means quad renders but UV is wrong
-    if (texel.r + texel.g + texel.b < 0.01) texel = vec4(0.2, 0.0, 0.0, 1.0);
-    gl_FragColor = texel;
+    // DEBUG: solid red to confirm quad renders at all
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
 `
 
