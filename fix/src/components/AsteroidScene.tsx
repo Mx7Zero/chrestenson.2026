@@ -803,6 +803,9 @@ export function AsteroidScene({
                       { key: 'zoom', label: 'ZOOM', min: 0.5, max: 12, step: 0.1 },
                       { key: 'lineWidth', label: 'LINE', min: 0.5, max: 6, step: 0.1 },
                       { key: 'glow', label: 'GLOW', min: 0, max: 1, step: 0.02 },
+                      { key: 'tiles', label: 'TILES', min: 1, max: 8, step: 1 },
+                      { key: 'layers', label: 'LAYERS', min: 1, max: 3, step: 1 },
+                      { key: 'pulse', label: 'PULSE', min: 0, max: 1, step: 0.02 },
                       { key: 'strobeRate', label: 'STROBE', min: 0, max: 20, step: 0.5 },
                     ] as const).map((k) => (
                       <TuneRow

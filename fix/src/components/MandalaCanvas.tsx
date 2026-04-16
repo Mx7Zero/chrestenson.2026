@@ -18,6 +18,9 @@ export type MandalaParams = {
   zoom: number
   lineWidth: number
   glow: number
+  tiles: number // 1 = single, 2+ = repeating grid
+  layers: number // 1-3 composited layers
+  pulse: number // breathing/pulse intensity
   colorFg: string
   colorBg: string
   animate: boolean
@@ -33,6 +36,9 @@ export const MANDALA_DEFAULTS: MandalaParams = {
   zoom: 2.5,
   lineWidth: 2,
   glow: 0.3,
+  tiles: 1,
+  layers: 1,
+  pulse: 0,
   colorFg: '#ffffff',
   colorBg: '#000000',
   animate: true,
@@ -57,9 +63,11 @@ export const MANDALA_PRESETS: { name: string; values: Partial<MandalaParams> }[]
   { name: 'YANTRA', values: { pattern: 'sriYantra', folds: 0, zoom: 2, lineWidth: 2, glow: 0.4, colorFg: '#ff6633', colorBg: '#1a0a00' } },
   { name: 'GOLDEN', values: { pattern: 'goldenSpiral', folds: 0, zoom: 1.5, lineWidth: 2, glow: 0.6, colorFg: '#ffd700', colorBg: '#000000' } },
   { name: 'HIVE', values: { pattern: 'hexGrid', folds: 0, zoom: 4, lineWidth: 1.5, glow: 0.2, colorFg: '#00e5ff', colorBg: '#000a14' } },
-  { name: 'KALEIDO', values: { pattern: 'flowerOfLife', folds: 8, zoom: 3, lineWidth: 2, glow: 0.4, colorFg: '#ffffff', colorBg: '#000000', speed: 0.2 } },
-  { name: 'PORTAL', values: { pattern: 'concentricRings', folds: 12, zoom: 5, lineWidth: 2.5, glow: 0.7, colorFg: '#ff1493', colorBg: '#000000', speed: 0.3 } },
-  { name: 'TEMPLE', values: { pattern: 'metatron', folds: 6, zoom: 2.5, lineWidth: 1.5, glow: 0.5, colorFg: '#ffffff', colorBg: '#0a0520', speed: 0.1 } },
+  { name: 'KALEIDO', values: { pattern: 'flowerOfLife', folds: 8, zoom: 3, lineWidth: 2, glow: 0.4, layers: 2, colorFg: '#ffffff', colorBg: '#000000', speed: 0.2 } },
+  { name: 'PORTAL', values: { pattern: 'concentricRings', folds: 12, zoom: 5, lineWidth: 2.5, glow: 0.7, pulse: 0.5, colorFg: '#ff1493', colorBg: '#000000', speed: 0.3 } },
+  { name: 'TEMPLE', values: { pattern: 'metatron', folds: 6, zoom: 2.5, lineWidth: 1.5, glow: 0.5, layers: 3, colorFg: '#ffffff', colorBg: '#0a0520', speed: 0.1 } },
+  { name: 'TILE', values: { pattern: 'flowerOfLife', folds: 0, zoom: 2, tiles: 4, lineWidth: 1.5, glow: 0.2, colorFg: '#ffffff', colorBg: '#000000' } },
+  { name: 'MATRIX', values: { pattern: 'hexGrid', folds: 0, zoom: 5, tiles: 1, layers: 2, lineWidth: 1.5, glow: 0.6, pulse: 0.3, colorFg: '#00ff41', colorBg: '#000000', speed: 0.1 } },
 ]
 
 const PATTERN_MAP: Record<MandalaPattern, number> = {
@@ -88,6 +96,9 @@ uniform float uPattern;
 uniform vec3 uColorFg;
 uniform vec3 uColorBg;
 uniform vec2 uResolution;
+uniform float uTiles;
+uniform float uLayers;
+uniform float uPulse;
 uniform float uStrobeRate;
 uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
@@ -311,32 +322,68 @@ float getPattern(float id, vec2 p, float r) {
 // MAIN
 // ============================================================
 
-void main() {
-  vec2 uv = (vUv - 0.5) * 2.0;
-  uv.x *= uResolution.x / uResolution.y;
-  uv *= uZoom;
+// Compute one layer of the mandala at a given UV
+float mandalaLayer(vec2 uv, float time, float layerOffset) {
+  // Pulse: breathing scale
+  float breathe = 1.0 + sin(time * 2.0 + layerOffset) * uPulse * 0.2;
+  uv *= breathe;
 
   // Rotation
-  float rot = uTime * uSpeed;
+  float rot = time * uSpeed + layerOffset * 0.5;
   mat2 rm = mat2(cos(rot), -sin(rot), sin(rot), cos(rot));
   uv = rm * uv;
 
   // Dn symmetry fold (0 = no fold)
   uv = dnFold(uv, uFolds);
 
-  // SDF distance
-  float d = getPattern(uPattern, uv, 1.0);
+  return getPattern(uPattern, uv, 1.0);
+}
 
-  // Anti-aliased line with pixel-width control
-  float line = renderLine(d, uLineWidth);
+void main() {
+  vec2 uv = (vUv - 0.5) * 2.0;
+  float aspect = uResolution.x / uResolution.y;
+  uv.x *= aspect;
+  uv *= uZoom;
 
-  // Glow
-  float glowVal = exp(-d * (40.0 / uZoom)) * uGlow;
+  float time = uTime;
+
+  // Tiling: repeat the pattern across the screen
+  vec2 cellUv = uv;
+  if (uTiles > 1.5) {
+    float tileSize = 2.0 / uTiles * uZoom;
+    cellUv = (fract(uv / tileSize + 0.5) - 0.5) * tileSize;
+  }
+
+  // Layer compositing
+  float totalLine = 0.0;
+  float totalGlow = 0.0;
+  float layerCount = clamp(uLayers, 1.0, 3.0);
+
+  for (int i = 0; i < 3; i++) {
+    if (float(i) >= layerCount) break;
+    float offset = float(i) * 2.094; // ~TAU/3
+    float scale = 1.0 + float(i) * 0.4;
+    float d = mandalaLayer(cellUv * scale, time, offset);
+
+    // Anti-aliased line
+    float fw = fwidth(d);
+    float aa = max(fw * 0.5, 0.001);
+    float halfW = max(fw * uLineWidth * 0.5, aa);
+    float line = 1.0 - smoothstep(halfW - aa, halfW + aa, abs(d));
+
+    // Glow
+    float glowVal = exp(-abs(d) * (40.0 / uZoom)) * uGlow;
+
+    // Weight by layer (front = full, back = reduced)
+    float weight = 1.0 - float(i) * 0.25;
+    totalLine = max(totalLine, line * weight);
+    totalGlow += glowVal * weight * 0.3;
+  }
 
   // Composite
   vec3 color = uColorBg;
-  color += uColorFg * line;
-  color += uColorFg * glowVal * 0.6;
+  color = mix(color, uColorFg, totalLine);
+  color += uColorFg * totalGlow;
 
   // Strobe
   if (uStrobeRate > 0.01) {
@@ -362,6 +409,9 @@ function MandalaQuad({ params }: { params: MandalaParams }) {
           uZoom: { value: 2.5 },
           uLineWidth: { value: 2 },
           uGlow: { value: 0.3 },
+          uTiles: { value: 1 },
+          uLayers: { value: 1 },
+          uPulse: { value: 0 },
           uPattern: { value: 1 },
           uColorFg: { value: new THREE.Color('#ffffff') },
           uColorBg: { value: new THREE.Color('#000000') },
@@ -385,6 +435,9 @@ function MandalaQuad({ params }: { params: MandalaParams }) {
     u.uZoom.value = params.zoom
     u.uLineWidth.value = params.lineWidth
     u.uGlow.value = params.glow
+    u.uTiles.value = params.tiles
+    u.uLayers.value = params.layers
+    u.uPulse.value = params.pulse
     u.uPattern.value = PATTERN_MAP[params.pattern] ?? 1
     u.uColorFg.value.set(params.colorFg)
     u.uColorBg.value.set(params.colorBg)
