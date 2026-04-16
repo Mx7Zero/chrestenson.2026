@@ -8,15 +8,19 @@ import * as THREE from 'three'
 // RENDERED frame into N-fold radial symmetry — the tunnel renders
 // normally, then the final 2D image is mirrored into mandala geometry.
 const KALEIDO_FRAG = `
-  void mainUv(inout vec2 uv) {
-    if (segments < 1.5) return;
+  void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+    if (segments < 1.5) {
+      outputColor = inputColor;
+      return;
+    }
     vec2 c = uv - 0.5;
     float a = atan(c.y, c.x);
     float r = length(c);
     float seg = 6.28318 / segments;
     a = mod(a + seg * 0.5, seg) - seg * 0.5;
     a = abs(a);
-    uv = vec2(cos(a), sin(a)) * r + 0.5;
+    vec2 foldedUv = vec2(cos(a), sin(a)) * r + 0.5;
+    outputColor = texture2D(inputBuffer, foldedUv);
   }
 `
 
@@ -908,11 +912,9 @@ export function TunnelCanvas({
       <color attach="background" args={['#000000']} />
       <CameraSync fov={params.fov} />
       <Tunnel params={params} />
-      {params.kaleidoscope > 1 && (
-        <EffectComposer>
-          <KaleidoscopePass segments={params.kaleidoscope} />
-        </EffectComposer>
-      )}
+      <EffectComposer>
+        <KaleidoscopePass segments={params.kaleidoscope} />
+      </EffectComposer>
     </Canvas>
   )
 }
