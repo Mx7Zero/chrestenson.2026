@@ -53,11 +53,6 @@ const BACKGROUND_PALETTE: PaletteEntry[] = [
     css: '#000000',
     swatchCss: 'repeating-conic-gradient(from 0deg, #000 0 20deg, #fff 20deg 40deg)',
   },
-  {
-    id: 'mandala',
-    css: '#000000',
-    swatchCss: 'conic-gradient(from 0deg, #fff 0 30deg, #000 30deg 60deg, #fff 60deg 90deg, #000 90deg 120deg, #fff 120deg 150deg, #000 150deg 180deg, #fff 180deg 210deg, #000 210deg 240deg, #fff 240deg 270deg, #000 270deg 300deg, #fff 300deg 330deg, #000 330deg 360deg)',
-  },
   { id: 'red', css: '#dc2626' },
   { id: 'yellow', css: '#eab308' },
   { id: 'blue', css: '#2563eb' },
@@ -294,6 +289,7 @@ export function AsteroidScene({
   const [tunePanelOpen, setTunePanelOpen] = useState(false)
   const [tuneTab, setTuneTab] = useState<'play' | 'design'>('play')
   const [hideModel, setHideModel] = useState(false)
+  const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -361,12 +357,20 @@ export function AsteroidScene({
           playsInline
         />
       )}
-      {currentBg.id === 'optical' && (
-        <TunnelCanvas active={inView} params={tunnelParams} />
-      )}
-      {currentBg.id === 'mandala' && (
-        <MandalaCanvas active={inView} params={tunnelParams} />
-      )}
+      {currentBg.id === 'optical' || currentBg.id === 'mandala' ? (
+        visualMode === 'mandala' ? (
+          <MandalaCanvas
+            active={inView}
+            params={{
+              ...tunnelParams,
+              kaleidoscope: Math.max(tunnelParams.kaleidoscope, 6),
+              patternA: tunnelParams.patternA || 'fractal',
+            }}
+          />
+        ) : (
+          <TunnelCanvas active={inView} params={tunnelParams} />
+        )
+      ) : null}
       <Canvas
         shadows
         frameloop={inView ? 'always' : 'never'}
@@ -552,7 +556,7 @@ export function AsteroidScene({
       >
         DRAG TO SPIN · PINCH OR ⌃/⌘ + SCROLL TO ZOOM
       </div>
-      {showBackgroundSelector && (currentBg.id === 'optical' || currentBg.id === 'mandala') && (
+      {showBackgroundSelector && currentBg.id === 'optical' && (
         <div
           className="absolute top-1/2 right-0 flex items-stretch"
           style={{ zIndex: 2, transform: 'translateY(-50%)' }}
@@ -707,6 +711,46 @@ export function AsteroidScene({
                       }}
                     >
                       {hidden ? 'HIDE' : 'SHOW'}
+                    </button>
+                  ))}
+                </div>
+                <span style={{ minWidth: 36 }} />
+
+                <span
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.6)',
+                  }}
+                >
+                  MODE
+                </span>
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                  {(['tunnel', 'mandala'] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setVisualMode(m)}
+                      style={{
+                        flex: 1,
+                        padding: '6px 0',
+                        background:
+                          visualMode === m
+                            ? 'rgba(255,255,255,0.18)'
+                            : 'transparent',
+                        border: '1px solid rgba(255,255,255,0.25)',
+                        color:
+                          visualMode === m
+                            ? '#ffffff'
+                            : 'rgba(255,255,255,0.55)',
+                        fontFamily: 'monospace',
+                        fontSize: 10,
+                        letterSpacing: '0.25em',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {m === 'tunnel' ? '◉ TUNNEL' : '✦ MANDALA'}
                     </button>
                   ))}
                 </div>
