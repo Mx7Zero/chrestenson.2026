@@ -6,6 +6,7 @@ import {
   TunnelCanvas,
   TUNNEL_DEFAULTS,
   TUNNEL_PRESETS,
+  STROBE_PRESETS,
   COLOR_PALETTES,
   TEST_IMAGES,
   PATTERNS,
@@ -776,37 +777,73 @@ export function AsteroidScene({
                   />
                 ))}
               </div>
+              {/* Strobe controls */}
               <div style={{ marginTop: 8, marginBottom: 4 }}>
-                <div
-                  style={{
-                    fontFamily: 'monospace',
-                    fontSize: 9,
-                    letterSpacing: '0.25em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.55)',
-                    marginBottom: 4,
-                  }}
-                >
-                  STROBE COLOR
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', marginBottom: 3, textTransform: 'uppercase' }}>TARGET</div>
+                    <div style={{ display: 'flex', gap: 3 }}>
+                      {[{ v: 0, l: 'ALL' }, { v: 1, l: 'A' }, { v: 2, l: 'B' }].map((t) => (
+                        <button
+                          key={t.v}
+                          onClick={() => setTunnelParams((p) => ({ ...p, strobeTarget: t.v }))}
+                          style={{
+                            flex: 1, padding: '3px 0',
+                            background: tunnelParams.strobeTarget === t.v ? 'rgba(255,255,255,0.18)' : 'transparent',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            color: tunnelParams.strobeTarget === t.v ? '#fff' : 'rgba(255,255,255,0.5)',
+                            fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.15em', cursor: 'pointer',
+                          }}
+                        >{t.l}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', marginBottom: 3, textTransform: 'uppercase' }}>COLOR</div>
+                    <input
+                      type="color"
+                      value={tunnelParams.strobeColor}
+                      onChange={(e) => setTunnelParams((p) => ({ ...p, strobeColor: e.target.value }))}
+                      style={{ width: 40, height: 22, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', padding: 0, cursor: 'pointer' }}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="color"
-                  value={tunnelParams.strobeColor}
-                  onChange={(e) =>
-                    setTunnelParams((p) => ({
-                      ...p,
-                      strobeColor: e.target.value,
-                    }))
-                  }
-                  style={{
-                    width: 48,
-                    height: 22,
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    background: 'transparent',
-                    padding: 0,
-                    cursor: 'pointer',
-                  }}
-                />
+                <div style={{ marginBottom: 6 }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', marginBottom: 3, textTransform: 'uppercase' }}>MODE</div>
+                  <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                    {[{ v: 0, l: 'FLASH' }, { v: 1, l: 'PULSE' }, { v: 2, l: 'RAINBOW' }, { v: 3, l: 'ALTER' }, { v: 4, l: 'INVERT' }].map((m) => (
+                      <button
+                        key={m.v}
+                        onClick={() => setTunnelParams((p) => ({ ...p, strobeMode: m.v }))}
+                        style={{
+                          padding: '3px 6px',
+                          background: tunnelParams.strobeMode === m.v ? 'rgba(255,255,255,0.18)' : 'transparent',
+                          border: '1px solid rgba(255,255,255,0.2)',
+                          color: tunnelParams.strobeMode === m.v ? '#fff' : 'rgba(255,255,255,0.5)',
+                          fontFamily: 'monospace', fontSize: 7, letterSpacing: '0.15em', cursor: 'pointer',
+                        }}
+                      >{m.l}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', marginBottom: 3, textTransform: 'uppercase' }}>STROBE PRESETS</div>
+                  <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                    {STROBE_PRESETS.map((sp) => (
+                      <button
+                        key={sp.name}
+                        onClick={() => setTunnelParams((p) => ({ ...p, ...sp.values }))}
+                        style={{
+                          padding: '3px 6px',
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.18)',
+                          color: 'rgba(255,255,255,0.7)',
+                          fontFamily: 'monospace', fontSize: 7, letterSpacing: '0.12em', cursor: 'pointer',
+                        }}
+                      >{sp.name}</button>
+                    ))}
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => setTunnelParams(TUNNEL_DEFAULTS)}

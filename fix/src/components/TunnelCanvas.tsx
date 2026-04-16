@@ -18,8 +18,10 @@ export type TunnelParams = {
   bendDir: number
   cellBlur: number // 0 = hard cell edges, 0.5 = fully blended
   strobeRate: number // flashes per second (0 = off)
-  strobeDuty: number // duty cycle 0.05–0.95 (short flash to mostly on)
+  strobeDuty: number // duty cycle 0.05–0.95
   strobeColor: string
+  strobeTarget: number // 0=all, 1=cellA, 2=cellB
+  strobeMode: number // 0=flash, 1=pulse, 2=rainbow, 3=alternate, 4=invert
   colorA: string
   colorB: string
   imageA: string | null
@@ -46,6 +48,8 @@ export const TUNNEL_DEFAULTS: TunnelParams = {
   strobeRate: 0,
   strobeDuty: 0.15,
   strobeColor: '#ffffff',
+  strobeTarget: 0,
+  strobeMode: 0,
   colorA: '#ffffff',
   colorB: '#000000',
   imageA: null,
@@ -73,6 +77,19 @@ export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] =
   { name: 'CIRCUIT', values: { rings: 8, density: 8, patternA: 'grid', patternB: 'dot', colorA: '#00ff41', colorB: '#050a05', cellBlur: 0, speed: 0.03 } },
   { name: 'DREAM', values: { rings: 2, density: 10, patternA: 'fractal', patternB: 'marble', colorA: '#00e5ff', colorB: '#2d1b4e', cellBlur: 0.25, speed: 0.015, roll: 0.5 } },
   { name: 'VOID', values: { rings: 20, density: 1, cellBlur: 0.4, colorA: '#000000', colorB: '#111111', speed: 0.08, roll: 1.5, helix: 2 } },
+]
+
+export const STROBE_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
+  { name: 'OFF', values: { strobeRate: 0 } },
+  { name: 'GENTLE', values: { strobeRate: 1, strobeDuty: 0.5, strobeMode: 1, strobeTarget: 0, strobeColor: '#ffffff' } },
+  { name: 'RAVE', values: { strobeRate: 8, strobeDuty: 0.12, strobeMode: 0, strobeTarget: 0, strobeColor: '#ffffff' } },
+  { name: 'POLICE', values: { strobeRate: 3, strobeDuty: 0.4, strobeMode: 3, strobeTarget: 0, colorA: '#0044ff', colorB: '#ff0022' } },
+  { name: 'RAINBOW', values: { strobeRate: 2, strobeDuty: 0.5, strobeMode: 2, strobeTarget: 0 } },
+  { name: 'HEARTBEAT', values: { strobeRate: 1.2, strobeDuty: 0.2, strobeMode: 1, strobeTarget: 0, strobeColor: '#ff0033' } },
+  { name: 'BLACKOUT', values: { strobeRate: 4, strobeDuty: 0.3, strobeMode: 0, strobeTarget: 0, strobeColor: '#000000' } },
+  { name: 'INVERT', values: { strobeRate: 2, strobeDuty: 0.5, strobeMode: 4, strobeTarget: 0 } },
+  { name: 'CELL A', values: { strobeRate: 4, strobeDuty: 0.2, strobeMode: 0, strobeTarget: 1, strobeColor: '#ffffff' } },
+  { name: 'CELL B', values: { strobeRate: 4, strobeDuty: 0.2, strobeMode: 0, strobeTarget: 2, strobeColor: '#ffffff' } },
 ]
 
 export const TEST_IMAGES: { name: string; url: string }[] = [
@@ -347,6 +364,8 @@ uniform float uCellBlur;
 uniform float uStrobeRate;
 uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
+uniform float uStrobeTarget;
+uniform float uStrobeMode;
 uniform sampler2D uImageA;
 uniform sampler2D uImageB;
 uniform float uHasImageA;
@@ -473,11 +492,43 @@ void main() {
                            uColorB, uColorA, uTime);
   vec3 color = mix(colA, colB, checker);
 
-  // Strobe: periodic flash. Rate=0 means off.
+  // Strobe system: target (all/cellA/cellB), mode (flash/pulse/rainbow/alternate/invert)
   if (uStrobeRate > 0.01) {
     float strobePhase = fract(uTime * uStrobeRate);
-    float strobeOn = 1.0 - step(uStrobeDuty, strobePhase);
-    color = mix(color, uStrobeColor, strobeOn);
+
+    // Target mask: which fragments are affected
+    float affected = 1.0;
+    if (uStrobeTarget > 0.5 && uStrobeTarget < 1.5)
+      affected = 1.0 - checker;  // cell A only
+    else if (uStrobeTarget > 1.5)
+      affected = checker;  // cell B only
+
+    // Envelope shape
+    float envelope;
+    if (uStrobeMode < 0.5 || uStrobeMode > 2.5 && uStrobeMode < 4.5)
+      envelope = 1.0 - step(uStrobeDuty, strobePhase);  // hard flash
+    else if (uStrobeMode < 1.5)
+      envelope = 0.5 + 0.5 * cos(strobePhase * 6.28318);  // smooth pulse
+    else
+      envelope = 1.0 - step(uStrobeDuty, strobePhase);
+
+    // Strobe color based on mode
+    vec3 strobeCol = uStrobeColor;
+    if (uStrobeMode > 1.5 && uStrobeMode < 2.5) {
+      // Rainbow: hue cycles with time
+      float hue = fract(uTime * uStrobeRate * 0.15);
+      vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+      vec3 p = abs(fract(vec3(hue) + K.xyz) * 6.0 - K.www);
+      strobeCol = mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), 1.0);
+    } else if (uStrobeMode > 2.5 && uStrobeMode < 3.5) {
+      // Alternate: swap cell colors
+      strobeCol = mix(uColorB, uColorA, checker);
+    } else if (uStrobeMode > 3.5) {
+      // Invert
+      strobeCol = vec3(1.0) - color;
+    }
+
+    color = mix(color, strobeCol, envelope * affected);
   }
 
   float fogFactor = clamp(
@@ -568,6 +619,8 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uStrobeRate: { value: 0 },
     uStrobeDuty: { value: 0.15 },
     uStrobeColor: { value: new THREE.Color('#ffffff') },
+    uStrobeTarget: { value: 0 },
+    uStrobeMode: { value: 0 },
     uImageA: { value: WHITE_PIXEL as THREE.Texture },
     uImageB: { value: WHITE_PIXEL as THREE.Texture },
     uHasImageA: { value: 0 },
@@ -661,6 +714,8 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uStrobeRate.value = params.strobeRate
     uniformsRef.current.uStrobeDuty.value = params.strobeDuty
     uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
+    uniformsRef.current.uStrobeTarget.value = params.strobeTarget
+    uniformsRef.current.uStrobeMode.value = params.strobeMode
     uniformsRef.current.uTime.value = elapsed
 
     rollPhaseRef.current += safeDelta * params.roll
