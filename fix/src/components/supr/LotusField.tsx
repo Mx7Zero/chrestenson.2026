@@ -19,7 +19,7 @@ const VERT = `
 varying vec2 vUv;
 void main() {
   vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  gl_Position = vec4(position.xy, 0.0, 1.0);
 }
 `
 
@@ -224,8 +224,8 @@ export function LotusField({ params }: { params: LotusFieldParams }) {
   if (!params.enabled) return null
 
   return (
-    <mesh position={[0, 0, params.zDepth]} material={material}>
-      <planeGeometry args={[40, 25]} />
+    <mesh material={material} renderOrder={Math.round(params.zDepth * -1)} frustumCulled={false}>
+      <planeGeometry args={[2, 2]} />
     </mesh>
   )
 }

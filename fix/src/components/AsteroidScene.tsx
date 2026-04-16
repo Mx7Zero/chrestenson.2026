@@ -829,47 +829,9 @@ export function AsteroidScene({
                 <span style={{ minWidth: 36 }} />
               </div>
 
-              {/* === SUPR COMPOSITION SYSTEM — tabbed module panels === */}
+              {/* === SUPR COMPOSITION SYSTEM === */}
               {visualMode === 'mandala' && (
-                <div style={{ display: 'flex', gap: 0, minHeight: 400 }}>
-                  {/* LEFT: vertical module tabs */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginRight: 8, flexShrink: 0 }}>
-                    {([
-                      { id: 'stage' as const, label: 'STG', color: '#888' },
-                      { id: 'lotus' as const, label: 'LTS', color: lotusParams.enabled ? '#7f7' : '#f55', indicator: true },
-                      { id: 'q900' as const, label: 'Q9', color: foldParams.enabled ? '#7f7' : '#f55', indicator: true },
-                    ]).map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setModuleTab(tab.id)}
-                        style={{
-                          padding: '10px 6px',
-                          fontFamily: 'monospace',
-                          fontSize: 9,
-                          letterSpacing: '0.15em',
-                          writingMode: 'vertical-rl',
-                          transform: 'rotate(180deg)',
-                          background: moduleTab === tab.id ? 'rgba(255,255,255,0.12)' : 'transparent',
-                          border: 'none',
-                          borderLeft: moduleTab === tab.id ? '2px solid #fff' : '2px solid transparent',
-                          color: moduleTab === tab.id ? '#fff' : 'rgba(255,255,255,0.4)',
-                          cursor: 'pointer',
-                          position: 'relative',
-                        }}
-                      >
-                        {tab.indicator && (
-                          <span style={{
-                            position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%) rotate(180deg)',
-                            width: 5, height: 5, borderRadius: '50%', background: tab.color,
-                          }} />
-                        )}
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* RIGHT: selected module's controls */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
 
                     {/* ─── STAGE ─── */}
                     {moduleTab === 'stage' && (
@@ -962,7 +924,6 @@ export function AsteroidScene({
                     )}
 
                   </div>
-                </div>
               )}
 
               {/* === LEGACY: old mandala controls (keeping for reference, hidden) === */}
@@ -1601,6 +1562,36 @@ export function AsteroidScene({
               </div>
             </div>
           </div>
+          {/* Module tabs — OUTSIDE the drawer, always visible in mandala mode */}
+          {visualMode === 'mandala' && tunePanelOpen && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignSelf: 'center' }}>
+              {([
+                { id: 'stage' as const, label: 'STG', dot: null },
+                { id: 'lotus' as const, label: 'LTS', dot: lotusParams.enabled ? '#4f4' : '#f44' },
+                { id: 'q900' as const, label: 'Q9', dot: foldParams.enabled ? '#4f4' : '#f44' },
+              ]).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setModuleTab(tab.id)}
+                  style={{
+                    padding: '12px 8px',
+                    fontFamily: 'monospace',
+                    fontSize: 9,
+                    letterSpacing: '0.2em',
+                    writingMode: 'vertical-rl',
+                    background: moduleTab === tab.id ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.7)',
+                    border: 'none',
+                    borderLeft: moduleTab === tab.id ? '2px solid #fff' : '2px solid transparent',
+                    color: moduleTab === tab.id ? '#fff' : 'rgba(255,255,255,0.45)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {tab.dot && <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: tab.dot, marginBottom: 4 }} />}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
           <button
             onClick={() => setTunePanelOpen((v) => !v)}
             aria-label="Tune panel toggle"
