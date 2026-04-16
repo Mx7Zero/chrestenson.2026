@@ -925,14 +925,42 @@ export function AsteroidScene({
                         <ModuleHeader title="Q-900 FOLD" enabled={foldParams.enabled} solo={foldParams.solo}
                           onToggle={() => setFoldParams((p) => ({ ...p, enabled: !p.enabled }))}
                           onSolo={() => setFoldParams((p) => ({ ...p, solo: !p.solo }))} />
-                        <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
-                          {(['mono', 'spectrum'] as const).map((m) => (
-                            <button key={m} onClick={() => setFoldParams((prev) => ({ ...prev, colorMode: m }))}
-                              style={{ flex: 1, padding: '4px 0', fontSize: 8, fontFamily: 'monospace', letterSpacing: '0.15em', textTransform: 'uppercase',
-                                background: foldParams.colorMode === m ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
-                                border: foldParams.colorMode === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.15)',
-                                color: foldParams.colorMode === m ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                        {/* Fold Type */}
+                        <div style={{ fontFamily: 'monospace', fontSize: 7, color: 'rgba(255,255,255,0.4)', marginBottom: 2, letterSpacing: '0.2em', textTransform: 'uppercase' }}>FOLD</div>
+                        <div style={{ display: 'flex', gap: 3, marginBottom: 5 }}>
+                          {(['abs', 'inversion', 'hybrid'] as const).map((m) => (
+                            <button key={m} onClick={() => setFoldParams((prev) => ({ ...prev, foldType: m }))}
+                              style={{ flex: 1, padding: '3px 0', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase',
+                                background: foldParams.foldType === m ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
+                                border: foldParams.foldType === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.12)',
+                                color: foldParams.foldType === m ? '#fff' : 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>
                               {m}
+                            </button>
+                          ))}
+                        </div>
+                        {/* Fill Mode */}
+                        <div style={{ fontFamily: 'monospace', fontSize: 7, color: 'rgba(255,255,255,0.4)', marginBottom: 2, letterSpacing: '0.2em', textTransform: 'uppercase' }}>FILL</div>
+                        <div style={{ display: 'flex', gap: 3, marginBottom: 5 }}>
+                          {(['edge', 'fill', 'gradient', 'stripe'] as const).map((m) => (
+                            <button key={m} onClick={() => setFoldParams((prev) => ({ ...prev, fillMode: m }))}
+                              style={{ flex: 1, padding: '3px 0', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase',
+                                background: foldParams.fillMode === m ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
+                                border: foldParams.fillMode === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.12)',
+                                color: foldParams.fillMode === m ? '#fff' : 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>
+                              {m}
+                            </button>
+                          ))}
+                        </div>
+                        {/* Color Strategy */}
+                        <div style={{ fontFamily: 'monospace', fontSize: 7, color: 'rgba(255,255,255,0.4)', marginBottom: 2, letterSpacing: '0.2em', textTransform: 'uppercase' }}>COLOR</div>
+                        <div style={{ display: 'flex', gap: 3, marginBottom: 5 }}>
+                          {(['mono', 'spectrum', 'depth', 'angular', 'distance'] as const).map((m) => (
+                            <button key={m} onClick={() => setFoldParams((prev) => ({ ...prev, colorStrategy: m }))}
+                              style={{ flex: 1, padding: '3px 0', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.05em', textTransform: 'uppercase',
+                                background: foldParams.colorStrategy === m ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
+                                border: foldParams.colorStrategy === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.12)',
+                                color: foldParams.colorStrategy === m ? '#fff' : 'rgba(255,255,255,0.45)', cursor: 'pointer' }}>
+                              {m.slice(0,5)}
                             </button>
                           ))}
                         </div>
@@ -951,6 +979,9 @@ export function AsteroidScene({
                           <TuneRow label="SPEED" min={0} max={1} step={0.01} stepper value={foldParams.speed} onChange={(v) => setFoldParams((p) => ({ ...p, speed: v }))} />
                           <TuneRow label="ZOOM" min={0.5} max={6} step={0.1} stepper value={foldParams.zoom} onChange={(v) => setFoldParams((p) => ({ ...p, zoom: v }))} />
                           <TuneRow label="SCALE" min={1.2} max={2.5} step={0.02} stepper value={foldParams.scale} onChange={(v) => setFoldParams((p) => ({ ...p, scale: v }))} />
+                          <TuneRow label="DRIFT" min={0} max={0.3} step={0.005} stepper value={foldParams.drift} onChange={(v) => setFoldParams((p) => ({ ...p, drift: v }))} />
+                          <TuneRow label="LN DECAY" min={0.3} max={1} step={0.02} stepper value={foldParams.lineWidthDecay} onChange={(v) => setFoldParams((p) => ({ ...p, lineWidthDecay: v }))} />
+                          <TuneRow label="FILL WT" min={0} max={1} step={0.02} stepper value={foldParams.fillWeight} onChange={(v) => setFoldParams((p) => ({ ...p, fillWeight: v }))} />
                           <TuneRow label="Z-DEPTH" min={-30} max={0} step={0.5} stepper value={foldParams.zDepth} onChange={(v) => setFoldParams((p) => ({ ...p, zDepth: v }))} />
                         </div>
                       </div>
