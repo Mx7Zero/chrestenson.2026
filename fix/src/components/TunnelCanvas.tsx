@@ -375,7 +375,6 @@ uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
 uniform float uStrobeTarget;
 uniform float uStrobeMode;
-uniform float uKaleidoscope;
 uniform float uChromatic;
 uniform float uHueShift;
 uniform sampler2D uImageA;
@@ -503,15 +502,9 @@ vec3 getCellColor(vec2 localUv, float shaderPat, float hasImage,
 }
 
 void main() {
-  // Kaleidoscope: fold UV into N-fold mirror symmetry with animation
-  vec2 kUv = vUv;
-  if (uKaleidoscope > 1.5) {
-    kUv = kaleidoFold(vUv, uKaleidoscope, uTime);
-  }
-
   vec2 tileUvBase = vec2(
-    kUv.x * uRings * 2.0,
-    (kUv.y + uTexScroll) * uDensityY * 2.0
+    vUv.x * uRings * 2.0,
+    (vUv.y + uTexScroll) * uDensityY * 2.0
   );
 
   // Motion blur samples
@@ -700,7 +693,6 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uStrobeColor: { value: new THREE.Color('#ffffff') },
     uStrobeTarget: { value: 0 },
     uStrobeMode: { value: 0 },
-    uKaleidoscope: { value: 0 },
     uChromatic: { value: 0 },
     uHueShift: { value: 0 },
     uImageA: { value: WHITE_PIXEL as THREE.Texture },
@@ -798,7 +790,6 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
     uniformsRef.current.uStrobeTarget.value = params.strobeTarget
     uniformsRef.current.uStrobeMode.value = params.strobeMode
-    uniformsRef.current.uKaleidoscope.value = params.kaleidoscope
     uniformsRef.current.uChromatic.value = params.chromatic
     uniformsRef.current.uHueShift.value = params.hueShift
     uniformsRef.current.uTime.value = elapsed
