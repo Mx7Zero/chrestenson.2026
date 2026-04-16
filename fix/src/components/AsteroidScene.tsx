@@ -190,19 +190,19 @@ function ModuleHeader({ title, enabled, solo, onToggle, onSolo }: {
       </span>
       {onToggle && (
         <button onClick={onToggle} style={{
-          padding: '2px 6px', fontSize: 7, fontFamily: 'monospace',
-          background: enabled ? 'rgba(80,200,120,0.3)' : 'rgba(255,60,60,0.2)',
-          border: `1px solid ${enabled ? 'rgba(80,200,120,0.5)' : 'rgba(255,60,60,0.3)'}`,
-          color: enabled ? '#7f7' : '#f77', cursor: 'pointer', letterSpacing: '0.1em',
-        }}>{enabled ? 'ON' : 'OFF'}</button>
+          padding: '4px 10px', fontSize: 9, fontFamily: 'monospace', fontWeight: 'bold',
+          background: enabled ? 'rgba(80,200,120,0.35)' : 'rgba(255,60,60,0.25)',
+          border: `1.5px solid ${enabled ? 'rgba(80,200,120,0.6)' : 'rgba(255,60,60,0.4)'}`,
+          color: enabled ? '#6f6' : '#f66', cursor: 'pointer', letterSpacing: '0.15em',
+        }}>{enabled ? '● ON' : '○ OFF'}</button>
       )}
       {onSolo && (
         <button onClick={onSolo} style={{
-          padding: '2px 6px', fontSize: 7, fontFamily: 'monospace',
-          background: solo ? 'rgba(255,200,0,0.3)' : 'transparent',
-          border: `1px solid ${solo ? 'rgba(255,200,0,0.5)' : 'rgba(255,255,255,0.15)'}`,
-          color: solo ? '#ff0' : 'rgba(255,255,255,0.4)', cursor: 'pointer', letterSpacing: '0.1em',
-        }}>S</button>
+          padding: '4px 8px', fontSize: 9, fontFamily: 'monospace', fontWeight: 'bold',
+          background: solo ? 'rgba(255,200,0,0.35)' : 'transparent',
+          border: `1.5px solid ${solo ? 'rgba(255,200,0,0.6)' : 'rgba(255,255,255,0.15)'}`,
+          color: solo ? '#ff0' : 'rgba(255,255,255,0.35)', cursor: 'pointer', letterSpacing: '0.15em',
+        }}>SOLO</button>
       )}
     </div>
   )

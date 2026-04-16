@@ -76,7 +76,7 @@ vec2 kaleidoscopeLayer(vec2 uv, float time, float folds, float iters, float base
     float d5 = abs(length(p) - 0.5);
     float d = min(min(d1, d2), min(min(d3, d4), d5));
 
-    float fw = fwidth(d);
+    float fw = clamp(fwidth(d), 0.0005, 0.08);
     float line = weight * smoothstep(fw * 1.35, 0.0, d);
     float glow = exp(-abs(d) * (18.0 + weight * 10.0)) * weight * 0.18;
 

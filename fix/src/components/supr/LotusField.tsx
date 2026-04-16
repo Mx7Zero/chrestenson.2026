@@ -166,7 +166,7 @@ void main() {
 
   float d = getPattern(uPattern, uv, 1.0);
 
-  float fw = fwidth(d);
+  float fw = clamp(fwidth(d), 0.0005, 0.08);
   float halfW = max(fw * uLineWidth * 0.5, fw * 0.5);
   float line = 1.0 - smoothstep(halfW - fw*0.5, halfW + fw*0.5, abs(d));
 
