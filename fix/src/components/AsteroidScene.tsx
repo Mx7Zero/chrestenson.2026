@@ -5,7 +5,6 @@ import * as THREE from 'three'
 import {
   MandalaCanvas,
   MANDALA_DEFAULTS,
-  MANDALA_PATTERNS,
   MANDALA_PRESETS,
   type MandalaParams,
 } from './MandalaCanvas'
@@ -759,20 +758,20 @@ export function AsteroidScene({
               {/* === MANDALA CONTROLS (completely separate from tunnel) === */}
               {visualMode === 'mandala' && (
                 <div>
-                  <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>GEOMETRY</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3, marginBottom: 10 }}>
-                    {MANDALA_PATTERNS.map((p) => (
+                  <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>COLOR MODE</div>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
+                    {(['mono', 'spectrum'] as const).map((m) => (
                       <button
-                        key={p.id}
-                        onClick={() => setMandalaParams((prev) => ({ ...prev, pattern: p.id }))}
+                        key={m}
+                        onClick={() => setMandalaParams((prev) => ({ ...prev, colorMode: m }))}
                         style={{
-                          padding: '4px 2px', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.1em',
-                          background: mandalaParams.pattern === p.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
-                          border: mandalaParams.pattern === p.id ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.2)',
-                          color: mandalaParams.pattern === p.id ? '#fff' : 'rgba(255,255,255,0.6)',
-                          cursor: 'pointer',
+                          flex: 1, padding: '5px 0', fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.15em',
+                          background: mandalaParams.colorMode === m ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                          border: mandalaParams.colorMode === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                          color: mandalaParams.colorMode === m ? '#fff' : 'rgba(255,255,255,0.6)',
+                          cursor: 'pointer', textTransform: 'uppercase',
                         }}
-                      >{p.label}</button>
+                      >{m}</button>
                     ))}
                   </div>
 
@@ -798,14 +797,11 @@ export function AsteroidScene({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 12, rowGap: 10, alignItems: 'center' }}>
                     {([
-                      { key: 'folds', label: 'FOLDS', min: 0, max: 24, step: 1 },
-                      { key: 'speed', label: 'SPEED', min: 0, max: 2, step: 0.01 },
-                      { key: 'zoom', label: 'ZOOM', min: 0.5, max: 12, step: 0.1 },
-                      { key: 'lineWidth', label: 'LINE', min: 0.5, max: 6, step: 0.1 },
-                      { key: 'glow', label: 'GLOW', min: 0, max: 1, step: 0.02 },
-                      { key: 'tiles', label: 'TILES', min: 1, max: 8, step: 1 },
-                      { key: 'layers', label: 'LAYERS', min: 1, max: 3, step: 1 },
-                      { key: 'pulse', label: 'PULSE', min: 0, max: 1, step: 0.02 },
+                      { key: 'folds', label: 'FOLDS', min: 2, max: 24, step: 1 },
+                      { key: 'iters', label: 'DEPTH', min: 2, max: 14, step: 1 },
+                      { key: 'speed', label: 'SPEED', min: 0, max: 1, step: 0.01 },
+                      { key: 'zoom', label: 'ZOOM', min: 0.5, max: 6, step: 0.1 },
+                      { key: 'scale', label: 'SCALE', min: 1.2, max: 2.5, step: 0.05 },
                       { key: 'strobeRate', label: 'STROBE', min: 0, max: 20, step: 0.5 },
                     ] as const).map((k) => (
                       <TuneRow
