@@ -2,16 +2,14 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { useMemo } from 'react'
 import * as THREE from 'three'
 
-// --- Mandala's own param system (NOT shared with tunnel) ---
-
 export type MandalaPattern =
-  | 'flowerOfLife'
   | 'seedOfLife'
+  | 'flowerOfLife'
   | 'metatron'
+  | 'sriYantra'
+  | 'goldenSpiral'
   | 'hexGrid'
-  | 'triGrid'
-  | 'concentricCircles'
-  | 'starBurst'
+  | 'concentricRings'
 
 export type MandalaParams = {
   pattern: MandalaPattern
@@ -19,6 +17,7 @@ export type MandalaParams = {
   speed: number
   zoom: number
   lineWidth: number
+  glow: number
   colorFg: string
   colorBg: string
   animate: boolean
@@ -29,10 +28,11 @@ export type MandalaParams = {
 
 export const MANDALA_DEFAULTS: MandalaParams = {
   pattern: 'flowerOfLife',
-  folds: 8,
-  speed: 0.3,
-  zoom: 3,
-  lineWidth: 0.03,
+  folds: 0,
+  speed: 0.15,
+  zoom: 2.5,
+  lineWidth: 2,
+  glow: 0.3,
   colorFg: '#ffffff',
   colorBg: '#000000',
   animate: true,
@@ -42,33 +42,34 @@ export const MANDALA_DEFAULTS: MandalaParams = {
 }
 
 export const MANDALA_PATTERNS: { id: MandalaPattern; label: string }[] = [
-  { id: 'flowerOfLife', label: 'FLOWER' },
   { id: 'seedOfLife', label: 'SEED' },
+  { id: 'flowerOfLife', label: 'FLOWER' },
   { id: 'metatron', label: 'METATRON' },
-  { id: 'hexGrid', label: 'HEX' },
-  { id: 'triGrid', label: 'TRI' },
-  { id: 'concentricCircles', label: 'CIRCLES' },
-  { id: 'starBurst', label: 'STAR' },
+  { id: 'sriYantra', label: 'SRI YANTRA' },
+  { id: 'goldenSpiral', label: 'SPIRAL' },
+  { id: 'hexGrid', label: 'HEX GRID' },
+  { id: 'concentricRings', label: 'RINGS' },
 ]
 
 export const MANDALA_PRESETS: { name: string; values: Partial<MandalaParams> }[] = [
-  { name: 'CLASSIC', values: { pattern: 'flowerOfLife', folds: 6, zoom: 3, lineWidth: 0.025, colorFg: '#ffffff', colorBg: '#000000' } },
-  { name: 'SACRED', values: { pattern: 'metatron', folds: 12, zoom: 2.5, lineWidth: 0.02, colorFg: '#ffd700', colorBg: '#1a0a2e' } },
-  { name: 'BLOOM', values: { pattern: 'seedOfLife', folds: 6, zoom: 4, lineWidth: 0.04, colorFg: '#ffffff', colorBg: '#0a1f2f' } },
-  { name: 'HIVE', values: { pattern: 'hexGrid', folds: 6, zoom: 5, lineWidth: 0.02, colorFg: '#00e5ff', colorBg: '#000000' } },
-  { name: 'PRISM', values: { pattern: 'triGrid', folds: 8, zoom: 4, lineWidth: 0.03, colorFg: '#ff1493', colorBg: '#050505' } },
-  { name: 'PULSE', values: { pattern: 'concentricCircles', folds: 12, zoom: 6, lineWidth: 0.035, colorFg: '#ffffff', colorBg: '#000000', speed: 0.6 } },
-  { name: 'NOVA', values: { pattern: 'starBurst', folds: 16, zoom: 3, lineWidth: 0.02, colorFg: '#ffd700', colorBg: '#000000' } },
+  { name: 'CLASSIC', values: { pattern: 'flowerOfLife', folds: 0, zoom: 2.5, lineWidth: 2, glow: 0.3, colorFg: '#ffffff', colorBg: '#000000' } },
+  { name: 'SACRED', values: { pattern: 'metatron', folds: 0, zoom: 2, lineWidth: 1.5, glow: 0.5, colorFg: '#ffd700', colorBg: '#0a0520' } },
+  { name: 'YANTRA', values: { pattern: 'sriYantra', folds: 0, zoom: 2, lineWidth: 2, glow: 0.4, colorFg: '#ff6633', colorBg: '#1a0a00' } },
+  { name: 'GOLDEN', values: { pattern: 'goldenSpiral', folds: 0, zoom: 1.5, lineWidth: 2, glow: 0.6, colorFg: '#ffd700', colorBg: '#000000' } },
+  { name: 'HIVE', values: { pattern: 'hexGrid', folds: 0, zoom: 4, lineWidth: 1.5, glow: 0.2, colorFg: '#00e5ff', colorBg: '#000a14' } },
+  { name: 'KALEIDO', values: { pattern: 'flowerOfLife', folds: 8, zoom: 3, lineWidth: 2, glow: 0.4, colorFg: '#ffffff', colorBg: '#000000', speed: 0.2 } },
+  { name: 'PORTAL', values: { pattern: 'concentricRings', folds: 12, zoom: 5, lineWidth: 2.5, glow: 0.7, colorFg: '#ff1493', colorBg: '#000000', speed: 0.3 } },
+  { name: 'TEMPLE', values: { pattern: 'metatron', folds: 6, zoom: 2.5, lineWidth: 1.5, glow: 0.5, colorFg: '#ffffff', colorBg: '#0a0520', speed: 0.1 } },
 ]
 
 const PATTERN_MAP: Record<MandalaPattern, number> = {
-  flowerOfLife: 0,
-  seedOfLife: 1,
+  seedOfLife: 0,
+  flowerOfLife: 1,
   metatron: 2,
-  hexGrid: 3,
-  triGrid: 4,
-  concentricCircles: 5,
-  starBurst: 6,
+  sriYantra: 3,
+  goldenSpiral: 4,
+  hexGrid: 5,
+  concentricRings: 6,
 }
 
 const VERT = `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }`
@@ -82,9 +83,11 @@ uniform float uFolds;
 uniform float uSpeed;
 uniform float uZoom;
 uniform float uLineWidth;
+uniform float uGlow;
 uniform float uPattern;
 uniform vec3 uColorFg;
 uniform vec3 uColorBg;
+uniform vec2 uResolution;
 uniform float uStrobeRate;
 uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
@@ -93,154 +96,247 @@ uniform vec3 uStrobeColor;
 #define PI  3.14159265359
 #define SQRT3 1.7320508
 
-// --- Kaleidoscope mirror fold ---
-vec2 kfold(vec2 p, float n) {
-  float a = atan(p.y, p.x);
-  float seg = TAU / n;
-  a = mod(a, seg);
-  a = abs(a - seg * 0.5);
-  return vec2(cos(a), sin(a)) * length(p);
-}
+// ============================================================
+// SDF PRIMITIVES
+// ============================================================
 
-// --- SDF primitives ---
-float sdCircle(vec2 p, float r) {
-  return abs(length(p) - r);
-}
-
-float sdLine(vec2 p, vec2 a, vec2 b) {
+float sdSegment(vec2 p, vec2 a, vec2 b) {
   vec2 pa = p - a, ba = b - a;
   float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
   return length(pa - ba * h);
 }
 
-// --- Sacred geometry patterns (return distance to nearest edge) ---
-
-// Flower of Life: circles centered on hex grid vertices
-float flowerOfLife(vec2 p, float scale) {
-  float d = 1e10;
-  float r = scale;
-  // Center circle
-  d = min(d, sdCircle(p, r));
-  // 6 surrounding circles
-  for (int i = 0; i < 6; i++) {
-    float a = float(i) * TAU / 6.0;
-    vec2 c = vec2(cos(a), sin(a)) * r;
-    d = min(d, sdCircle(p - c, r));
-  }
-  // Second ring: 6 more at 2r distance
-  for (int i = 0; i < 6; i++) {
-    float a = float(i) * TAU / 6.0;
-    vec2 c = vec2(cos(a), sin(a)) * r * 2.0;
-    d = min(d, sdCircle(p - c, r));
-  }
-  // Fill between with offset ring
-  for (int i = 0; i < 6; i++) {
-    float a = (float(i) + 0.5) * TAU / 6.0;
-    vec2 c = vec2(cos(a), sin(a)) * r * SQRT3;
-    d = min(d, sdCircle(p - c, r));
-  }
-  return d;
+float sdCircleEdge(vec2 p, vec2 center, float r) {
+  return abs(length(p - center) - r);
 }
 
-// Seed of Life: 7 overlapping circles
-float seedOfLife(vec2 p, float scale) {
-  float d = 1e10;
-  float r = scale;
-  d = min(d, sdCircle(p, r));
-  for (int i = 0; i < 6; i++) {
-    float a = float(i) * TAU / 6.0;
-    vec2 c = vec2(cos(a), sin(a)) * r;
-    d = min(d, sdCircle(p - c, r));
-  }
-  return d;
+float sdRegularPolygon(vec2 p, float r, float n) {
+  float an = PI / n;
+  float a = mod(atan(p.y, p.x) + an, 2.0 * an) - an;
+  vec2 q = length(p) * vec2(cos(a), sin(a));
+  return q.x - r * cos(an);
 }
 
-// Metatron's Cube: seed of life + connecting lines
-float metatronsCube(vec2 p, float scale) {
-  float d = seedOfLife(p, scale);
-  // Connect all 7 centers with lines
-  vec2 centers[7];
-  centers[0] = vec2(0.0);
-  for (int i = 0; i < 6; i++) {
-    float a = float(i) * TAU / 6.0;
-    centers[i + 1] = vec2(cos(a), sin(a)) * scale;
-  }
-  for (int i = 0; i < 7; i++) {
-    for (int j = i + 1; j < 7; j++) {
-      d = min(d, sdLine(p, centers[i], centers[j]));
-    }
-  }
-  return d;
-}
+// ============================================================
+// Dn DIHEDRAL SYMMETRY FOLD
+// ============================================================
 
-// Hexagonal grid
-float hexGrid(vec2 p, float scale) {
-  vec2 r = vec2(1.0, SQRT3);
-  vec2 h = r * 0.5;
-  vec2 a = mod(p / scale, r) - h;
-  vec2 b = mod(p / scale - h, r) - h;
-  vec2 g = dot(a, a) < dot(b, b) ? a : b;
-  return abs(max(abs(g.x) * 1.5 + g.y * 0.866, abs(g.y)) - 0.5) * scale;
-}
-
-// Triangular grid
-float triGrid(vec2 p, float scale) {
-  vec2 q = p / scale;
-  vec2 r = vec2(1.0, SQRT3);
-  vec2 h = r * 0.5;
-  vec2 a = mod(q, r) - h;
-  // Triangle distance via folding
-  a.y += 0.25;
-  if (a.x + a.y * SQRT3 > 0.0) a = vec2(a.x - 0.5, a.y - 0.5 / SQRT3);
-  a.x -= clamp(a.x, -1.0, 0.0);
-  return length(a) * scale;
-}
-
-// Concentric circles
-float concentricCircles(vec2 p, float scale) {
-  float r = length(p);
-  return abs(fract(r / scale) - 0.5) * scale;
-}
-
-// Star burst: radial lines
-float starBurst(vec2 p, float scale) {
+vec2 dnFold(vec2 p, float n) {
+  if (n < 1.5) return p;
   float a = atan(p.y, p.x);
-  float n = 12.0;
-  return abs(sin(a * n)) * length(p) * 0.3;
+  float r = length(p);
+  float seg = TAU / n;
+  a = mod(a, seg);
+  // Mirror: true Dn reflection
+  if (a > seg * 0.5) a = seg - a;
+  return vec2(cos(a), sin(a)) * r;
 }
 
-float getPattern(float id, vec2 p, float scale) {
-  if (id < 0.5) return flowerOfLife(p, scale);
-  if (id < 1.5) return seedOfLife(p, scale);
-  if (id < 2.5) return metatronsCube(p, scale);
-  if (id < 3.5) return hexGrid(p, scale);
-  if (id < 4.5) return triGrid(p, scale);
-  if (id < 5.5) return concentricCircles(p, scale);
-  return starBurst(p, scale);
+// ============================================================
+// ANTI-ALIASED LINE RENDERING (fwidth-based)
+// ============================================================
+
+float renderLine(float d, float pixelWidth) {
+  float fw = fwidth(d);
+  float halfW = fw * pixelWidth * 0.5;
+  float aa = fw * 0.5;
+  return 1.0 - smoothstep(-aa, aa, abs(d) - halfW);
 }
+
+// ============================================================
+// SACRED GEOMETRY PATTERNS
+// ============================================================
+
+// Seed of Life: 1 center + 6 circles
+float sdSeedOfLife(vec2 p, float r) {
+  float d = sdCircleEdge(p, vec2(0), r);
+  for (int i = 0; i < 6; i++) {
+    float a = float(i) * PI / 3.0;
+    d = min(d, sdCircleEdge(p, r * vec2(cos(a), sin(a)), r));
+  }
+  return d;
+}
+
+// Flower of Life: 19 circles in hex packing
+float sdFlowerOfLife(vec2 p, float r) {
+  float d = sdCircleEdge(p, vec2(0), r);
+  // Ring 1: 6 at distance r
+  for (int i = 0; i < 6; i++) {
+    float a = float(i) * PI / 3.0;
+    d = min(d, sdCircleEdge(p, r * vec2(cos(a), sin(a)), r));
+  }
+  // Ring 2: 6 at distance 2r + 6 at r*sqrt(3)
+  for (int i = 0; i < 6; i++) {
+    float a = float(i) * PI / 3.0;
+    d = min(d, sdCircleEdge(p, 2.0 * r * vec2(cos(a), sin(a)), r));
+    float a2 = a + PI / 6.0;
+    d = min(d, sdCircleEdge(p, r * SQRT3 * vec2(cos(a2), sin(a2)), r));
+  }
+  return d;
+}
+
+// Metatron's Cube: Fruit of Life (13 circles) + 78 connecting lines
+float sdMetatronsCube(vec2 p, float r) {
+  // 13 circle centers
+  vec2 c0 = vec2(0);
+  float d = sdCircleEdge(p, c0, r);
+
+  vec2 c1[6];
+  for (int i = 0; i < 6; i++) {
+    float a = float(i) * PI / 3.0;
+    c1[i] = 2.0 * r * vec2(cos(a), sin(a));
+    d = min(d, sdCircleEdge(p, c1[i], r));
+  }
+
+  vec2 c2[6];
+  for (int i = 0; i < 6; i++) {
+    float a = float(i) * PI / 3.0 + PI / 6.0;
+    c2[i] = 2.0 * r * SQRT3 * vec2(cos(a), sin(a));
+    d = min(d, sdCircleEdge(p, c2[i], r));
+  }
+
+  // Connect center to all 12
+  for (int i = 0; i < 6; i++) {
+    d = min(d, sdSegment(p, c0, c1[i]));
+    d = min(d, sdSegment(p, c0, c2[i]));
+  }
+  // Connect ring1 to ring1 neighbors
+  for (int i = 0; i < 6; i++) {
+    d = min(d, sdSegment(p, c1[i], c1[(i + 1) < 6 ? i + 1 : 0]));
+  }
+  // Connect ring1 to ring2
+  for (int i = 0; i < 6; i++) {
+    d = min(d, sdSegment(p, c1[i], c2[i]));
+    d = min(d, sdSegment(p, c1[i], c2[i > 0 ? i - 1 : 5]));
+  }
+  // Connect ring2 to ring2 neighbors
+  for (int i = 0; i < 6; i++) {
+    d = min(d, sdSegment(p, c2[i], c2[(i + 1) < 6 ? i + 1 : 0]));
+  }
+  // Cross connections ring1-ring2 (the remaining diagonals)
+  for (int i = 0; i < 6; i++) {
+    int next = (i + 1) < 6 ? i + 1 : 0;
+    d = min(d, sdSegment(p, c1[i], c2[next]));
+    d = min(d, sdSegment(p, c2[i], c1[next]));
+  }
+
+  return d;
+}
+
+// Sri Yantra: 9 interlocking triangles + outer circle
+float sdSriYantra(vec2 p, float r) {
+  float d = sdCircleEdge(p, vec2(0), r);
+  // Outer square (bhupura)
+  d = min(d, abs(sdRegularPolygon(p, r * 1.05, 4.0)));
+
+  // 4 upward triangles (Shiva) + 5 downward (Shakti)
+  // Simplified vertex positions on concentric rings
+  float h[9];
+  h[0] = 0.92; h[1] = 0.65; h[2] = 0.38; h[3] = 0.12;
+  h[4] = -0.92; h[5] = -0.62; h[6] = -0.32; h[7] = -0.05; h[8] = 0.22;
+
+  // Upward triangles (apex up)
+  for (int i = 0; i < 4; i++) {
+    float ay = h[i] * r;
+    float by = -h[4 + i] * r * 0.7;
+    float bx = sqrt(max(r * r - by * by, 0.0)) * 0.9;
+    d = min(d, sdSegment(p, vec2(0, ay), vec2(-bx, by)));
+    d = min(d, sdSegment(p, vec2(0, ay), vec2(bx, by)));
+    d = min(d, sdSegment(p, vec2(-bx, by), vec2(bx, by)));
+  }
+  // Downward triangles (apex down)
+  for (int i = 0; i < 5; i++) {
+    float ay = h[4 + i] * r;
+    float by = -h[i < 4 ? i : 3] * r * 0.7;
+    float bx = sqrt(max(r * r - by * by, 0.0)) * 0.85;
+    d = min(d, sdSegment(p, vec2(0, ay), vec2(-bx, by)));
+    d = min(d, sdSegment(p, vec2(0, ay), vec2(bx, by)));
+    d = min(d, sdSegment(p, vec2(-bx, by), vec2(bx, by)));
+  }
+
+  return d;
+}
+
+// Golden Spiral (logarithmic, phi-based)
+float sdGoldenSpiral(vec2 p, float scale) {
+  float PHI = 1.6180339887;
+  float k = log(PHI) / (PI * 0.5);
+  float r = length(p);
+  float theta = atan(p.y, p.x);
+  float theta_s = log(max(r / scale, 0.001)) / k;
+  float d = 1e9;
+  for (int n = -6; n < 10; n++) {
+    float t = theta_s + float(n) * TAU;
+    float rs = scale * exp(k * t);
+    vec2 sp = rs * vec2(cos(t), sin(t));
+    d = min(d, length(p - sp));
+  }
+  // Add concentric quarter-circle arcs for the Fibonacci rectangles
+  d = min(d, sdCircleEdge(p, vec2(0), scale));
+  d = min(d, sdCircleEdge(p, vec2(0), scale * PHI));
+  d = min(d, sdCircleEdge(p, vec2(0), scale * PHI * PHI));
+  return d;
+}
+
+// Hexagonal Grid
+float sdHexGrid(vec2 p, float scale) {
+  vec2 H = vec2(1.0, SQRT3);
+  vec2 h = H * 0.5;
+  vec2 a = mod(p / scale, H) - h;
+  vec2 b = mod(p / scale - h, H) - h;
+  vec2 g = dot(a, a) < dot(b, b) ? a : b;
+  return (max(abs(g.x) * 1.5 + g.y * 0.866, abs(g.y)) - 0.5) * scale;
+}
+
+// Concentric Rings
+float sdConcentricRings(vec2 p, float scale) {
+  return abs(fract(length(p) / scale + 0.5) - 0.5) * scale;
+}
+
+// ============================================================
+// PATTERN DISPATCH
+// ============================================================
+
+float getPattern(float id, vec2 p, float r) {
+  if (id < 0.5) return sdSeedOfLife(p, r);
+  if (id < 1.5) return sdFlowerOfLife(p, r);
+  if (id < 2.5) return sdMetatronsCube(p, r);
+  if (id < 3.5) return sdSriYantra(p, r);
+  if (id < 4.5) return sdGoldenSpiral(p, r * 0.3);
+  if (id < 5.5) return sdHexGrid(p, r * 0.5);
+  return sdConcentricRings(p, r * 0.4);
+}
+
+// ============================================================
+// MAIN
+// ============================================================
 
 void main() {
-  // Center and aspect-correct
   vec2 uv = (vUv - 0.5) * 2.0;
-  uv.x *= 1.7778;
+  uv.x *= uResolution.x / uResolution.y;
   uv *= uZoom;
 
-  // Slow rotation
-  float rot = uTime * uSpeed * 0.3;
+  // Rotation
+  float rot = uTime * uSpeed;
   mat2 rm = mat2(cos(rot), -sin(rot), sin(rot), cos(rot));
   uv = rm * uv;
 
-  // Kaleidoscope fold
-  vec2 p = kfold(uv, uFolds);
+  // Dn symmetry fold (0 = no fold)
+  uv = dnFold(uv, uFolds);
 
-  // Get distance to pattern edges
-  float d = getPattern(uPattern, p, 1.0);
+  // SDF distance
+  float d = getPattern(uPattern, uv, 1.0);
 
-  // Sharp edge rendering
-  float edge = 1.0 - step(uLineWidth, d);
+  // Anti-aliased line with pixel-width control
+  float line = renderLine(d, uLineWidth);
 
-  // Two-color output
-  vec3 color = mix(uColorBg, uColorFg, edge);
+  // Glow
+  float glowVal = exp(-d * (40.0 / uZoom)) * uGlow;
+
+  // Composite
+  vec3 color = uColorBg;
+  color += uColorFg * line;
+  color += uColorFg * glowVal * 0.6;
 
   // Strobe
   if (uStrobeRate > 0.01) {
@@ -255,37 +351,44 @@ void main() {
 
 function MandalaQuad({ params }: { params: MandalaParams }) {
   const material = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
+    () => {
+      const mat = new THREE.ShaderMaterial({
         vertexShader: VERT,
         fragmentShader: FRAG,
         uniforms: {
           uTime: { value: 0 },
-          uFolds: { value: 8 },
-          uSpeed: { value: 0.3 },
-          uZoom: { value: 3 },
-          uLineWidth: { value: 0.03 },
-          uPattern: { value: 0 },
+          uFolds: { value: 0 },
+          uSpeed: { value: 0.15 },
+          uZoom: { value: 2.5 },
+          uLineWidth: { value: 2 },
+          uGlow: { value: 0.3 },
+          uPattern: { value: 1 },
           uColorFg: { value: new THREE.Color('#ffffff') },
           uColorBg: { value: new THREE.Color('#000000') },
+          uResolution: { value: new THREE.Vector2(1920, 1080) },
           uStrobeRate: { value: 0 },
           uStrobeDuty: { value: 0.15 },
           uStrobeColor: { value: new THREE.Color('#ffffff') },
         },
-      }),
+      })
+      ;(mat as any).extensions = { derivatives: true }
+      return mat
+    },
     [],
   )
 
   useFrame((state) => {
     const u = material.uniforms
     u.uTime.value = params.animate ? state.clock.elapsedTime : 0
-    u.uFolds.value = Math.max(params.folds, 2)
+    u.uFolds.value = params.folds
     u.uSpeed.value = params.speed
     u.uZoom.value = params.zoom
     u.uLineWidth.value = params.lineWidth
-    u.uPattern.value = PATTERN_MAP[params.pattern] ?? 0
+    u.uGlow.value = params.glow
+    u.uPattern.value = PATTERN_MAP[params.pattern] ?? 1
     u.uColorFg.value.set(params.colorFg)
     u.uColorBg.value.set(params.colorBg)
+    u.uResolution.value.set(state.size.width, state.size.height)
     u.uStrobeRate.value = params.strobeRate
     u.uStrobeDuty.value = params.strobeDuty
     u.uStrobeColor.value.set(params.strobeColor)

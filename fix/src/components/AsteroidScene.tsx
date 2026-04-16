@@ -798,10 +798,11 @@ export function AsteroidScene({
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 12, rowGap: 10, alignItems: 'center' }}>
                     {([
-                      { key: 'folds', label: 'FOLDS', min: 2, max: 24, step: 1 },
+                      { key: 'folds', label: 'FOLDS', min: 0, max: 24, step: 1 },
                       { key: 'speed', label: 'SPEED', min: 0, max: 2, step: 0.01 },
                       { key: 'zoom', label: 'ZOOM', min: 0.5, max: 12, step: 0.1 },
-                      { key: 'lineWidth', label: 'LINE', min: 0.005, max: 0.15, step: 0.005 },
+                      { key: 'lineWidth', label: 'LINE', min: 0.5, max: 6, step: 0.1 },
+                      { key: 'glow', label: 'GLOW', min: 0, max: 1, step: 0.02 },
                       { key: 'strobeRate', label: 'STROBE', min: 0, max: 20, step: 0.5 },
                     ] as const).map((k) => (
                       <TuneRow
