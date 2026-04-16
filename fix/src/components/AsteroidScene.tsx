@@ -2,7 +2,13 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, useAnimations, useProgress, Html } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { MandalaCanvas } from './MandalaCanvas'
+import {
+  MandalaCanvas,
+  MANDALA_DEFAULTS,
+  MANDALA_PATTERNS,
+  MANDALA_PRESETS,
+  type MandalaParams,
+} from './MandalaCanvas'
 import {
   TunnelCanvas,
   TUNNEL_DEFAULTS,
@@ -290,6 +296,7 @@ export function AsteroidScene({
   const [tuneTab, setTuneTab] = useState<'play' | 'design'>('play')
   const [hideModel, setHideModel] = useState(false)
   const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
+  const [mandalaParams, setMandalaParams] = useState<MandalaParams>(MANDALA_DEFAULTS)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -357,20 +364,12 @@ export function AsteroidScene({
           playsInline
         />
       )}
-      {(currentBg.id === 'optical' || currentBg.id === 'mandala') ? (
-        visualMode === 'mandala' ? (
-          <MandalaCanvas
-            active={inView}
-            params={{
-              ...tunnelParams,
-              kaleidoscope: Math.max(tunnelParams.kaleidoscope, 6),
-              patternA: tunnelParams.patternA || 'fractal',
-            }}
-          />
-        ) : (
-          <TunnelCanvas active={inView} params={tunnelParams} />
-        )
-      ) : null}
+      {currentBg.id === 'optical' && visualMode === 'tunnel' && (
+        <TunnelCanvas active={inView} params={tunnelParams} />
+      )}
+      {currentBg.id === 'optical' && visualMode === 'mandala' && (
+        <MandalaCanvas active={inView} params={mandalaParams} />
+      )}
       <Canvas
         shadows
         frameloop={inView ? 'always' : 'never'}
@@ -757,6 +756,77 @@ export function AsteroidScene({
                 <span style={{ minWidth: 36 }} />
               </div>
 
+              {/* === MANDALA CONTROLS (completely separate from tunnel) === */}
+              {visualMode === 'mandala' && (
+                <div>
+                  <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>GEOMETRY</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3, marginBottom: 10 }}>
+                    {MANDALA_PATTERNS.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setMandalaParams((prev) => ({ ...prev, pattern: p.id }))}
+                        style={{
+                          padding: '4px 2px', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.1em',
+                          background: mandalaParams.pattern === p.id ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                          border: mandalaParams.pattern === p.id ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                          color: mandalaParams.pattern === p.id ? '#fff' : 'rgba(255,255,255,0.6)',
+                          cursor: 'pointer',
+                        }}
+                      >{p.label}</button>
+                    ))}
+                  </div>
+
+                  <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>PRESETS</div>
+                  <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {MANDALA_PRESETS.map((p) => (
+                      <button
+                        key={p.name}
+                        onClick={() => setMandalaParams((prev) => ({ ...prev, ...p.values }))}
+                        style={{ padding: '3px 6px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace', fontSize: 7, letterSpacing: '0.12em', cursor: 'pointer' }}
+                      >{p.name}</button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'monospace', fontSize: 9, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                      FG <input type="color" value={mandalaParams.colorFg} onChange={(e) => setMandalaParams((p) => ({ ...p, colorFg: e.target.value }))} style={{ width: 36, height: 20, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'monospace', fontSize: 9, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                      BG <input type="color" value={mandalaParams.colorBg} onChange={(e) => setMandalaParams((p) => ({ ...p, colorBg: e.target.value }))} style={{ width: 36, height: 20, border: '1px solid rgba(255,255,255,0.25)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 12, rowGap: 10, alignItems: 'center' }}>
+                    {([
+                      { key: 'folds', label: 'FOLDS', min: 2, max: 24, step: 1 },
+                      { key: 'speed', label: 'SPEED', min: 0, max: 2, step: 0.01 },
+                      { key: 'zoom', label: 'ZOOM', min: 0.5, max: 12, step: 0.1 },
+                      { key: 'lineWidth', label: 'LINE', min: 0.005, max: 0.15, step: 0.005 },
+                      { key: 'strobeRate', label: 'STROBE', min: 0, max: 20, step: 0.5 },
+                    ] as const).map((k) => (
+                      <TuneRow
+                        key={k.key}
+                        label={k.label}
+                        min={k.min}
+                        max={k.max}
+                        step={k.step}
+                        value={mandalaParams[k.key]}
+                        stepper
+                        onChange={(v) => setMandalaParams((p) => ({ ...p, [k.key]: v }))}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setMandalaParams(MANDALA_DEFAULTS)}
+                    style={{ width: '100%', marginTop: 10, padding: '6px 0', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  >RESET</button>
+                </div>
+              )}
+
+              {/* === TUNNEL CONTROLS (hidden when mandala is active) === */}
+              {visualMode === 'tunnel' && (<>
+
               {/* Pattern presets */}
               <div style={{ marginBottom: 10 }}>
                 <div
@@ -916,10 +986,11 @@ export function AsteroidScene({
               >
                 RESET
               </button>
+              </>)}
               </div>
 
-              {/* --- DESIGN TAB --- */}
-              <div style={{ display: tuneTab === 'design' ? 'block' : 'none' }}>
+              {/* --- DESIGN TAB (tunnel only) --- */}
+              <div style={{ display: tuneTab === 'design' && visualMode === 'tunnel' ? 'block' : 'none' }}>
 
               {/* Color palettes */}
               <div style={{ marginBottom: 10 }}>
