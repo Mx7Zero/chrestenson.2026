@@ -2,11 +2,19 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, useAnimations, useProgress, Html } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { SuprStage } from './supr/SuprStage'
 import {
-  MandalaCanvas,
-  MANDALA_DEFAULTS,
+  LOTUS_DEFAULTS,
+  FOLD_DEFAULTS,
+  STAGE_DEFAULTS,
+  type LotusFieldParams,
+  type FoldFieldParams,
+  type StageParams,
+} from './supr/types'
+import {
   MANDALA_PRESETS,
   type MandalaParams,
+  MANDALA_DEFAULTS,
 } from './MandalaCanvas'
 import {
   TunnelCanvas,
@@ -312,6 +320,15 @@ export function AsteroidScene({
   const [hideModel, setHideModel] = useState(false)
   const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
   const [mandalaParams, setMandalaParams] = useState<MandalaParams>(MANDALA_DEFAULTS)
+  // Per-module state for the composition system
+  const [lotusParams, _setLotus] = useState<LotusFieldParams>(LOTUS_DEFAULTS)
+  const [foldParams, _setFold] = useState<FoldFieldParams>(FOLD_DEFAULTS)
+  const [stageParams, _setStage] = useState<StageParams>(STAGE_DEFAULTS)
+  // Expose setters for panel use
+  const setLotusParams = _setLotus
+  const setFoldParams = _setFold
+  const setStageParams = _setStage
+  void setLotusParams; void setFoldParams; void setStageParams
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -383,7 +400,12 @@ export function AsteroidScene({
         <TunnelCanvas active={inView} params={tunnelParams} />
       )}
       {currentBg.id === 'optical' && visualMode === 'mandala' && (
-        <MandalaCanvas active={inView} params={mandalaParams} />
+        <SuprStage
+          active={inView}
+          stage={stageParams}
+          lotus={lotusParams}
+          fold={foldParams}
+        />
       )}
       <Canvas
         shadows
