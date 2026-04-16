@@ -357,7 +357,7 @@ export function AsteroidScene({
           playsInline
         />
       )}
-      {currentBg.id === 'optical' || currentBg.id === 'mandala' ? (
+      {(currentBg.id === 'optical' || currentBg.id === 'mandala') ? (
         visualMode === 'mandala' ? (
           <MandalaCanvas
             active={inView}
