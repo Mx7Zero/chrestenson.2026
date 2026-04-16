@@ -352,6 +352,7 @@ export function AsteroidScene({
   })
   const [tunePanelOpen, setTunePanelOpen] = useState(false)
   const [tuneTab, setTuneTab] = useState<'play' | 'design'>('play')
+  const [moduleTab, setModuleTab] = useState<'stage' | 'lotus' | 'q900'>('stage')
   const [hideModel, setHideModel] = useState(false)
   const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
   const [mandalaParams, setMandalaParams] = useState<MandalaParams>(MANDALA_DEFAULTS)
@@ -828,87 +829,141 @@ export function AsteroidScene({
                 <span style={{ minWidth: 36 }} />
               </div>
 
-              {/* === SUPR MODULE PANELS (composition system) === */}
-              {visualMode === 'mandala' && (<div>
-
-                {/* ─── STAGE ─── */}
-                <ModuleHeader title="STAGE" />
-                <div style={{ marginBottom: 12, display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
-                  <TuneRow label="DRIFT" min={0} max={2} step={0.05} stepper value={stageParams.cameraDrift} onChange={(v) => setStageParams((p) => ({ ...p, cameraDrift: v }))} />
-                  <TuneRow label="SPEED" min={0.1} max={3} step={0.05} stepper value={stageParams.masterSpeed} onChange={(v) => setStageParams((p) => ({ ...p, masterSpeed: v }))} />
-                </div>
-
-                {/* ─── LOTUS FIELD ─── */}
-                <ModuleHeader title="LOTUS" enabled={lotusParams.enabled} solo={lotusParams.solo}
-                  onToggle={() => setLotusParams((p) => ({ ...p, enabled: !p.enabled }))}
-                  onSolo={() => setLotusParams((p) => ({ ...p, solo: !p.solo }))} />
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 6 }}>
-                    {(['seedOfLife','flowerOfLife','metatron','sriYantra','hexGrid','concentricRings'] as const).map((pat) => (
-                      <button key={pat} onClick={() => setLotusParams((p) => ({ ...p, pattern: pat }))}
-                        style={{ padding: '3px 5px', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.1em',
-                          background: lotusParams.pattern === pat ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.04)',
-                          border: lotusParams.pattern === pat ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.15)',
-                          color: lotusParams.pattern === pat ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
-                        {pat.replace(/([A-Z])/g, ' $1').trim().toUpperCase().slice(0,8)}
+              {/* === SUPR COMPOSITION SYSTEM — tabbed module panels === */}
+              {visualMode === 'mandala' && (
+                <div style={{ display: 'flex', gap: 0, minHeight: 400 }}>
+                  {/* LEFT: vertical module tabs */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginRight: 8, flexShrink: 0 }}>
+                    {([
+                      { id: 'stage' as const, label: 'STG', color: '#888' },
+                      { id: 'lotus' as const, label: 'LTS', color: lotusParams.enabled ? '#7f7' : '#f55', indicator: true },
+                      { id: 'q900' as const, label: 'Q9', color: foldParams.enabled ? '#7f7' : '#f55', indicator: true },
+                    ]).map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setModuleTab(tab.id)}
+                        style={{
+                          padding: '10px 6px',
+                          fontFamily: 'monospace',
+                          fontSize: 9,
+                          letterSpacing: '0.15em',
+                          writingMode: 'vertical-rl',
+                          transform: 'rotate(180deg)',
+                          background: moduleTab === tab.id ? 'rgba(255,255,255,0.12)' : 'transparent',
+                          border: 'none',
+                          borderLeft: moduleTab === tab.id ? '2px solid #fff' : '2px solid transparent',
+                          color: moduleTab === tab.id ? '#fff' : 'rgba(255,255,255,0.4)',
+                          cursor: 'pointer',
+                          position: 'relative',
+                        }}
+                      >
+                        {tab.indicator && (
+                          <span style={{
+                            position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%) rotate(180deg)',
+                            width: 5, height: 5, borderRadius: '50%', background: tab.color,
+                          }} />
+                        )}
+                        {tab.label}
                       </button>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-                      FG <input type="color" value={lotusParams.colorFg} onChange={(e) => setLotusParams((p) => ({ ...p, colorFg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-                      BG <input type="color" value={lotusParams.colorBg} onChange={(e) => setLotusParams((p) => ({ ...p, colorBg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
-                    </label>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
-                    <TuneRow label="OPACITY" min={0} max={1} step={0.02} stepper value={lotusParams.opacity} onChange={(v) => setLotusParams((p) => ({ ...p, opacity: v }))} />
-                    <TuneRow label="FOLDS" min={0} max={24} step={1} stepper value={lotusParams.folds} onChange={(v) => setLotusParams((p) => ({ ...p, folds: v }))} />
-                    <TuneRow label="SPEED" min={0} max={1} step={0.01} stepper value={lotusParams.speed} onChange={(v) => setLotusParams((p) => ({ ...p, speed: v }))} />
-                    <TuneRow label="ZOOM" min={0.5} max={8} step={0.1} stepper value={lotusParams.zoom} onChange={(v) => setLotusParams((p) => ({ ...p, zoom: v }))} />
-                    <TuneRow label="LINE" min={0.5} max={6} step={0.1} stepper value={lotusParams.lineWidth} onChange={(v) => setLotusParams((p) => ({ ...p, lineWidth: v }))} />
-                    <TuneRow label="GLOW" min={0} max={1} step={0.02} stepper value={lotusParams.glow} onChange={(v) => setLotusParams((p) => ({ ...p, glow: v }))} />
-                    <TuneRow label="DEPTH" min={-30} max={0} step={0.5} stepper value={lotusParams.zDepth} onChange={(v) => setLotusParams((p) => ({ ...p, zDepth: v }))} />
+
+                  {/* RIGHT: selected module's controls */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+
+                    {/* ─── STAGE ─── */}
+                    {moduleTab === 'stage' && (
+                      <div>
+                        <ModuleHeader title="STAGE" />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
+                          <TuneRow label="DRIFT" min={0} max={2} step={0.05} stepper value={stageParams.cameraDrift} onChange={(v) => setStageParams((p) => ({ ...p, cameraDrift: v }))} />
+                          <TuneRow label="SPEED" min={0.1} max={3} step={0.05} stepper value={stageParams.masterSpeed} onChange={(v) => setStageParams((p) => ({ ...p, masterSpeed: v }))} />
+                        </div>
+                        <div style={{ marginTop: 8 }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                            BG <input type="color" value={stageParams.background} onChange={(e) => setStageParams((p) => ({ ...p, background: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ─── LOTUS ─── */}
+                    {moduleTab === 'lotus' && (
+                      <div>
+                        <ModuleHeader title="LOTUS FIELD" enabled={lotusParams.enabled} solo={lotusParams.solo}
+                          onToggle={() => setLotusParams((p) => ({ ...p, enabled: !p.enabled }))}
+                          onSolo={() => setLotusParams((p) => ({ ...p, solo: !p.solo }))} />
+                        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 6 }}>
+                          {(['seedOfLife','flowerOfLife','metatron','sriYantra','hexGrid','concentricRings'] as const).map((pat) => (
+                            <button key={pat} onClick={() => setLotusParams((p) => ({ ...p, pattern: pat }))}
+                              style={{ padding: '3px 5px', fontSize: 7, fontFamily: 'monospace', letterSpacing: '0.1em',
+                                background: lotusParams.pattern === pat ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.04)',
+                                border: lotusParams.pattern === pat ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                                color: lotusParams.pattern === pat ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                              {pat.replace(/([A-Z])/g, ' $1').trim().toUpperCase().slice(0,8)}
+                            </button>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                            FG <input type="color" value={lotusParams.colorFg} onChange={(e) => setLotusParams((p) => ({ ...p, colorFg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                            BG <input type="color" value={lotusParams.colorBg} onChange={(e) => setLotusParams((p) => ({ ...p, colorBg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                          </label>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
+                          <TuneRow label="OPACITY" min={0} max={1} step={0.02} stepper value={lotusParams.opacity} onChange={(v) => setLotusParams((p) => ({ ...p, opacity: v }))} />
+                          <TuneRow label="FOLDS" min={0} max={24} step={1} stepper value={lotusParams.folds} onChange={(v) => setLotusParams((p) => ({ ...p, folds: v }))} />
+                          <TuneRow label="SPEED" min={0} max={1} step={0.01} stepper value={lotusParams.speed} onChange={(v) => setLotusParams((p) => ({ ...p, speed: v }))} />
+                          <TuneRow label="ZOOM" min={0.5} max={8} step={0.1} stepper value={lotusParams.zoom} onChange={(v) => setLotusParams((p) => ({ ...p, zoom: v }))} />
+                          <TuneRow label="LINE" min={0.5} max={6} step={0.1} stepper value={lotusParams.lineWidth} onChange={(v) => setLotusParams((p) => ({ ...p, lineWidth: v }))} />
+                          <TuneRow label="GLOW" min={0} max={1} step={0.02} stepper value={lotusParams.glow} onChange={(v) => setLotusParams((p) => ({ ...p, glow: v }))} />
+                          <TuneRow label="Z-DEPTH" min={-30} max={0} step={0.5} stepper value={lotusParams.zDepth} onChange={(v) => setLotusParams((p) => ({ ...p, zDepth: v }))} />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ─── Q-900 FOLD ─── */}
+                    {moduleTab === 'q900' && (
+                      <div>
+                        <ModuleHeader title="Q-900 FOLD" enabled={foldParams.enabled} solo={foldParams.solo}
+                          onToggle={() => setFoldParams((p) => ({ ...p, enabled: !p.enabled }))}
+                          onSolo={() => setFoldParams((p) => ({ ...p, solo: !p.solo }))} />
+                        <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+                          {(['mono', 'spectrum'] as const).map((m) => (
+                            <button key={m} onClick={() => setFoldParams((prev) => ({ ...prev, colorMode: m }))}
+                              style={{ flex: 1, padding: '4px 0', fontSize: 8, fontFamily: 'monospace', letterSpacing: '0.15em', textTransform: 'uppercase',
+                                background: foldParams.colorMode === m ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
+                                border: foldParams.colorMode === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                                color: foldParams.colorMode === m ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                              {m}
+                            </button>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                            FG <input type="color" value={foldParams.colorFg} onChange={(e) => setFoldParams((p) => ({ ...p, colorFg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                            BG <input type="color" value={foldParams.colorBg} onChange={(e) => setFoldParams((p) => ({ ...p, colorBg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
+                          </label>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
+                          <TuneRow label="OPACITY" min={0} max={1} step={0.02} stepper value={foldParams.opacity} onChange={(v) => setFoldParams((p) => ({ ...p, opacity: v }))} />
+                          <TuneRow label="FOLDS" min={2} max={24} step={1} stepper value={foldParams.folds} onChange={(v) => setFoldParams((p) => ({ ...p, folds: v }))} />
+                          <TuneRow label="ITERS" min={2} max={14} step={1} stepper value={foldParams.iters} onChange={(v) => setFoldParams((p) => ({ ...p, iters: v }))} />
+                          <TuneRow label="SPEED" min={0} max={1} step={0.01} stepper value={foldParams.speed} onChange={(v) => setFoldParams((p) => ({ ...p, speed: v }))} />
+                          <TuneRow label="ZOOM" min={0.5} max={6} step={0.1} stepper value={foldParams.zoom} onChange={(v) => setFoldParams((p) => ({ ...p, zoom: v }))} />
+                          <TuneRow label="SCALE" min={1.2} max={2.5} step={0.02} stepper value={foldParams.scale} onChange={(v) => setFoldParams((p) => ({ ...p, scale: v }))} />
+                          <TuneRow label="Z-DEPTH" min={-30} max={0} step={0.5} stepper value={foldParams.zDepth} onChange={(v) => setFoldParams((p) => ({ ...p, zDepth: v }))} />
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
-
-                {/* ─── FOLD FIELD (Q-900) ─── */}
-                <ModuleHeader title="Q-900 FOLD" enabled={foldParams.enabled} solo={foldParams.solo}
-                  onToggle={() => setFoldParams((p) => ({ ...p, enabled: !p.enabled }))}
-                  onSolo={() => setFoldParams((p) => ({ ...p, solo: !p.solo }))} />
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
-                    {(['mono', 'spectrum'] as const).map((m) => (
-                      <button key={m} onClick={() => setFoldParams((prev) => ({ ...prev, colorMode: m }))}
-                        style={{ flex: 1, padding: '4px 0', fontSize: 8, fontFamily: 'monospace', letterSpacing: '0.15em', textTransform: 'uppercase',
-                          background: foldParams.colorMode === m ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.04)',
-                          border: foldParams.colorMode === m ? '1.5px solid #fff' : '1px solid rgba(255,255,255,0.15)',
-                          color: foldParams.colorMode === m ? '#fff' : 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-                      FG <input type="color" value={foldParams.colorFg} onChange={(e) => setFoldParams((p) => ({ ...p, colorFg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace', fontSize: 8, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-                      BG <input type="color" value={foldParams.colorBg} onChange={(e) => setFoldParams((p) => ({ ...p, colorBg: e.target.value }))} style={{ width: 28, height: 18, border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', padding: 0, cursor: 'pointer' }} />
-                    </label>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', columnGap: 10, rowGap: 8, alignItems: 'center' }}>
-                    <TuneRow label="OPACITY" min={0} max={1} step={0.02} stepper value={foldParams.opacity} onChange={(v) => setFoldParams((p) => ({ ...p, opacity: v }))} />
-                    <TuneRow label="FOLDS" min={2} max={24} step={1} stepper value={foldParams.folds} onChange={(v) => setFoldParams((p) => ({ ...p, folds: v }))} />
-                    <TuneRow label="DEPTH" min={2} max={14} step={1} stepper value={foldParams.iters} onChange={(v) => setFoldParams((p) => ({ ...p, iters: v }))} />
-                    <TuneRow label="SPEED" min={0} max={1} step={0.01} stepper value={foldParams.speed} onChange={(v) => setFoldParams((p) => ({ ...p, speed: v }))} />
-                    <TuneRow label="ZOOM" min={0.5} max={6} step={0.1} stepper value={foldParams.zoom} onChange={(v) => setFoldParams((p) => ({ ...p, zoom: v }))} />
-                    <TuneRow label="SCALE" min={1.2} max={2.5} step={0.02} stepper value={foldParams.scale} onChange={(v) => setFoldParams((p) => ({ ...p, scale: v }))} />
-                    <TuneRow label="Z" min={-30} max={0} step={0.5} stepper value={foldParams.zDepth} onChange={(v) => setFoldParams((p) => ({ ...p, zDepth: v }))} />
-                  </div>
-                </div>
-
-              </div>)}
+              )}
 
               {/* === LEGACY: old mandala controls (keeping for reference, hidden) === */}
               {false && visualMode === 'mandala' && (
