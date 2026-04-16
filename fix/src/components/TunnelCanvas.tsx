@@ -1,4 +1,5 @@
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber'
+import { useFBO } from '@react-three/drei'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 
@@ -375,7 +376,6 @@ uniform float uStrobeDuty;
 uniform vec3 uStrobeColor;
 uniform float uStrobeTarget;
 uniform float uStrobeMode;
-uniform float uKaleidoscope;
 uniform float uChromatic;
 uniform float uHueShift;
 uniform sampler2D uImageA;
@@ -499,15 +499,9 @@ vec3 getCellColor(vec2 localUv, float shaderPat, float hasImage,
 }
 
 void main() {
-  // Kaleidoscope: fold the tube UV into N-fold symmetry
-  vec2 screenUv = vUv;
-  if (uKaleidoscope > 1.5) {
-    screenUv = kaleidoFold(screenUv, uKaleidoscope);
-  }
-
   vec2 tileUvBase = vec2(
-    screenUv.x * uRings * 2.0,
-    (screenUv.y + uTexScroll) * uDensityY * 2.0
+    vUv.x * uRings * 2.0,
+    (vUv.y + uTexScroll) * uDensityY * 2.0
   );
 
   // Motion blur samples
@@ -696,7 +690,6 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uStrobeColor: { value: new THREE.Color('#ffffff') },
     uStrobeTarget: { value: 0 },
     uStrobeMode: { value: 0 },
-    uKaleidoscope: { value: 0 },
     uChromatic: { value: 0 },
     uHueShift: { value: 0 },
     uImageA: { value: WHITE_PIXEL as THREE.Texture },
@@ -794,7 +787,6 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
     uniformsRef.current.uStrobeTarget.value = params.strobeTarget
     uniformsRef.current.uStrobeMode.value = params.strobeMode
-    uniformsRef.current.uKaleidoscope.value = params.kaleidoscope
     uniformsRef.current.uChromatic.value = params.chromatic
     uniformsRef.current.uHueShift.value = params.hueShift
     uniformsRef.current.uTime.value = elapsed
@@ -850,6 +842,87 @@ function Tunnel({ params }: { params: TunnelParams }) {
   )
 }
 
+// --- Screen-space kaleidoscope via FBO ---
+const KALEIDO_VERT = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`
+const KALEIDO_FRAG = `
+  precision highp float;
+  uniform sampler2D tDiffuse;
+  uniform float segments;
+  uniform float time;
+  varying vec2 vUv;
+  void main() {
+    vec2 uv = vUv;
+    if (segments > 1.5) {
+      vec2 p = uv - 0.5;
+      float a = atan(p.y, p.x);
+      float r = length(p);
+      // Slow rotation for "living mandala"
+      a += time * 0.08;
+      float seg = 6.28318 / segments;
+      // Mirror fold — abs gives true reflection, not just rotation
+      a = abs(mod(a + seg * 0.5, seg) - seg * 0.5);
+      // Subtle radial ripple
+      a += sin(r * 6.0 - time * 1.5) * 0.04;
+      uv = vec2(cos(a), sin(a)) * r + 0.5;
+    }
+    gl_FragColor = texture2D(tDiffuse, uv);
+  }
+`
+
+function KaleidoscopeWrapper({ params }: { params: TunnelParams }) {
+  const fbo = useFBO(
+    typeof window !== 'undefined' ? window.innerWidth : 1024,
+    typeof window !== 'undefined' ? window.innerHeight : 768,
+    { stencilBuffer: false },
+  )
+  const virtualScene = useMemo(() => new THREE.Scene(), [])
+  const { gl, camera, clock } = useThree()
+
+  virtualScene.background = new THREE.Color('#000000')
+
+  const kaleidoMat = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: KALEIDO_VERT,
+        fragmentShader: KALEIDO_FRAG,
+        uniforms: {
+          tDiffuse: { value: null },
+          segments: { value: 0 },
+          time: { value: 0 },
+        },
+        depthTest: false,
+        depthWrite: false,
+      }),
+    [],
+  )
+
+  useFrame(() => {
+    gl.setRenderTarget(fbo)
+    gl.setClearColor(0x000000, 1)
+    gl.clear()
+    gl.render(virtualScene, camera)
+    gl.setRenderTarget(null)
+    kaleidoMat.uniforms.tDiffuse.value = fbo.texture
+    kaleidoMat.uniforms.segments.value = params.kaleidoscope
+    kaleidoMat.uniforms.time.value = clock.elapsedTime
+  }, 1)
+
+  return (
+    <>
+      {createPortal(
+        <>
+          <CameraSync fov={params.fov} />
+          <Tunnel params={params} />
+        </>,
+        virtualScene,
+      )}
+      <mesh material={kaleidoMat} frustumCulled={false}>
+        <planeGeometry args={[2, 2]} />
+      </mesh>
+    </>
+  )
+}
+
 function CameraSync({ fov }: { fov: number }) {
   const { camera } = useThree()
   useFrame(() => {
@@ -876,9 +949,15 @@ export function TunnelCanvas({
       gl={{ antialias: true }}
       style={{ position: 'absolute', inset: 0 }}
     >
-      <color attach="background" args={['#000000']} />
-      <CameraSync fov={params.fov} />
-      <Tunnel params={params} />
+      {params.kaleidoscope > 1 ? (
+        <KaleidoscopeWrapper params={params} />
+      ) : (
+        <>
+          <color attach="background" args={['#000000']} />
+          <CameraSync fov={params.fov} />
+          <Tunnel params={params} />
+        </>
+      )}
     </Canvas>
   )
 }
