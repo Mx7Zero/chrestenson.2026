@@ -1,8 +1,14 @@
 /**
- * LotusField — Sacred geometry SDF module
- * Renders sacred geometry patterns (Flower of Life, Metatron, etc.)
- * on a transparent plane at configurable z-depth.
- * This is a preserved operator — never merge into another module.
+ * LIVE BASELINE MODULE — LotusField
+ *
+ * Sacred geometry SDF module. Renders Flower of Life, Metatron's Cube,
+ * Seed of Life, Sri Yantra, Hex Grid, Concentric Rings.
+ *
+ * This is the PROTECTED BASELINE. Per VISUAL_BUILD_PROTOCOL.md:
+ * - May be restored, tuned, and rendered.
+ * - May NOT be deleted, overwritten, or silently "improved."
+ * - Any new system must be built beside it, not on top of it.
+ * - Defaults: solo=true on load (the default visual in mandala mode).
  */
 
 import { useFrame } from '@react-three/fiber'

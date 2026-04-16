@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, useAnimations, useProgress, Html } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
+// ─── LIVE PATH: mandala composition system ───
 import { SuprStage } from './supr/SuprStage'
 import {
   LOTUS_DEFAULTS,
@@ -11,6 +12,7 @@ import {
   type FoldFieldParams,
   type StageParams,
 } from './supr/types'
+// ─── LEGACY IMPORTS: only used by hidden legacy control block ({false && ...}) ───
 import {
   MANDALA_PRESETS,
   type MandalaParams,
@@ -355,6 +357,7 @@ export function AsteroidScene({
   const [moduleTab, setModuleTab] = useState<'stage' | 'lotus' | 'q900'>('stage')
   const [hideModel, setHideModel] = useState(false)
   const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
+  // LEGACY STATE: only used by hidden legacy control block ({false && ...} at ~line 993)
   const [mandalaParams, setMandalaParams] = useState<MandalaParams>(MANDALA_DEFAULTS)
   // Per-module state for the composition system
   const [lotusParams, _setLotus] = useState<LotusFieldParams>(LOTUS_DEFAULTS)
@@ -432,9 +435,11 @@ export function AsteroidScene({
           playsInline
         />
       )}
+      {/* ─── LIVE PATH: tunnel mode ─── */}
       {currentBg.id === 'optical' && visualMode === 'tunnel' && (
         <TunnelCanvas active={inView} params={tunnelParams} />
       )}
+      {/* ─── LIVE PATH: mandala mode (SuprStage → LotusField baseline + FoldField candidate) ─── */}
       {currentBg.id === 'optical' && visualMode === 'mandala' && (
         <SuprStage
           active={inView}
@@ -990,7 +995,11 @@ export function AsteroidScene({
                   </div>
               )}
 
-              {/* === LEGACY: old mandala controls (keeping for reference, hidden) === */}
+              {/* === LEGACY BLOCK — NOT RENDERED ===
+                  This entire block is gated by {false && ...} and never renders.
+                  It references mandalaParams/setMandalaParams state and types from
+                  MandalaCanvas.tsx (also legacy). Kept for reference only.
+                  The live mandala controls are in the SUPR module panels above. */}
               {false && visualMode === 'mandala' && (
                 <div>
                   <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginBottom: 5 }}>ANIMATION</div>

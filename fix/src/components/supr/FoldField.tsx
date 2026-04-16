@@ -1,7 +1,14 @@
 /**
- * FoldField — Q-900 iterated coordinate folding module
- * Based on swarm9 research + Codex breakthrough improvements.
- * This is a preserved operator — never merge into another module.
+ * LIVE CANDIDATE MODULE — FoldField (Q-900)
+ *
+ * Iterated coordinate folding shader. Based on swarm9 research +
+ * Codex breakthrough improvements. Contains fold variants (abs,
+ * inversion, hybrid), fill modes, and color strategies from swarm10.
+ *
+ * This is a CANDIDATE module, NOT the baseline. Per VISUAL_BUILD_PROTOCOL.md:
+ * - Defaults: enabled=false. User must explicitly opt in via Q9 panel tab.
+ * - Must not replace LotusField as the default visual.
+ * - Candidates graduate only after render-validated A/B review.
  */
 
 import { useFrame } from '@react-three/fiber'
