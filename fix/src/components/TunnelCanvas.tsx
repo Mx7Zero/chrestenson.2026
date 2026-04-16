@@ -865,7 +865,10 @@ const KALEIDO_FRAG = `
       a += sin(r * 6.0 - time * 1.5) * 0.04;
       uv = vec2(cos(a), sin(a)) * r + 0.5;
     }
-    gl_FragColor = texture2D(tDiffuse, uv);
+    vec4 texel = texture2D(tDiffuse, uv);
+    // Debug: red means FBO is empty, green means quad renders but UV is wrong
+    if (texel.r + texel.g + texel.b < 0.01) texel = vec4(0.2, 0.0, 0.0, 1.0);
+    gl_FragColor = texel;
   }
 `
 
@@ -949,15 +952,7 @@ export function TunnelCanvas({
       gl={{ antialias: true }}
       style={{ position: 'absolute', inset: 0 }}
     >
-      {params.kaleidoscope > 1 ? (
-        <KaleidoscopeWrapper params={params} />
-      ) : (
-        <>
-          <color attach="background" args={['#000000']} />
-          <CameraSync fov={params.fov} />
-          <Tunnel params={params} />
-        </>
-      )}
+      <KaleidoscopeWrapper params={params} />
     </Canvas>
   )
 }
