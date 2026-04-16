@@ -30,8 +30,14 @@ export const Navigation = () => {
             <a href="#competencies" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
               Competencies
             </a>
+            <a href="#bird" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
+              Bird
+            </a>
             <a href="#expertise" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
               Expertise
+            </a>
+            <a href="#asteroid" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
+              Asteroid
             </a>
             <a href="#tech-stack" className="text-[#1D1D1F] hover:text-[#0071E3] transition-colors text-sm font-medium">
               Tech Stack
@@ -62,7 +68,9 @@ export const Navigation = () => {
             <div className="flex flex-col gap-4">
               <a href="#credibility" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Credibility</a>
               <a href="#competencies" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Competencies</a>
+              <a href="#bird" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Bird</a>
               <a href="#expertise" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Expertise</a>
+              <a href="#asteroid" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Asteroid</a>
               <a href="#tech-stack" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Tech Stack</a>
               <a href="#get-in-touch" className="text-[#1D1D1F] text-lg" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
             </div>

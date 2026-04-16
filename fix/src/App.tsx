@@ -22,11 +22,14 @@ function App() {
         <CredibilityBar />
         <CompetencyGrid />
         <AsteroidScene
+          sectionId="bird"
           modelPath="/models/hummingbird.glb"
           label="HUMMINGBIRD"
           animated
           autoRotate={false}
           targetSize={5}
+          showBackgroundSelector
+          defaultBackground="optical"
           attribution={{
             title: 'Animated Hovering Flying Hummingbird Loop',
             author: 'LasquetiSpice',
@@ -39,6 +42,7 @@ function App() {
         <VideoCarousel />
         <ExpertiseAccordion />
         <AsteroidScene
+          sectionId="asteroid"
           modelPath="/models/asteroid.glb"
           label="ASTEROID"
           attribution={{
