@@ -89,7 +89,7 @@ export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] =
   // a hint to chunks 2-3 that these are hidden from user-facing UI later;
   // they exist so spec review can pin one new uniform at a visibly
   // distinctive value while everything else stays at SUNBURST baseline.
-  { name: '__VALIDATE_KALEIDO', values: { rings: 30, density: 4, speed: 0.02, kaleidoscope: 8 } },
+  { name: '__VALIDATE_KALEIDO', values: { rings: 6, density: 6, speed: 0.02, kaleidoscope: 8, patternA: 'diagonal', patternB: 'diagonal', colorA: '#ffcc00', colorB: '#4a0e60' } },
   { name: '__VALIDATE_CHROMA',  values: { rings: 30, density: 4, speed: 0.02, chromatic: 0.6 } },
   { name: '__VALIDATE_HUE',     values: { rings: 30, density: 4, speed: 0.02, hueShift: 1.5 } },
 ]
