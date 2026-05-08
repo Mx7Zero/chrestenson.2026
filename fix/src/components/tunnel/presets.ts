@@ -16,6 +16,45 @@ export type TabId =
   | 'chroma'
   | 'myset'
 
+// ─── Tab order, labels, capability copy ───────────────────────────
+// `TAB_ORDER` is the canonical left-to-right tab strip order
+// (excluding `myset`, which only appears when the user has favorites
+// — chunk 10). `TAB_LABELS` is the rendered tab text. `TAB_CAPABILITY_COPY`
+// is the one-line description shown beneath the active tab in
+// `PresetsPanel`. `FLASH_TABS` flags tabs that emit a ⚠ FLASH badge in
+// the tab strip + capability line; chunks 9+ wire it into the actual
+// flash gate.
+export const TAB_ORDER: Exclude<TabId, 'myset'>[] = [
+  'signature', 'psychedelic', 'kaleido', 'cosmic',
+  'rave', 'glitch', 'sacred', 'chroma',
+]
+
+export const TAB_LABELS: Record<TabId, string> = {
+  signature: 'SIGNATURE',
+  psychedelic: 'PSYCHEDELIC',
+  kaleido: 'KALEIDO',
+  cosmic: 'COSMIC',
+  rave: 'RAVE',
+  glitch: 'GLITCH',
+  sacred: 'SACRED',
+  chroma: 'CHROMA',
+  myset: 'MY SET',
+}
+
+export const TAB_CAPABILITY_COPY: Record<TabId, string> = {
+  signature: "The instrument's anchor presets — broad strokes across every capability.",
+  psychedelic: 'Liquid color, fractal drift, chromatic separation, hue-shift motion.',
+  kaleido: 'Mirror geometry from 4-fold to 16-fold symmetry, sharp pattern cells.',
+  cosmic: 'Deep palettes, slow helix twist, long fog depth, gentle wave.',
+  rave: 'Strobe presets, high-contrast neon, pulse and rainbow modes.',
+  glitch: 'Chromatic split, signal-collapse, invert-mode flash, broken pattern shifts.',
+  sacred: 'Gold/jewel tones, slow rotation, diamond/cross/rings under heavy symmetry.',
+  chroma: 'Pure color motion — continuous hue drift, no patterns, soft cell-blur.',
+  myset: 'Your starred presets.',
+}
+
+export const FLASH_TABS: Set<TabId> = new Set(['rave', 'glitch'])
+
 // ─── Preset shape ─────────────────────────────────────────────────
 // The closing chip in the chip list will surface `paletteName`. All
 // other chips are derived from `values` by the auto-chip rules in
@@ -275,6 +314,8 @@ export const PRESETS: Preset[] = [
 // stable, but the slugs preserve the `__validate-…` prefix so chunks
 // 3+ can filter them out of user-facing tabs (recommended: hide
 // behind a debug toggle, surface only via direct id reference).
+//
+// Filter rule for tab UIs: id.includes('.__validate-')
 export const DEV_PRESETS: Preset[] = [
   {
     id: 'signature.__validate-kaleido',

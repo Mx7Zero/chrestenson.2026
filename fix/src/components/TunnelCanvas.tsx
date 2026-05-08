@@ -74,7 +74,13 @@ export const TUNNEL_DEFAULTS: TunnelParams = {
 import { PRESETS as _PRESETS, DEV_PRESETS as _DEV_PRESETS } from './tunnel/presets'
 export { PRESETS, DEV_PRESETS, type Preset, type TabId } from './tunnel/presets'
 
-/** @deprecated Use `PRESETS` and `DEV_PRESETS` from `./tunnel/presets`. Kept as a stable re-export for legacy consumers (AsteroidScene preset row) until tab UI lands in chunk 3. */
+/**
+ * @deprecated Use `PRESETS` and `DEV_PRESETS` from `./tunnel/presets`.
+ * Kept as a stable re-export for legacy consumers (AsteroidScene preset row)
+ * until tab UI lands in chunk 3.
+ * @removeIn chunk-5 — once the 96-preset library lands and AsteroidScene
+ *   no longer reads this flat array, delete this re-export.
+ */
 export const TUNNEL_PRESETS = [..._PRESETS, ..._DEV_PRESETS]
 
 export const STROBE_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
