@@ -24,11 +24,7 @@ import { morphParams } from './morph'
 //   • stopDemo         — halt auto-cycle, stay on current preset
 //   • cancelMorph      — slider-edit path: jump to current frame, stop morph
 //   • setParam         — slider write path: cancel morph + write to ref
-//   • subscribe        — optional listener for params snapshots (used by
-//                        sliders/now-playing-line that want to watch
-//                        morph-driven changes); returns an unsubscriber.
-
-type Subscriber = (params: TunnelParams) => void
+//   • setParams        — React-setState-shaped slider write path
 
 export type TunnelEngine = {
   paramsRef: React.MutableRefObject<TunnelParams>
@@ -48,11 +44,10 @@ export type TunnelEngine = {
   // React-setState-shaped adapter so the slider drawer (TunePanel) can
   // keep its `setTunnelParams((p) => ({...p, foo: v}))` ergonomics
   // without rewriting every onChange. Cancels any active morph, writes
-  // through to paramsRef + staticParams, fires subscribers.
+  // through to paramsRef + staticParams.
   setParams: (
     update: TunnelParams | ((prev: TunnelParams) => TunnelParams),
   ) => void
-  subscribe: (fn: Subscriber) => () => void
 }
 
 // Resolve a partial preset against the canonical defaults. The result
@@ -89,16 +84,6 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
   const demoIndexRef = useRef<number>(0)
   const demoTimerRef = useRef<number | null>(null)
 
-  // Subscriber registry — sliders and the now-playing line rely on
-  // this for fresh snapshots without forcing a 60fps re-render.
-  const subsRef = useRef<Set<Subscriber>>(new Set())
-  const subscribe = useCallback((fn: Subscriber) => {
-    subsRef.current.add(fn)
-    return () => {
-      subsRef.current.delete(fn)
-    }
-  }, [])
-
   // Lightly-React state — these change at preset frequency, not frame
   // frequency, so a re-render is cheap and gives us a clean prop path
   // for the now-playing line and the DEMO/STOP toggle.
@@ -111,11 +96,12 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
   }))
 
   const rafRef = useRef<number | null>(null)
-  const tickRef = useRef<() => void>(() => {})
 
   // ── rAF loop. Runs as long as a morph is in progress. Self-cancels
-  //    when t crosses 1.0, after writing the final frame.
-  tickRef.current = () => {
+  //    when t crosses 1.0, after writing the final frame. Stable
+  //    closure (only reads refs) — useCallback with empty deps so
+  //    the identity doesn't churn.
+  const tick = useCallback(() => {
     const startedAt = startedAtRef.current
     if (startedAt === null) {
       rafRef.current = null
@@ -124,31 +110,23 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
     const now = performance.now()
     const t = Math.min(1, (now - startedAt) / durationRef.current)
     paramsRef.current = morphParams(fromRef.current, toRef.current, t)
-    // Notify subscribers (sliders, now-playing). These are typically
-    // 0–1 listeners so the cost is minimal.
-    if (subsRef.current.size > 0) {
-      for (const sub of subsRef.current) sub(paramsRef.current)
-    }
     if (t >= 1) {
       // Snap to exact toRef so floating-point drift doesn't leave a
       // residual delta in the params (e.g. cellBlur + bloom at t=1
       // is mathematically 0 but defensively re-snap anyway).
       paramsRef.current = { ...toRef.current }
-      if (subsRef.current.size > 0) {
-        for (const sub of subsRef.current) sub(paramsRef.current)
-      }
       startedAtRef.current = null
       rafRef.current = null
       return
     }
-    rafRef.current = requestAnimationFrame(() => tickRef.current())
-  }
+    rafRef.current = requestAnimationFrame(tick)
+  }, [])
 
   const ensureRafRunning = useCallback(() => {
     if (rafRef.current === null) {
-      rafRef.current = requestAnimationFrame(() => tickRef.current())
+      rafRef.current = requestAnimationFrame(tick)
     }
-  }, [])
+  }, [tick])
 
   // ── applyPreset ─────────────────────────────────────────────────
   const applyPreset = useCallback(
@@ -281,9 +259,6 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
       // Slider edits also flip staticParams immediately so React-level
       // consumers (geometry / patterns) see the change.
       setStaticParams({ ...paramsRef.current })
-      if (subsRef.current.size > 0) {
-        for (const sub of subsRef.current) sub(paramsRef.current)
-      }
     },
     [cancelMorph],
   )
@@ -298,9 +273,6 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
       paramsRef.current = { ...next }
       toRef.current = { ...next }
       setStaticParams(next)
-      if (subsRef.current.size > 0) {
-        for (const sub of subsRef.current) sub(paramsRef.current)
-      }
     },
     [cancelMorph],
   )
@@ -330,6 +302,5 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
     cancelMorph,
     setParam,
     setParams,
-    subscribe,
   }
 }
