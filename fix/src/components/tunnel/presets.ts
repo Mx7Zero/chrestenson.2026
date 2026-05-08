@@ -330,6 +330,7 @@ export const PRESETS: Preset[] = [
     tab: 'psychedelic',
     name: 'Solar Bloom',
     paletteName: 'Solar/Magenta',
+    flashWarn: true,
     values: {
       rings: 4,
       density: 8,
@@ -1745,7 +1746,7 @@ export const PRESETS: Preset[] = [
       patternB: null,
       colorA: '#fff0d8',
       colorB: '#ee9aaa',
-      hueShift: 0.8,
+      hueShift: 1.0,
       cellBlur: 0.5,
       speed: 0.012,
     },
