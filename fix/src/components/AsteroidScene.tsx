@@ -1141,7 +1141,7 @@ export function AsteroidScene({
                     const active = presetMatches(tunnelParams, p.values)
                     return (
                       <button
-                        key={p.name}
+                        key={p.id}
                         onClick={() =>
                           setTunnelParams((prev) => ({ ...prev, ...p.values }))
                         }

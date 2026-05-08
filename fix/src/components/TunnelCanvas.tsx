@@ -66,33 +66,16 @@ export const TUNNEL_DEFAULTS: TunnelParams = {
   patternB: null,
 }
 
-export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
-  { name: 'SUNBURST', values: { rings: 30, density: 2, speed: 0.02, roll: 0.3 } },
-  { name: 'CHECKER', values: { rings: 4, density: 8, speed: 0.05, roll: 0 } },
-  { name: 'HYPNO', values: { rings: 2, density: 60, speed: 0.1, roll: 0.8 } },
-  { name: 'VORTEX', values: { rings: 20, density: 4, speed: 0.08, roll: 2, helix: 3 } },
-  { name: 'WARP', values: { rings: 8, density: 30, speed: 0.3, bend: 45, wobble: 1 } },
-  { name: 'RETRO', values: { rings: 6, density: 6, patternA: 'checker', patternB: 'checker', colorA: '#ff1493', colorB: '#00e1ff' } },
-  { name: 'DOTS', values: { rings: 4, density: 4, patternA: 'dots', patternB: 'dot', colorA: '#ffffff', colorB: '#000000' } },
-  { name: 'LINES', values: { rings: 10, density: 2, patternA: 'hlines', patternB: 'vlines' } },
-  { name: 'TRIBAL', values: { rings: 6, density: 6, patternA: 'diagonal', patternB: 'diagonal', colorA: '#ffcc00', colorB: '#4a0e60' } },
-  { name: 'DECO', values: { rings: 4, density: 4, patternA: 'diamond', patternB: 'cross', colorA: '#ffd700', colorB: '#000000' } },
-  { name: 'JULIA', values: { rings: 3, density: 4, patternA: 'fractal', patternB: 'fractal', colorA: '#000000', colorB: '#00e5ff', speed: 0.02 } },
-  { name: 'LAVA', values: { rings: 2, density: 2, patternA: 'marble', patternB: 'noise', colorA: '#ff1a00', colorB: '#ffcc00', speed: 0.03 } },
-  { name: 'ZEN', values: { rings: 6, density: 2, patternA: 'spiral', patternB: 'radialGrad', colorA: '#ffffff', colorB: '#0a1f2f', speed: 0.01, roll: 0.1 } },
-  { name: 'MELT', values: { rings: 4, density: 4, cellBlur: 0.35, patternA: 'noise', patternB: null, colorA: '#ff1493', colorB: '#000000', speed: 0.04 } },
-  { name: 'COSMIC', values: { rings: 3, density: 4, patternA: 'radialGrad', patternB: 'spiral', colorA: '#4a0e60', colorB: '#ffd700', cellBlur: 0.15, speed: 0.02 } },
-  { name: 'CIRCUIT', values: { rings: 8, density: 8, patternA: 'grid', patternB: 'dot', colorA: '#00ff41', colorB: '#050a05', cellBlur: 0, speed: 0.03 } },
-  { name: 'DREAM', values: { rings: 2, density: 10, patternA: 'fractal', patternB: 'marble', colorA: '#00e5ff', colorB: '#2d1b4e', cellBlur: 0.25, speed: 0.015, roll: 0.5 } },
-  { name: 'VOID', values: { rings: 20, density: 2, cellBlur: 0.4, colorA: '#000000', colorB: '#111111', speed: 0.08, roll: 1.5, helix: 2 } },
-  // Chunk 1.5 dev-only validation presets. The double-underscore prefix is
-  // a hint to chunks 2-3 that these are hidden from user-facing UI later;
-  // they exist so spec review can pin one new uniform at a visibly
-  // distinctive value while everything else stays at SUNBURST baseline.
-  { name: '__VALIDATE_KALEIDO', values: { rings: 6, density: 6, speed: 0.02, kaleidoscope: 8, patternA: 'diagonal', patternB: 'diagonal', colorA: '#ffcc00', colorB: '#4a0e60' } },
-  { name: '__VALIDATE_CHROMA',  values: { rings: 30, density: 4, speed: 0.02, chromatic: 0.6 } },
-  { name: '__VALIDATE_HUE',     values: { rings: 30, density: 4, speed: 0.02, hueShift: 1.5 } },
-]
+// Chunk 2 — `TUNNEL_PRESETS` is now sourced from `./tunnel/presets.ts`, which
+// holds the typed `Preset` schema (id, tab, name, paletteName, values,
+// flashWarn). The legacy export below stitches PRESETS + DEV_PRESETS so the
+// existing AsteroidScene preset row keeps showing all 21 buttons until
+// chunks 3+ split presets across tabs.
+import { PRESETS as _PRESETS, DEV_PRESETS as _DEV_PRESETS } from './tunnel/presets'
+export { PRESETS, DEV_PRESETS, type Preset, type TabId } from './tunnel/presets'
+
+/** @deprecated Use `PRESETS` and `DEV_PRESETS` from `./tunnel/presets`. Kept as a stable re-export for legacy consumers (AsteroidScene preset row) until tab UI lands in chunk 3. */
+export const TUNNEL_PRESETS = [..._PRESETS, ..._DEV_PRESETS]
 
 export const STROBE_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
   { name: 'OFF', values: { strobeRate: 0 } },
