@@ -85,6 +85,13 @@ export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] =
   { name: 'CIRCUIT', values: { rings: 8, density: 8, patternA: 'grid', patternB: 'dot', colorA: '#00ff41', colorB: '#050a05', cellBlur: 0, speed: 0.03 } },
   { name: 'DREAM', values: { rings: 2, density: 10, patternA: 'fractal', patternB: 'marble', colorA: '#00e5ff', colorB: '#2d1b4e', cellBlur: 0.25, speed: 0.015, roll: 0.5 } },
   { name: 'VOID', values: { rings: 20, density: 2, cellBlur: 0.4, colorA: '#000000', colorB: '#111111', speed: 0.08, roll: 1.5, helix: 2 } },
+  // Chunk 1.5 dev-only validation presets. The double-underscore prefix is
+  // a hint to chunks 2-3 that these are hidden from user-facing UI later;
+  // they exist so spec review can pin one new uniform at a visibly
+  // distinctive value while everything else stays at SUNBURST baseline.
+  { name: '__VALIDATE_KALEIDO', values: { rings: 30, density: 4, speed: 0.02, kaleidoscope: 8 } },
+  { name: '__VALIDATE_CHROMA',  values: { rings: 30, density: 4, speed: 0.02, chromatic: 0.6 } },
+  { name: '__VALIDATE_HUE',     values: { rings: 30, density: 4, speed: 0.02, hueShift: 1.5 } },
 ]
 
 export const STROBE_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
@@ -390,6 +397,13 @@ uniform vec3 uFogColor;
 uniform float uFogNear;
 uniform float uFogFar;
 
+// Chunk 1.5 — visual-instrument unlock: kaleido fold on the angular UV,
+// chromatic aberration on the composited cell color, and continuous
+// hue rotation applied to final RGB.
+uniform float uKaleidoscope; // 0/1 = off, >=2 = N-fold mirrored sectors
+uniform float uChromatic;    // 0..1, 0 = off, 1 = max RGB split
+uniform float uHueShift;     // accumulated radians of hue rotation
+
 varying vec2 vUv;
 varying float vFogDepth;
 
@@ -450,6 +464,32 @@ float shaderPattern(float id, vec2 uv, float time) {
   return 0.5 + 0.5 * sin(a * 4.0 + r * 12.0 - time * 2.0);
 }
 
+// --- Kaleidoscope fold on angular UV ---
+// Fold a 0..1 axis into n mirrored sectors. n < 2 is pass-through.
+// Output is in 0..0.5 — the pattern lookup that follows already
+// re-multiplies by uRings * 2.0, so this preserves ring tiling
+// inside each mirrored sector.
+float kaleidoFold(float t, float n) {
+  if (n < 2.0) return t;
+  float sector = 1.0 / n;
+  float folded = mod(t, sector);
+  float halfSector = sector * 0.5;
+  if (folded > halfSector) folded = sector - folded;
+  return folded * n;
+}
+
+// --- Hue rotation matrix on RGB.
+// Standard NTSC luma-preserving hue rotation. Angle in radians.
+vec3 hueRotate(vec3 c, float a) {
+  float U = cos(a), W = sin(a);
+  mat3 m = mat3(
+    0.299 + 0.701 * U + 0.168 * W,  0.587 - 0.587 * U + 0.330 * W,  0.114 - 0.114 * U - 0.497 * W,
+    0.299 - 0.299 * U - 0.328 * W,  0.587 + 0.413 * U + 0.035 * W,  0.114 - 0.114 * U + 0.292 * W,
+    0.299 - 0.300 * U + 1.250 * W,  0.587 - 0.588 * U - 1.050 * W,  0.114 + 0.886 * U - 0.203 * W
+  );
+  return m * c;
+}
+
 // --- Anti-aliased checkerboard ---
 float aaChecker(vec2 p) {
   vec2 w = fwidth(p) + 0.001;
@@ -472,10 +512,22 @@ vec3 getCellColor(vec2 localUv, float shaderPat, float hasImage,
   return solidCol;
 }
 
-void main() {
+// Composite cell color at a given (possibly chromatic-offset) angular UV.
+// Mirrors the body of main() up through the cell mix, factored so the
+// chromatic-aberration path can sample it three times with channel-shifted
+// offsets. The longitudinal axis (vUvY) is shared across all three samples;
+// only the angular axis (vUvX) is offset, which is what produces the
+// stripe-edge halo the design calls for.
+vec3 composeCellColor(float vUvX, float vUvY) {
+  // Apply kaleidoscope fold on the angular UV (vUv.x is the axis around
+  // the cylinder for CylinderGeometry). Folding here, BEFORE the rings
+  // multiplication, gives true N-fold rotational symmetry around the
+  // tube while preserving rings-within-sector tiling.
+  float foldedX = kaleidoFold(vUvX, uKaleidoscope);
+
   vec2 tileUv = vec2(
-    vUv.x * uRings * 2.0,
-    (vUv.y + uTexScroll) * uDensityY * 2.0
+    foldedX * uRings * 2.0,
+    (vUvY + uTexScroll) * uDensityY * 2.0
   );
 
   float checker = 0.0;
@@ -504,7 +556,55 @@ void main() {
                            uColorA, uColorB, uTime);
   vec3 colB = getCellColor(localUv, uShaderPatB, uHasImageB, uImageB,
                            uColorB, uColorA, uTime);
-  vec3 color = mix(colA, colB, checker);
+  return mix(colA, colB, checker);
+}
+
+// Re-derive the post-kaleido checker coverage for fragments that need it
+// outside composeCellColor (strobe target masks, transparency).
+float computeChecker(float vUvX, float vUvY) {
+  float foldedX = kaleidoFold(vUvX, uKaleidoscope);
+  vec2 tileUv = vec2(
+    foldedX * uRings * 2.0,
+    (vUvY + uTexScroll) * uDensityY * 2.0
+  );
+  float c = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float t = (float(i) + 0.5) / 4.0 - 0.5;
+    vec2 sampleUv = tileUv + vec2(0.0, t * uMotion);
+    c += clamp(aaChecker(sampleUv), 0.0, 1.0);
+  }
+  c *= 0.25;
+  float checkerWidth = max(max(fwidth(tileUv.x), fwidth(tileUv.y)) * 0.65, 0.01);
+  c = smoothstep(0.5 - checkerWidth, 0.5 + checkerWidth, c);
+  if (uCellBlur > 0.001) {
+    vec2 f = fract(tileUv);
+    vec2 edgeDist = min(f, 1.0 - f);
+    float minDist = min(edgeDist.x, edgeDist.y);
+    float edgeMask = smoothstep(0.0, uCellBlur, minDist);
+    c = mix(0.5, c, edgeMask);
+  }
+  return c;
+}
+
+void main() {
+  // Chromatic aberration is implemented at the cell-color level — three
+  // composeCellColor calls with slightly offset angular UVs, one per
+  // channel. Cleanest visible halo on stripe edges. uChromatic == 0 short-
+  // circuits to a single sample so the default path stays cheap.
+  vec3 color;
+  if (uChromatic > 0.001) {
+    float dx = uChromatic * 0.01;
+    vec3 cR = composeCellColor(vUv.x + dx, vUv.y);
+    vec3 cG = composeCellColor(vUv.x,      vUv.y);
+    vec3 cB = composeCellColor(vUv.x - dx, vUv.y);
+    color = vec3(cR.r, cG.g, cB.b);
+  } else {
+    color = composeCellColor(vUv.x, vUv.y);
+  }
+
+  // Strobe / transparency want the unsplit checker — recompute once at
+  // the original UV so masks and alpha behave the same as before chunk 1.5.
+  float checker = computeChecker(vUv.x, vUv.y);
 
   // Strobe system: target (all/cellA/cellB), mode (flash/pulse/rainbow/alternate/invert)
   if (uStrobeRate > 0.01) {
@@ -559,6 +659,16 @@ void main() {
   } else if (uTransparentCell > 1.5) {
     alpha = 1.0 - checker; // cell B transparent (checker=1 → alpha=0)
   }
+
+  // Hue drift — applied last so the entire composited frame (including
+  // strobe color and fog mix) rotates together. Hue is fed in as the
+  // accumulated rotation in radians; the JS side multiplies the rate
+  // (params.hueShift, in rad/s) by delta each frame so hueShift = 0 means
+  // "frozen, no drift". See useFrame writer for the rate-model rationale.
+  if (abs(uHueShift) > 0.0001) {
+    color = clamp(hueRotate(color, uHueShift), 0.0, 1.0);
+  }
+
   gl_FragColor = vec4(color, alpha);
 }
 `
@@ -653,6 +763,11 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uFogColor: { value: new THREE.Color('#000000') },
     uFogNear: { value: 2 },
     uFogFar: { value: 35 },
+    // Chunk 1.5 uniforms — defaults are neutral so all 18 existing presets
+    // render identically to before this chunk.
+    uKaleidoscope: { value: 0 },
+    uChromatic: { value: 0 },
+    uHueShift: { value: 0 },
   })
 
   // Include shader strings in deps so HMR actually rebuilds the material
@@ -693,6 +808,11 @@ function Tunnel({ params }: { params: TunnelParams }) {
   const phaseRef = useRef(0)
   const scrollRef = useRef(0)
   const rollPhaseRef = useRef(0)
+  // Chunk 1.5 — hueShift is a RATE (rad/s) on the design side, accumulated
+  // here every frame so the shader sees a continuously advancing rotation
+  // angle. Param value 0 = no drift; the accumulator stays where it last
+  // landed (initially 0) so colors freeze in place.
+  const hueAccumRef = useRef(0)
 
   useFrame((state, delta) => {
     const elapsed = state.clock.elapsedTime
@@ -742,6 +862,16 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uTransparentCell.value =
       params.transparentCell === 'a' ? 1 : params.transparentCell === 'b' ? 2 : 0
     uniformsRef.current.uTime.value = elapsed
+
+    // Chunk 1.5 — kaleido (instant scalar), chromatic (instant scalar),
+    // hue (rate-model accumulator). hueAccum wraps modulo 2π to keep the
+    // float bounded across long sessions.
+    uniformsRef.current.uKaleidoscope.value = params.kaleidoscope ?? 0
+    uniformsRef.current.uChromatic.value = params.chromatic ?? 0
+    const TWO_PI = Math.PI * 2
+    hueAccumRef.current =
+      ((hueAccumRef.current + (params.hueShift ?? 0) * safeDelta) % TWO_PI + TWO_PI) % TWO_PI
+    uniformsRef.current.uHueShift.value = hueAccumRef.current
 
     rollPhaseRef.current += safeDelta * params.roll
 
