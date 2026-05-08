@@ -67,24 +67,24 @@ export const TUNNEL_DEFAULTS: TunnelParams = {
 }
 
 export const TUNNEL_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
-  { name: 'SUNBURST', values: { rings: 30, density: 1, speed: 0.02, roll: 0.3 } },
+  { name: 'SUNBURST', values: { rings: 30, density: 2, speed: 0.02, roll: 0.3 } },
   { name: 'CHECKER', values: { rings: 4, density: 8, speed: 0.05, roll: 0 } },
   { name: 'HYPNO', values: { rings: 2, density: 60, speed: 0.1, roll: 0.8 } },
-  { name: 'VORTEX', values: { rings: 20, density: 3, speed: 0.08, roll: 2, helix: 3 } },
+  { name: 'VORTEX', values: { rings: 20, density: 4, speed: 0.08, roll: 2, helix: 3 } },
   { name: 'WARP', values: { rings: 8, density: 30, speed: 0.3, bend: 45, wobble: 1 } },
   { name: 'RETRO', values: { rings: 6, density: 6, patternA: 'checker', patternB: 'checker', colorA: '#ff1493', colorB: '#00e1ff' } },
   { name: 'DOTS', values: { rings: 4, density: 4, patternA: 'dots', patternB: 'dot', colorA: '#ffffff', colorB: '#000000' } },
   { name: 'LINES', values: { rings: 10, density: 2, patternA: 'hlines', patternB: 'vlines' } },
   { name: 'TRIBAL', values: { rings: 6, density: 6, patternA: 'diagonal', patternB: 'diagonal', colorA: '#ffcc00', colorB: '#4a0e60' } },
   { name: 'DECO', values: { rings: 4, density: 4, patternA: 'diamond', patternB: 'cross', colorA: '#ffd700', colorB: '#000000' } },
-  { name: 'JULIA', values: { rings: 3, density: 3, patternA: 'fractal', patternB: 'fractal', colorA: '#000000', colorB: '#00e5ff', speed: 0.02 } },
+  { name: 'JULIA', values: { rings: 3, density: 4, patternA: 'fractal', patternB: 'fractal', colorA: '#000000', colorB: '#00e5ff', speed: 0.02 } },
   { name: 'LAVA', values: { rings: 2, density: 2, patternA: 'marble', patternB: 'noise', colorA: '#ff1a00', colorB: '#ffcc00', speed: 0.03 } },
-  { name: 'ZEN', values: { rings: 6, density: 1, patternA: 'spiral', patternB: 'radialGrad', colorA: '#ffffff', colorB: '#0a1f2f', speed: 0.01, roll: 0.1 } },
+  { name: 'ZEN', values: { rings: 6, density: 2, patternA: 'spiral', patternB: 'radialGrad', colorA: '#ffffff', colorB: '#0a1f2f', speed: 0.01, roll: 0.1 } },
   { name: 'MELT', values: { rings: 4, density: 4, cellBlur: 0.35, patternA: 'noise', patternB: null, colorA: '#ff1493', colorB: '#000000', speed: 0.04 } },
-  { name: 'COSMIC', values: { rings: 3, density: 3, patternA: 'radialGrad', patternB: 'spiral', colorA: '#4a0e60', colorB: '#ffd700', cellBlur: 0.15, speed: 0.02 } },
+  { name: 'COSMIC', values: { rings: 3, density: 4, patternA: 'radialGrad', patternB: 'spiral', colorA: '#4a0e60', colorB: '#ffd700', cellBlur: 0.15, speed: 0.02 } },
   { name: 'CIRCUIT', values: { rings: 8, density: 8, patternA: 'grid', patternB: 'dot', colorA: '#00ff41', colorB: '#050a05', cellBlur: 0, speed: 0.03 } },
   { name: 'DREAM', values: { rings: 2, density: 10, patternA: 'fractal', patternB: 'marble', colorA: '#00e5ff', colorB: '#2d1b4e', cellBlur: 0.25, speed: 0.015, roll: 0.5 } },
-  { name: 'VOID', values: { rings: 20, density: 1, cellBlur: 0.4, colorA: '#000000', colorB: '#111111', speed: 0.08, roll: 1.5, helix: 2 } },
+  { name: 'VOID', values: { rings: 20, density: 2, cellBlur: 0.4, colorA: '#000000', colorB: '#111111', speed: 0.08, roll: 1.5, helix: 2 } },
 ]
 
 export const STROBE_PRESETS: { name: string; values: Partial<TunnelParams> }[] = [
@@ -269,13 +269,16 @@ function usePatternTexture(
       setTex(null)
       return
     }
-    const canvas = generatePattern(name, 256, fg, bg)
+    const canvas = generatePattern(name, 1024, fg, bg)
     const t = new THREE.CanvasTexture(canvas)
     t.wrapS = THREE.ClampToEdgeWrapping
     t.wrapT = THREE.ClampToEdgeWrapping
     t.colorSpace = THREE.SRGBColorSpace
-    t.minFilter = THREE.LinearFilter
+    t.minFilter = THREE.LinearMipmapLinearFilter
     t.magFilter = THREE.LinearFilter
+    t.generateMipmaps = true
+    t.anisotropy = 16
+    t.needsUpdate = true
     setTex(t)
     return () => t.dispose()
   }, [name, fg, bg])
@@ -482,6 +485,8 @@ void main() {
     checker += clamp(aaChecker(sampleUv), 0.0, 1.0);
   }
   checker *= 0.25;
+  float checkerWidth = max(max(fwidth(tileUv.x), fwidth(tileUv.y)) * 0.65, 0.01);
+  checker = smoothstep(0.5 - checkerWidth, 0.5 + checkerWidth, checker);
 
   // Soften cell edges: blend checker toward 0.5 near cell boundaries.
   // uCellBlur 0 = razor edges, 0.5 = everything melts together.
@@ -550,9 +555,9 @@ void main() {
   // Transparency: make one cell see-through so background image shows
   float alpha = 1.0;
   if (uTransparentCell > 0.5 && uTransparentCell < 1.5) {
-    alpha = checkerG; // cell A transparent (checker=0 → alpha=0)
+    alpha = checker; // cell A transparent (checker=0 → alpha=0)
   } else if (uTransparentCell > 1.5) {
-    alpha = 1.0 - checkerG; // cell B transparent (checker=1 → alpha=0)
+    alpha = 1.0 - checker; // cell B transparent (checker=1 → alpha=0)
   }
   gl_FragColor = vec4(color, alpha);
 }
@@ -696,10 +701,11 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uWave.value = params.wave
     uniformsRef.current.uColorA.value.set(params.colorA)
     uniformsRef.current.uColorB.value.set(params.colorB)
-    // Force integer — non-integer density/rings produce odd cell counts
-    // that break checker parity and cause stroboscopic artifacts.
-    const safeRings = Math.max(Math.round(params.rings), 1)
-    const safeDensity = Math.max(Math.round(params.density), 1)
+    // "Density" is the ring count in the UI. It must stay even or the checker
+    // parity breaks and the tunnel flickers.
+    // Keep the runtime safe even if a preset or localStorage value drifts.
+    const safeRings = Math.min(Math.max(Math.round(params.rings), 1), 200)
+    const safeDensity = Math.min(Math.max(Math.round(params.density / 2) * 2, 2), 3000)
     uniformsRef.current.uRings.value = safeRings
     uniformsRef.current.uDensityY.value = safeDensity
     uniformsRef.current.uFogNear.value = 2
@@ -719,7 +725,7 @@ function Tunnel({ params }: { params: TunnelParams }) {
       ((phaseRef.current - step) % PHASE_WRAP + PHASE_WRAP) % PHASE_WRAP
     // Divide scroll by density so the per-frame cell shift is always
     // step*0.08 regardless of density. No stroboscopic aliasing even at
-    // density 2000.
+    // density 3000.
     const scrollStep = step * 0.04 / safeDensity
     const scrollWrap = 2 / safeDensity
     scrollRef.current =
@@ -811,6 +817,7 @@ export function TunnelCanvas({
     <Canvas
       frameloop={active ? 'always' : 'never'}
       camera={{ position: [0, 0, 0], fov: params.fov, near: 0.1, far: 1000 }}
+      dpr={[1.5, 3]}
       gl={{ antialias: true, alpha: params.transparentCell !== 'none' }}
       style={{ position: 'absolute', inset: 0 }}
     >
