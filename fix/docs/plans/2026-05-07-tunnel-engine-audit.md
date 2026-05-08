@@ -55,7 +55,7 @@ Every field on the `TunnelParams` type, where it is consumed inside
 
 ### Categorical fields (snap, do not lerp)
 
-These five fields are unions or selectors. Lerping them produces invalid
+These eight fields are unions or selectors. Lerping them produces invalid
 intermediate states or shader bugs:
 
 - `direction` — `1 | -1`. Half-way is `0` which freezes the tunnel.
