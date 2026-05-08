@@ -2,11 +2,11 @@ import type { CSSProperties } from 'react'
 
 // ─── Transport bar ─────────────────────────────────────────────────
 // Bottom-anchored full-width strip on the bird section. Houses the
-// now-playing line and the transport buttons. Chunk 3 ships chrome
-// only — every button logs a "not yet implemented" notice.
+// now-playing line and the transport buttons. Chunk 4 wires DEMO;
+// the other buttons stay stubbed until their respective chunks.
 //
 // Wiring lands in:
-//   • DEMO         — chunk 4
+//   • DEMO         — chunk 4 ✓
 //   • VARIATION    — chunk 8
 //   • INTENSITY    — chunk 9 (CALM · FULL · OVERDRIVE)
 //   • FULLSCREEN   — chunk 7
@@ -15,6 +15,9 @@ import type { CSSProperties } from 'react'
 type TransportBarProps = {
   nowPlayingName: string
   paletteName?: string
+  // Chunk 4 — DEMO wiring.
+  demoActive?: boolean
+  onDemoToggle?: () => void
 }
 
 const buttonBase: CSSProperties = {
@@ -41,6 +44,8 @@ const stub = (label: string, chunk: number) => () =>
 export function TransportBar({
   nowPlayingName,
   paletteName,
+  demoActive = false,
+  onDemoToggle,
 }: TransportBarProps) {
   return (
     <div
@@ -113,8 +118,23 @@ export function TransportBar({
           pointerEvents: 'auto',
         }}
       >
-        <button onClick={stub('demo', 4)} style={buttonBase}>
-          ▶ DEMO
+        <button
+          onClick={onDemoToggle}
+          disabled={!onDemoToggle}
+          style={{
+            ...buttonBase,
+            // Active state — invert background so the button reads as
+            // a recording-light when DEMO is cycling.
+            background: demoActive
+              ? 'rgba(255,255,255,0.92)'
+              : buttonBase.background,
+            color: demoActive ? '#000000' : buttonBase.color,
+            borderColor: demoActive
+              ? 'rgba(255,255,255,0.92)'
+              : 'rgba(255,255,255,0.25)',
+          }}
+        >
+          {demoActive ? '■ STOP' : '▶ DEMO'}
         </button>
         <button onClick={stub('variation', 8)} style={buttonBase}>
           ⟲ VARIATION

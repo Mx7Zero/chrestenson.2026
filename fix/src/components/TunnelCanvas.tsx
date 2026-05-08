@@ -1,4 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 
@@ -691,7 +692,20 @@ function useImageTexture(url: string | null): THREE.Texture | null {
   return tex
 }
 
-function Tunnel({ params }: { params: TunnelParams }) {
+function Tunnel({
+  params,
+  paramsRef,
+}: {
+  params: TunnelParams
+  // Chunk 4 — optional ref of the morph engine's per-frame snapshot.
+  // When supplied, useFrame reads scalar/color uniforms from the ref
+  // instead of `params`. React-level reads (geometry rebuild, pattern
+  // texture bake) still come from `params` so they only fire at preset
+  // boundaries (when the engine flips the React-state snapshot to the
+  // morph target). Without this split a 600ms color lerp would force a
+  // 1024×1024 canvas rebuild every frame — see chunk 1 audit.
+  paramsRef?: React.RefObject<TunnelParams>
+}) {
   const { camera } = useThree()
 
   const geometry = useMemo(
@@ -806,30 +820,35 @@ function Tunnel({ params }: { params: TunnelParams }) {
   useFrame((state, delta) => {
     const elapsed = state.clock.elapsedTime
 
-    uniformsRef.current.uHelix.value = params.helix
-    uniformsRef.current.uWave.value = params.wave
-    uniformsRef.current.uColorA.value.set(params.colorA)
-    uniformsRef.current.uColorB.value.set(params.colorB)
+    // Chunk 4 — prefer the morph engine's per-frame snapshot when one
+    // is supplied. Falls back to the React-state `params` prop so the
+    // legacy callers (no morph) keep working unchanged.
+    const fp = paramsRef?.current ?? params
+
+    uniformsRef.current.uHelix.value = fp.helix
+    uniformsRef.current.uWave.value = fp.wave
+    uniformsRef.current.uColorA.value.set(fp.colorA)
+    uniformsRef.current.uColorB.value.set(fp.colorB)
     // "Density" is the ring count in the UI. It must stay even or the checker
     // parity breaks and the tunnel flickers.
     // Keep the runtime safe even if a preset or localStorage value drifts.
-    const safeRings = Math.min(Math.max(Math.round(params.rings), 1), 200)
-    const safeDensity = Math.min(Math.max(Math.round(params.density / 2) * 2, 2), 3000)
+    const safeRings = Math.min(Math.max(Math.round(fp.rings), 1), 200)
+    const safeDensity = Math.min(Math.max(Math.round(fp.density / 2) * 2, 2), 3000)
     uniformsRef.current.uRings.value = safeRings
     uniformsRef.current.uDensityY.value = safeDensity
     uniformsRef.current.uFogNear.value = 2
-    uniformsRef.current.uFogFar.value = params.fogFar
+    uniformsRef.current.uFogFar.value = fp.fogFar
 
     const uBendValue =
-      (params.bend * Math.PI) / 180 / (TUBE_LENGTH * 0.5)
-    const uBendDirRad = (params.bendDir * Math.PI) / 180
+      (fp.bend * Math.PI) / 180 / (TUBE_LENGTH * 0.5)
+    const uBendDirRad = (fp.bendDir * Math.PI) / 180
     uniformsRef.current.uBend.value = uBendValue
     uniformsRef.current.uBendDir.value = uBendDirRad
 
     // Clamp delta so one slow frame (layout thrash, scene pause/resume,
     // window blur) can't catapult the phase and cause a visible jump.
     const safeDelta = Math.min(delta, 1 / 30)
-    const step = safeDelta * params.speed * 100 * params.direction
+    const step = safeDelta * fp.speed * 100 * fp.direction
     phaseRef.current =
       ((phaseRef.current - step) % PHASE_WRAP + PHASE_WRAP) % PHASE_WRAP
     // Divide scroll by density so the per-frame cell shift is always
@@ -842,44 +861,44 @@ function Tunnel({ params }: { params: TunnelParams }) {
     uniformsRef.current.uPhase.value = phaseRef.current
     uniformsRef.current.uTexScroll.value = scrollRef.current
     uniformsRef.current.uMotion.value = Math.abs(step * 0.08)
-    uniformsRef.current.uCellBlur.value = params.cellBlur
-    uniformsRef.current.uStrobeRate.value = params.strobeRate
-    uniformsRef.current.uStrobeDuty.value = params.strobeDuty
-    uniformsRef.current.uStrobeColor.value.set(params.strobeColor)
-    uniformsRef.current.uStrobeTarget.value = params.strobeTarget
-    uniformsRef.current.uStrobeMode.value = params.strobeMode
+    uniformsRef.current.uCellBlur.value = fp.cellBlur
+    uniformsRef.current.uStrobeRate.value = fp.strobeRate
+    uniformsRef.current.uStrobeDuty.value = fp.strobeDuty
+    uniformsRef.current.uStrobeColor.value.set(fp.strobeColor)
+    uniformsRef.current.uStrobeTarget.value = fp.strobeTarget
+    uniformsRef.current.uStrobeMode.value = fp.strobeMode
     uniformsRef.current.uTransparentCell.value =
-      params.transparentCell === 'a' ? 1 : params.transparentCell === 'b' ? 2 : 0
+      fp.transparentCell === 'a' ? 1 : fp.transparentCell === 'b' ? 2 : 0
     uniformsRef.current.uTime.value = elapsed
 
     // Chunk 1.5 — kaleido (instant scalar), chromatic (instant scalar),
     // hue (rate-model accumulator). hueAccum wraps modulo 2π to keep the
     // float bounded across long sessions.
-    uniformsRef.current.uKaleidoscope.value = params.kaleidoscope ?? 0
-    uniformsRef.current.uChromatic.value = params.chromatic ?? 0
+    uniformsRef.current.uKaleidoscope.value = fp.kaleidoscope ?? 0
+    uniformsRef.current.uChromatic.value = fp.chromatic ?? 0
     const TWO_PI = Math.PI * 2
     hueAccumRef.current =
-      ((hueAccumRef.current + (params.hueShift ?? 0) * safeDelta) % TWO_PI + TWO_PI) % TWO_PI
+      ((hueAccumRef.current + (fp.hueShift ?? 0) * safeDelta) % TWO_PI + TWO_PI) % TWO_PI
     uniformsRef.current.uHueShift.value = hueAccumRef.current
 
-    rollPhaseRef.current += safeDelta * params.roll
+    rollPhaseRef.current += safeDelta * fp.roll
 
-    const wobbleCap = params.hole * 0.7
-    const w = Math.min(params.wobble, wobbleCap)
+    const wobbleCap = fp.hole * 0.7
+    const w = Math.min(fp.wobble, wobbleCap)
     const wobX = Math.sin(elapsed * 0.7) * w
     const wobY = Math.cos(elapsed * 0.9) * w
 
     const phase = phaseRef.current
     const helixOffsetX =
-      Math.cos(-phase * HELIX_FREQ) * params.helix +
-      Math.sin(-phase * WAVE_FREQ) * params.wave
-    const helixOffsetY = -Math.sin(-phase * HELIX_FREQ) * params.helix
+      Math.cos(-phase * HELIX_FREQ) * fp.helix +
+      Math.sin(-phase * WAVE_FREQ) * fp.wave
+    const helixOffsetY = -Math.sin(-phase * HELIX_FREQ) * fp.helix
 
     const aheadPhase = phase + 10
     const nextX =
-      Math.cos(-aheadPhase * HELIX_FREQ) * params.helix +
-      Math.sin(-aheadPhase * WAVE_FREQ) * params.wave
-    const nextY = -Math.sin(-aheadPhase * HELIX_FREQ) * params.helix
+      Math.cos(-aheadPhase * HELIX_FREQ) * fp.helix +
+      Math.sin(-aheadPhase * WAVE_FREQ) * fp.wave
+    const nextY = -Math.sin(-aheadPhase * HELIX_FREQ) * fp.helix
 
     let lookWorldX = nextX + wobX
     let lookWorldY = nextY + wobY
@@ -913,12 +932,20 @@ function Tunnel({ params }: { params: TunnelParams }) {
   )
 }
 
-function CameraSync({ fov }: { fov: number }) {
+function CameraSync({
+  fov,
+  paramsRef,
+}: {
+  fov: number
+  paramsRef?: React.RefObject<TunnelParams>
+}) {
   const { camera } = useThree()
   useFrame(() => {
     const cam = camera as THREE.PerspectiveCamera
-    if (cam.fov !== fov) {
-      cam.fov = fov
+    // Prefer the morph snapshot's fov so camera tracks the lerp.
+    const target = paramsRef?.current?.fov ?? fov
+    if (cam.fov !== target) {
+      cam.fov = target
       cam.updateProjectionMatrix()
     }
   })
@@ -928,9 +955,14 @@ function CameraSync({ fov }: { fov: number }) {
 export function TunnelCanvas({
   active,
   params,
+  paramsRef,
 }: {
   active: boolean
   params: TunnelParams
+  // Chunk 4 — when supplied, the renderer reads per-frame uniform values
+  // from this ref (driven by `useTunnelEngine`). React-level reads
+  // (geometry, pattern textures, alpha mode) still come from `params`.
+  paramsRef?: React.RefObject<TunnelParams>
 }) {
   return (
     <Canvas
@@ -941,8 +973,8 @@ export function TunnelCanvas({
       style={{ position: 'absolute', inset: 0 }}
     >
       <color attach="background" args={['#000000']} />
-      <CameraSync fov={params.fov} />
-      <Tunnel params={params} />
+      <CameraSync fov={params.fov} paramsRef={paramsRef} />
+      <Tunnel params={params} paramsRef={paramsRef} />
     </Canvas>
   )
 }

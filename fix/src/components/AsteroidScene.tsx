@@ -20,11 +20,12 @@ import {
   TUNNEL_DEFAULTS,
   type TunnelParams,
 } from './TunnelCanvas'
-import { PRESETS, type Preset, type TabId } from './tunnel/presets'
+import { PRESETS, type TabId } from './tunnel/presets'
 import { usePersistedBoolean } from './tunnel/usePersistedBoolean'
 import { PresetsPanel } from './tunnel/PresetsPanel'
 import { TunePanel } from './tunnel/TunePanel'
 import { TransportBar } from './tunnel/TransportBar'
+import { useTunnelEngine } from './tunnel/useTunnelEngine'
 
 type Triple = [number, number, number]
 
@@ -187,7 +188,10 @@ export function AsteroidScene({
     Math.max(0, BACKGROUND_PALETTE.findIndex((b) => b.id === defaultBackground)),
   )
   const [bgOpen, setBgOpen] = useState(false)
-  const [tunnelParams, setTunnelParams] = useState<TunnelParams>(() => {
+  // Chunk 4 — engine owns morph state, paramsRef, demo cycle. The
+  // initial seed comes from localStorage if present so the bird-section
+  // tunnel re-renders with the user's last setup.
+  const initialTunnelParams = useMemo<TunnelParams>(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = window.localStorage.getItem('asteroidScene.tunnelParams')
@@ -199,28 +203,33 @@ export function AsteroidScene({
       }
     }
     return TUNNEL_DEFAULTS
-  })
+  }, [])
+  const engine = useTunnelEngine(initialTunnelParams)
   // ─── Chunk 3 — split TUNE drawer into PresetsPanel + TunePanel ───
   // First-visit default: open on desktop (>= 1024px), closed on mobile.
   // After the first visit, `usePersistedBoolean` round-trips through
   // `localStorage` so the user's choice survives reloads.
-  const isDesktopRef = useRef<boolean | null>(null)
-  if (isDesktopRef.current === null) {
-    isDesktopRef.current =
-      typeof window !== 'undefined'
-        ? window.matchMedia('(min-width: 1024px)').matches
-        : true
-  }
+  // Chunk 4 cleanup — replaced the `useRef` + init-block (which was
+  // order-dependent on `usePersistedBoolean` calls landing after it)
+  // with a one-shot lazy `useState` initializer. Order-independent.
+  const [isDesktop] = useState<boolean>(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(min-width: 1024px)').matches
+      : true,
+  )
   const [presetsOpen, setPresetsOpen] = usePersistedBoolean(
     'chrestenson.tunnel.presetsOpen',
-    isDesktopRef.current,
+    isDesktop,
   )
   const [tuneOpen, setTuneOpen] = usePersistedBoolean(
     'chrestenson.tunnel.tuneOpen',
-    isDesktopRef.current,
+    isDesktop,
   )
   const [activeTab, setActiveTab] = useState<TabId>('signature')
-  const [lastPreset, setLastPreset] = useState<Preset>(() => PRESETS[0])
+  // Active preset comes from the engine. Fall back to PRESETS[0] for
+  // the initial render so chrome (now-playing line, preset highlight)
+  // has a sensible default before any click.
+  const activePreset = engine.activePreset ?? PRESETS[0]
   const [hideModel, setHideModel] = useState(false)
   const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
   // Per-module state for the SUPR composition system. Setters are unused
@@ -231,17 +240,21 @@ export function AsteroidScene({
   const [foldParams] = useState<FoldFieldParams>(FOLD_DEFAULTS)
   const [stageParams] = useState<StageParams>(STAGE_DEFAULTS)
 
+  // Persist the morph target (staticParams) — that's the resolved
+  // preset state, which is what we want to restore on next visit.
+  // The lerped per-frame values would be a snapshot mid-morph, which
+  // is wrong to persist.
   useEffect(() => {
     if (typeof window === 'undefined') return
     try {
       window.localStorage.setItem(
         'asteroidScene.tunnelParams',
-        JSON.stringify(tunnelParams),
+        JSON.stringify(engine.staticParams),
       )
     } catch {
       /* storage may be unavailable — ignore */
     }
-  }, [tunnelParams])
+  }, [engine.staticParams])
   const currentBg = BACKGROUND_PALETTE[bgIndex]
 
   useEffect(() => {
@@ -299,7 +312,11 @@ export function AsteroidScene({
       )}
       {/* ─── LIVE PATH: tunnel mode ─── */}
       {currentBg.id === 'optical' && visualMode === 'tunnel' && (
-        <TunnelCanvas active={inView} params={tunnelParams} />
+        <TunnelCanvas
+          active={inView}
+          params={engine.staticParams}
+          paramsRef={engine.paramsRef}
+        />
       )}
       {/* ─── LIVE PATH: mandala mode (SuprStage → LotusField baseline + FoldField candidate) ─── */}
       {currentBg.id === 'optical' && visualMode === 'mandala' && (
@@ -515,20 +532,26 @@ export function AsteroidScene({
               onToggle={() => setPresetsOpen(!presetsOpen)}
               activeTab={activeTab}
               presets={PRESETS}
-              activePresetId={lastPreset.id}
-              onTabClick={(t) => setActiveTab(t)}
+              activePresetId={activePreset.id}
+              onTabClick={(t) => {
+                // Chunk 4: switching tabs stops the demo cycle. The
+                // current preset stays loaded; the new tab simply
+                // lights up empty until the user picks something.
+                if (engine.demoActive) engine.stopDemo()
+                setActiveTab(t)
+              }}
               onPresetClick={(p) => {
-                // Chunk 3: instant apply (existing behavior).
-                // Chunk 4 swaps this for the morph engine.
-                setTunnelParams((prev) => ({ ...prev, ...p.values }))
-                setLastPreset(p)
+                // Chunk 4 — 600ms morph through useTunnelEngine.
+                // applyPreset() also stops any active demo, so a
+                // manual click commandeers the cycle as expected.
+                engine.applyPreset(p, 600)
               }}
             />
             <TunePanel
               open={tuneOpen}
               onToggle={() => setTuneOpen(!tuneOpen)}
-              tunnelParams={tunnelParams}
-              setTunnelParams={setTunnelParams}
+              tunnelParams={engine.staticParams}
+              setTunnelParams={engine.setParams}
               hideModel={hideModel}
               setHideModel={setHideModel}
               visualMode={visualMode}
@@ -536,8 +559,21 @@ export function AsteroidScene({
             />
           </div>
           <TransportBar
-            nowPlayingName={lastPreset.name}
-            paletteName={lastPreset.paletteName}
+            nowPlayingName={activePreset.name}
+            paletteName={activePreset.paletteName}
+            demoActive={engine.demoActive}
+            onDemoToggle={() => {
+              if (engine.demoActive) {
+                engine.stopDemo()
+              } else {
+                // Cycle the active tab's user-facing presets.
+                const cycle = PRESETS.filter(
+                  (p) =>
+                    p.tab === activeTab && !p.id.includes('.__validate-'),
+                )
+                if (cycle.length > 0) engine.startDemo(cycle, 8000)
+              }
+            }}
           />
         </>
       )}
