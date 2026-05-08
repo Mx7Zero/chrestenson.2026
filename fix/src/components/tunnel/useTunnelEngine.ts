@@ -156,7 +156,11 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
       // Capture the renderer's current params snapshot as the morph
       // start so a click during another morph cross-fades smoothly.
       fromRef.current = { ...paramsRef.current }
-      const target = resolve(preset, paramsRef.current)
+      // Resolve target against TUNNEL_DEFAULTS (not currentParams), so
+      // a preset click is "give me this preset, full stop" — fields the
+      // preset doesn't override snap back to defaults instead of leaking
+      // from whatever was on screen.
+      const target = resolve(preset)
       toRef.current = target
       startedAtRef.current = performance.now()
       durationRef.current = durationMs
@@ -189,8 +193,10 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
         // Inline the apply logic so we don't bounce through stopDemo:
         // applyPreset would (correctly) flip demoActive=false from
         // the public path, but the internal cycle wants to keep it on.
+        // Resolve against TUNNEL_DEFAULTS, not currentParams — see the
+        // applyPreset comment for why.
         fromRef.current = { ...paramsRef.current }
-        const target = resolve(next, paramsRef.current)
+        const target = resolve(next)
         toRef.current = target
         startedAtRef.current = performance.now()
         durationRef.current = durationMs
@@ -226,10 +232,13 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
       demoCycleRef.current = cycle
       demoIndexRef.current = 0
       setDemoActive(true)
-      // First step: morph immediately to the first preset.
+      // First step: morph immediately to the first preset. Resolve
+      // against TUNNEL_DEFAULTS (not currentParams) so the demo lands
+      // on the preset as authored, not a Frankenstein of whatever was
+      // on screen + the preset's overrides.
       const first = cycle[0]
       fromRef.current = { ...paramsRef.current }
-      const target = resolve(first, paramsRef.current)
+      const target = resolve(first)
       toRef.current = target
       startedAtRef.current = performance.now()
       durationRef.current = durationMs
