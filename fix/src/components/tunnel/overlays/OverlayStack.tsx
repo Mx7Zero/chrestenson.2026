@@ -3,6 +3,7 @@ import { findAsset, resolveAssetPath } from './assetRegistry'
 import { scaleFraction, type OverlayLayer } from './types'
 import { TunnelCanvas, TUNNEL_DEFAULTS, type TunnelParams } from '../../TunnelCanvas'
 import { EffectSVG } from './EffectSVG'
+import { expandLayerToInstances, type LayerInstance } from './expandLayer'
 
 // Build a CSS mask-image data URL from an asset path. The resulting
 // SVG paints the shape WHITE on a transparent background — when used
@@ -229,18 +230,68 @@ to{transform:rotate(360deg);}
       }}
     >
       <style>{allKeyframes}</style>
-      {layers.map((layer) =>
-        isLayerOn(layer) ? (
-          <LayerView
-            key={layer.id}
-            layer={layer}
-            cw={cw}
-            ch={ch}
-            vmin={vmin}
-            reducedMotion={reducedMotion}
-          />
-        ) : null,
-      )}
+      {layers.map((layer) => {
+        if (!isLayerOn(layer)) return null
+        // Pattern-space expansion: each layer becomes N instances.
+        // Task 1 wires `single` + `massive` only; other modes return
+        // a single identity instance until later tasks fill them in.
+        const instances = expandLayerToInstances(layer)
+        return instances.map((inst, i) => (
+          <InstanceWrapper
+            key={`${layer.id}-i${i}`}
+            instance={inst}
+          >
+            <LayerView
+              layer={layer}
+              cw={cw}
+              ch={ch}
+              vmin={vmin}
+              reducedMotion={reducedMotion}
+            />
+          </InstanceWrapper>
+        ))
+      })}
+    </div>
+  )
+}
+
+// Wraps a LayerView with the per-instance transform (translate +
+// scale + rotation) and opacity multiplier from `expandLayerToInstances`.
+// For `single`/`massive` modes the only meaningful field is `scale`;
+// the rest reduce to no-ops so existing visuals stay identical.
+function InstanceWrapper({
+  instance,
+  children,
+}: {
+  instance: LayerInstance
+  children: React.ReactNode
+}) {
+  const isIdentity =
+    instance.dx === 0 &&
+    instance.dy === 0 &&
+    instance.rotation === 0 &&
+    instance.scale === 1 &&
+    instance.opacity === 1 &&
+    !instance.mirror
+  if (isIdentity) {
+    // No wrapper needed — preserves the exact previous render path
+    // so back-compat is byte-identical when no pattern fields are set.
+    return <>{children}</>
+  }
+  const mirrorX = instance.mirror === 'x' ? -1 : 1
+  const mirrorY = instance.mirror === 'y' ? -1 : 1
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        transform: `translate(${instance.dx}px, ${instance.dy}px) rotate(${instance.rotation}deg) scale(${instance.scale * mirrorX}, ${instance.scale * mirrorY})`,
+        transformOrigin: 'center center',
+        opacity: instance.opacity,
+        pointerEvents: 'none',
+      }}
+    >
+      {children}
     </div>
   )
 }

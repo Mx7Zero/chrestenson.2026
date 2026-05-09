@@ -96,6 +96,33 @@ export type AudioMod = {
 // Future: 'baseTunnel' (clip the live engine's tunnel) and 'image'.
 export type OverlaySource = 'solid' | 'independentTunnel'
 
+// ─── Pattern Space ────────────────────────────────────────────────
+// A layer renders as N "instances" — copies stamped at computed
+// transforms. `patternMode` picks the layout family; `scaleMode`
+// scales every instance by a fixed multiplier so a layer can become
+// a screen-filling field. See `expandLayer.ts` for the pure helper
+// that turns a layer + these fields into a `LayerInstance[]`.
+export type PatternMode =
+  | 'single'
+  | 'massive'
+  | 'mirrorStage'
+  | 'radial'
+  | 'kaleido'
+  | 'tileGrid'
+  | 'tunnelRepeat'
+  | 'cloneCloud'
+  | 'mandalaStack'
+
+export type ScaleMode =
+  | 'tiny'         // 0.25x
+  | 'object'       // 1.0x (default)
+  | 'poster'       // 2.0x
+  | 'architectural'// 4.0x
+  | 'fullBleed'    // 6.0x
+  | 'beyondFrame'  // 9.0x (intentional clip)
+
+export type WireCloneMode = 'sameCenter' | 'radial' | 'depth' | 'grid' | 'cloud'
+
 export type OverlayLayer = {
   id: string
   type: OverlayType
@@ -181,6 +208,40 @@ export type OverlayLayer = {
   // (X/Y/scale/rotation). Doesn't affect animation — see freeze for
   // that. Lets users compose without accidentally bumping a layer.
   locked?: boolean
+  // ─── Pattern Space (see expandLayer.ts) ─────────────────────────
+  // All optional with defaults applied at normalize-time so older
+  // saved looks render identically. `patternMode` selects the layout
+  // family the renderer expands into; the rest are tunables consumed
+  // by `expandLayerToInstances`. `kaleidoFolds` supersedes the legacy
+  // `kaleidoscope` field (migration normalizes the old one across).
+  patternMode?: PatternMode          // default 'single'
+  scaleMode?: ScaleMode              // default 'object'
+  patternScale?: number              // 0.1–8.0, default 1
+  repeatX?: number                   // 1–24
+  repeatY?: number                   // 1–24
+  radialCount?: number               // 1–64
+  cloneCount?: number                // 1–128
+  depthCount?: number                // 1–48
+  spacingX?: number                  // 0–1 (fraction of vmin)
+  spacingY?: number                  // 0–1
+  depthSpacing?: number              // 0–1
+  phaseSpread?: number               // 0–1
+  rotationSpread?: number            // 0–360 deg
+  scaleFalloff?: number              // 0–1 (0 = no falloff, 1 = aggressive)
+  opacityFalloff?: number            // 0–1
+  kaleidoFolds?: number              // 1–32 (replaces `kaleidoscope`)
+  tileOffsetX?: number               // 0–1
+  tileOffsetY?: number               // 0–1
+  // Wireframe-only per-clone offsets (consumed by Wireframe3D once
+  // Task 5 lands; stored on the schema today so URLs survive).
+  wireCloneCount?: number            // 1–48
+  wireCloneMode?: WireCloneMode      // default 'sameCenter'
+  perClonePhaseOffset?: number       // 0–1
+  perCloneRotationOffset?: number    // 0–360
+  perCloneScaleFalloff?: number      // 0–1
+  perCloneOpacityFalloff?: number    // 0–1
+  perCloneDepthOffset?: number       // 0–1
+  perCloneSeedOffset?: number        // 0–1
 }
 
 // Defaults used by the layer factory. Per-type overrides applied in
@@ -292,10 +353,42 @@ export function scaleFraction(scale: number): number {
   return 0.18 + (scale - 0.2) * ((1.12 - 0.18) / (2.0 - 0.2))
 }
 
+// Allowed string values for the new pattern-space enums.
+const PATTERN_MODES: PatternMode[] = [
+  'single',
+  'massive',
+  'mirrorStage',
+  'radial',
+  'kaleido',
+  'tileGrid',
+  'tunnelRepeat',
+  'cloneCloud',
+  'mandalaStack',
+]
+const SCALE_MODES: ScaleMode[] = [
+  'tiny',
+  'object',
+  'poster',
+  'architectural',
+  'fullBleed',
+  'beyondFrame',
+]
+const WIRE_CLONE_MODES: WireCloneMode[] = [
+  'sameCenter',
+  'radial',
+  'depth',
+  'grid',
+  'cloud',
+]
+
 // Defensive runtime guard for hydrated/loaded layers — fills in any
-// fields that may be missing on older saved looks.
+// fields that may be missing on older saved looks. Also runs the
+// pattern-space back-compat migration (legacy `kaleidoscope > 1` maps
+// onto `patternMode='kaleido'`; type=tile maps onto `patternMode=
+// 'tileGrid'`; everything else stays a `single` so existing visuals
+// render identically).
 export function normalizeLayer(input: any): OverlayLayer {
-  return {
+  const base: OverlayLayer = {
     ...BASE_DEFAULTS,
     ...input,
     id: typeof input?.id === 'string' ? input.id : newLayerId(),
@@ -322,5 +415,93 @@ export function normalizeLayer(input: any): OverlayLayer {
       input?.source === 'independentTunnel' ? 'independentTunnel' : 'solid',
     assetSeed:
       typeof input?.assetSeed === 'number' ? input.assetSeed : undefined,
+  }
+
+  // ─── Pattern-space back-compat migration ────────────────────────
+  const num = (v: any, dflt: number): number =>
+    typeof v === 'number' && Number.isFinite(v) ? v : dflt
+  const incomingPatternMode: PatternMode | undefined =
+    typeof input?.patternMode === 'string' &&
+    PATTERN_MODES.includes(input.patternMode)
+      ? input.patternMode
+      : undefined
+  const incomingScaleMode: ScaleMode | undefined =
+    typeof input?.scaleMode === 'string' &&
+    SCALE_MODES.includes(input.scaleMode)
+      ? input.scaleMode
+      : undefined
+  const legacyKaleido = num(input?.kaleidoscope, 1)
+  const legacyTileSpacing = num(input?.tileSpacing, BASE_DEFAULTS.tileSpacing)
+
+  let patternMode: PatternMode
+  let kaleidoFolds: number
+  let repeatX: number
+  let repeatY: number
+  let spacingX: number
+  let spacingY: number
+  if (incomingPatternMode) {
+    patternMode = incomingPatternMode
+    kaleidoFolds = Math.max(1, num(input?.kaleidoFolds, legacyKaleido))
+    repeatX = Math.max(1, num(input?.repeatX, 4))
+    repeatY = Math.max(1, num(input?.repeatY, 4))
+    spacingX = num(input?.spacingX, 0.18)
+    spacingY = num(input?.spacingY, 0.18)
+  } else if (legacyKaleido > 1) {
+    patternMode = 'kaleido'
+    kaleidoFolds = Math.max(1, legacyKaleido)
+    repeatX = num(input?.repeatX, 4)
+    repeatY = num(input?.repeatY, 4)
+    spacingX = num(input?.spacingX, 0.18)
+    spacingY = num(input?.spacingY, 0.18)
+  } else if (base.type === 'tile') {
+    patternMode = 'tileGrid'
+    kaleidoFolds = Math.max(1, legacyKaleido)
+    const derived = Math.round(1 / Math.max(legacyTileSpacing, 0.05))
+    const clamped = Math.max(4, Math.min(16, derived))
+    repeatX = num(input?.repeatX, clamped)
+    repeatY = num(input?.repeatY, clamped)
+    spacingX = num(input?.spacingX, legacyTileSpacing)
+    spacingY = num(input?.spacingY, legacyTileSpacing)
+  } else {
+    patternMode = 'single'
+    kaleidoFolds = Math.max(1, legacyKaleido)
+    repeatX = num(input?.repeatX, 4)
+    repeatY = num(input?.repeatY, 4)
+    spacingX = num(input?.spacingX, 0.18)
+    spacingY = num(input?.spacingY, 0.18)
+  }
+
+  return {
+    ...base,
+    patternMode,
+    scaleMode: incomingScaleMode ?? 'object',
+    patternScale: num(input?.patternScale, 1),
+    repeatX,
+    repeatY,
+    radialCount: Math.max(1, num(input?.radialCount, 8)),
+    cloneCount: Math.max(1, num(input?.cloneCount, 24)),
+    depthCount: Math.max(1, num(input?.depthCount, 8)),
+    spacingX,
+    spacingY,
+    depthSpacing: num(input?.depthSpacing, 0.12),
+    phaseSpread: num(input?.phaseSpread, 0.5),
+    rotationSpread: num(input?.rotationSpread, 0),
+    scaleFalloff: num(input?.scaleFalloff, 0),
+    opacityFalloff: num(input?.opacityFalloff, 0),
+    kaleidoFolds,
+    tileOffsetX: num(input?.tileOffsetX, 0),
+    tileOffsetY: num(input?.tileOffsetY, 0),
+    wireCloneCount: Math.max(1, num(input?.wireCloneCount, 1)),
+    wireCloneMode:
+      typeof input?.wireCloneMode === 'string' &&
+      WIRE_CLONE_MODES.includes(input.wireCloneMode)
+        ? input.wireCloneMode
+        : 'sameCenter',
+    perClonePhaseOffset: num(input?.perClonePhaseOffset, 0),
+    perCloneRotationOffset: num(input?.perCloneRotationOffset, 0),
+    perCloneScaleFalloff: num(input?.perCloneScaleFalloff, 0),
+    perCloneOpacityFalloff: num(input?.perCloneOpacityFalloff, 0),
+    perCloneDepthOffset: num(input?.perCloneDepthOffset, 0),
+    perCloneSeedOffset: num(input?.perCloneSeedOffset, 0),
   }
 }

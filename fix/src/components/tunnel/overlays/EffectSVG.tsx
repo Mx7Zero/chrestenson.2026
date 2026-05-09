@@ -10,6 +10,16 @@ import {
   torus,
   type Geometry,
 } from './wireframeGeometry'
+import type { LayerInstance } from './expandLayer'
+
+// Default `instances` for Wireframe3D when the caller hasn't run
+// `expandLayerToInstances` yet — a single identity instance so every
+// existing call site keeps rendering the same single wireframe pose.
+// Task 5 will use the full `instances` array to stamp per-clone copies
+// with phase / depth / rotation offsets.
+const DEFAULT_WIRE_INSTANCES: readonly LayerInstance[] = [
+  { dx: 0, dy: 0, scale: 1, rotation: 0, phase: 0, opacity: 1 },
+]
 
 // ─── TODO: shared overlay animation clock ─────────────────────────
 // Each Wireframe3D instance currently mounts its own rAF. Fine for
@@ -71,6 +81,11 @@ export type EffectProps = {
   wireTrailBlur?: number
   wireDepthFog?: boolean
   wireDepthFogAmount?: number
+  // Pattern-space instances. Wireframe3D uses these in Task 5 to
+  // stamp per-clone copies with phase / depth / rotation offsets.
+  // Other effects currently ignore the prop. Defaults to a single
+  // identity instance so existing callers keep rendering identically.
+  instances?: readonly LayerInstance[]
 }
 
 export function EffectSVG({
@@ -92,6 +107,7 @@ export function EffectSVG({
   wireTrailBlur,
   wireDepthFog,
   wireDepthFogAmount,
+  instances,
 }: EffectProps) {
   const rng = useMemo(() => mulberry32(seed >>> 0), [seed])
 
@@ -164,6 +180,7 @@ export function EffectSVG({
           wireTrailBlur={wireTrailBlur}
           wireDepthFog={wireDepthFog}
           wireDepthFogAmount={wireDepthFogAmount}
+          instances={instances ?? DEFAULT_WIRE_INSTANCES}
         />
       )
     }
@@ -656,6 +673,7 @@ function Wireframe3D({
   wireTrailBlur,
   wireDepthFog,
   wireDepthFogAmount,
+  instances = DEFAULT_WIRE_INSTANCES,
 }: {
   geometry: Geometry
   rng: () => number
@@ -675,7 +693,15 @@ function Wireframe3D({
   wireTrailBlur?: number
   wireDepthFog?: boolean
   wireDepthFogAmount?: number
+  // Pattern-space instances. Task 5 reads this to stamp per-clone
+  // copies inside the single rAF loop. Today we only assert that the
+  // prop arrives — Task 5's per-clone phase / rotation / depth math
+  // hangs off these entries.
+  instances?: readonly LayerInstance[]
 }) {
+  // Reference the prop so it's not flagged as unused before Task 5
+  // wires per-clone offsets into the projection loop.
+  void instances
   const multiplier = Math.max(1, Math.min(8, wireMultiplier ?? 1))
   const trailCount = Math.max(0, Math.min(8, wireTrailCount ?? 0))
   const trailDecay = Math.max(0.2, Math.min(0.95, wireTrailDecay ?? 0.6))
