@@ -49,6 +49,10 @@ type PresetsPanelProps = {
   // collapsed-via-toggle). The toggle state is preserved so exiting
   // fullscreen returns the user to whatever drawer config they had.
   hidden?: boolean
+  // Which screen edge the drawer anchors to. 'left' puts the toggle
+  // tab on the right edge of the panel (so the tab faces the screen
+  // center); 'right' is the original behavior. Defaults to 'right'.
+  side?: 'left' | 'right'
 }
 
 const PANEL_WIDTH = 360
@@ -94,6 +98,7 @@ export function PresetsPanel({
   mySetLooks = [],
   onLookDelete,
   hidden = false,
+  side = 'right',
 }: PresetsPanelProps) {
   const isMySet = activeTab === 'myset'
   // For MY SET we render saved looks; otherwise filter the catalog by tab.
@@ -103,11 +108,14 @@ export function PresetsPanel({
         (p) => p.tab === activeTab && !p.id.includes('.__validate-'),
       )
 
+  const isLeft = side === 'left'
+
   return (
     <div
       style={{
         display: hidden ? 'none' : 'flex',
         alignItems: 'stretch',
+        flexDirection: isLeft ? 'row-reverse' : 'row',
       }}
     >
       <div
@@ -122,7 +130,8 @@ export function PresetsPanel({
           style={{
             background: 'rgba(0,0,0,0.82)',
             border: '1px solid rgba(255,255,255,0.22)',
-            borderRight: 'none',
+            borderRight: isLeft ? '1px solid rgba(255,255,255,0.22)' : 'none',
+            borderLeft: isLeft ? 'none' : '1px solid rgba(255,255,255,0.22)',
             padding: '12px 14px',
             width: PANEL_WIDTH,
             maxHeight: '60vh',
@@ -314,7 +323,13 @@ export function PresetsPanel({
           alignSelf: 'center',
         }}
       >
-        {open ? '▸ PRESETS' : '◂ PRESETS'}
+        {isLeft
+          ? open
+            ? '◂ PRESETS'
+            : '▸ PRESETS'
+          : open
+          ? '▸ PRESETS'
+          : '◂ PRESETS'}
       </button>
     </div>
   )

@@ -8,13 +8,8 @@ import {
   TUNNEL_DEFAULTS,
   type TunnelParams,
 } from '../TunnelCanvas'
-import { MASKS } from './masks/maskAssets'
-import {
-  MASK_DEFAULTS,
-  type MaskMode,
-  type MaskMotion,
-  type MaskState,
-} from './masks/maskState'
+import { OverlaysSection } from './overlays/OverlaysSection'
+import type { OverlayLayer } from './overlays/types'
 
 // ─── Tune panel ────────────────────────────────────────────────────
 // Right-side collapsible parameter panel. Ports the existing
@@ -150,10 +145,26 @@ type TunePanelProps = {
   // (prefers-reduced-motion + persisted localStorage).
   reducedFlash?: boolean
   onReducedFlashChange?: (on: boolean) => void
-  // Mask layer — the foreground silhouette/cutout/lightLeak overlay.
-  // Owned by AsteroidScene; TunePanel renders the controls.
-  mask?: MaskState
-  onMaskChange?: (next: MaskState) => void
+  // Overlay layer stack (Photoshop-style). Owned by AsteroidScene;
+  // TunePanel renders the OVERLAYS panel inside its PLAY tab.
+  overlayLayers?: OverlayLayer[]
+  activeLayerId?: string | null
+  onAddLayer?: () => void
+  onSelectLayer?: (id: string | null) => void
+  onUpdateLayer?: (id: string, patch: Partial<OverlayLayer>) => void
+  onDeleteLayer?: (id: string) => void
+  onDuplicateLayer?: (id: string) => void
+  onReorderLayer?: (id: string, dir: -1 | 1) => void
+  onClearLayers?: () => void
+  onSetLayers?: (layers: OverlayLayer[]) => void
+  blendDiag?: boolean
+  onToggleBlendDiag?: () => void
+  // Tunnel params + genre piped down so independentTunnel sources
+  // can copy the live base look.
+  baseTunnelParams?: TunnelParams
+  baseGenre?: import('./generator/generateLook').Genre
+  // Which screen edge the drawer anchors to.
+  side?: 'left' | 'right'
 }
 
 const PANEL_WIDTH = 480
@@ -170,21 +181,31 @@ export function TunePanel({
   hidden = false,
   reducedFlash = false,
   onReducedFlashChange,
-  mask = MASK_DEFAULTS,
-  onMaskChange,
+  overlayLayers = [],
+  activeLayerId = null,
+  onAddLayer,
+  onSelectLayer,
+  onUpdateLayer,
+  onDeleteLayer,
+  onDuplicateLayer,
+  onReorderLayer,
+  onClearLayers,
+  onSetLayers,
+  blendDiag = false,
+  onToggleBlendDiag,
+  baseTunnelParams,
+  baseGenre,
+  side = 'right',
 }: TunePanelProps) {
   const [tuneTab, setTuneTab] = useState<'play' | 'design'>('play')
-
-  const updateMask = (patch: Partial<MaskState>) => {
-    if (!onMaskChange) return
-    onMaskChange({ ...mask, ...patch })
-  }
+  const isLeft = side === 'left'
 
   return (
     <div
       style={{
         display: hidden ? 'none' : 'flex',
         alignItems: 'stretch',
+        flexDirection: isLeft ? 'row-reverse' : 'row',
       }}
     >
       <div
@@ -199,7 +220,8 @@ export function TunePanel({
           style={{
             background: 'rgba(0,0,0,0.82)',
             border: '1px solid rgba(255,255,255,0.22)',
-            borderRight: 'none',
+            borderRight: isLeft ? '1px solid rgba(255,255,255,0.22)' : 'none',
+            borderLeft: isLeft ? 'none' : '1px solid rgba(255,255,255,0.22)',
             padding: '14px 18px',
             width: PANEL_WIDTH,
             maxHeight: '60vh',
@@ -725,282 +747,27 @@ export function TunePanel({
                     </button>
                   </div>
                 )}
-                {/* MASK — foreground silhouette / cutout / light-leak
-                    overlay. Sits between the tunnel and the bird so
-                    the engine becomes a poster/identity tool. */}
-                {onMaskChange && (
-                  <div
-                    style={{
-                      marginTop: 12,
-                      padding: '10px 10px 12px',
-                      border: '1px solid rgba(255,255,255,0.18)',
-                      background: 'rgba(255,255,255,0.03)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontFamily: 'monospace',
-                        fontSize: 10,
-                        letterSpacing: '0.25em',
-                        color: 'rgba(255,255,255,0.7)',
-                        textTransform: 'uppercase',
-                        marginBottom: 8,
-                      }}
-                    >
-                      ✦ MASK
-                    </div>
-
-                    {/* Mode picker */}
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(5, 1fr)',
-                        gap: 4,
-                        marginBottom: 8,
-                      }}
-                    >
-                      {(
-                        [
-                          { id: 'none', label: 'OFF' },
-                          { id: 'silhouette', label: 'SILH' },
-                          { id: 'cutout', label: 'CUT' },
-                          { id: 'lightLeak', label: 'LEAK' },
-                          { id: 'stencil', label: 'TILE' },
-                        ] as { id: MaskMode; label: string }[]
-                      ).map((m) => {
-                        const active = mask.mode === m.id
-                        return (
-                          <button
-                            key={m.id}
-                            onClick={() => updateMask({ mode: m.id })}
-                            style={{
-                              fontFamily: 'monospace',
-                              fontSize: 9,
-                              letterSpacing: '0.18em',
-                              padding: '5px 0',
-                              background: active
-                                ? 'rgba(255,255,255,0.92)'
-                                : 'rgba(255,255,255,0.06)',
-                              color: active ? '#000' : 'rgba(255,255,255,0.7)',
-                              border: '1px solid rgba(255,255,255,0.22)',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {m.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    {/* Asset picker */}
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(5, 1fr)',
-                        gap: 4,
-                        marginBottom: 8,
-                      }}
-                    >
-                      {MASKS.map((m) => {
-                        const active = mask.asset === m.id
-                        return (
-                          <button
-                            key={m.id}
-                            onClick={() => updateMask({ asset: m.id })}
-                            title={m.name}
-                            style={{
-                              padding: '4px',
-                              background: active
-                                ? 'rgba(255,255,255,0.16)'
-                                : 'rgba(255,255,255,0.04)',
-                              border: active
-                                ? '1px solid rgba(255,255,255,0.85)'
-                                : '1px solid rgba(255,255,255,0.18)',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <svg
-                              width="22"
-                              height="22"
-                              viewBox={m.viewBox}
-                              aria-label={m.name}
-                            >
-                              <path
-                                d={m.d}
-                                fill="rgba(255,255,255,0.85)"
-                                fillRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    {/* Sliders */}
-                    {(
-                      [
-                        { key: 'size', label: 'SIZE', min: 0.2, max: 2, step: 0.05 },
-                        { key: 'rotation', label: 'ROT', min: -180, max: 180, step: 1 },
-                        { key: 'softness', label: 'SOFT', min: 0, max: 40, step: 1 },
-                        { key: 'glow', label: 'GLOW', min: 0, max: 40, step: 1 },
-                      ] as {
-                        key: 'size' | 'rotation' | 'softness' | 'glow'
-                        label: string
-                        min: number
-                        max: number
-                        step: number
-                      }[]
-                    ).map((row) => (
-                      <div
-                        key={row.key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          marginBottom: 4,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontFamily: 'monospace',
-                            fontSize: 9,
-                            letterSpacing: '0.2em',
-                            color: 'rgba(255,255,255,0.6)',
-                            width: 44,
-                          }}
-                        >
-                          {row.label}
-                        </span>
-                        <input
-                          type="range"
-                          min={row.min}
-                          max={row.max}
-                          step={row.step}
-                          value={mask[row.key]}
-                          onChange={(e) =>
-                            updateMask({ [row.key]: Number(e.target.value) } as Partial<MaskState>)
-                          }
-                          style={{ flex: 1 }}
-                        />
-                        <span
-                          style={{
-                            fontFamily: 'monospace',
-                            fontSize: 9,
-                            color: 'rgba(255,255,255,0.6)',
-                            width: 36,
-                            textAlign: 'right',
-                          }}
-                        >
-                          {row.key === 'size'
-                            ? mask.size.toFixed(2)
-                            : Math.round(mask[row.key])}
-                        </span>
-                      </div>
-                    ))}
-
-                    {/* Invert toggle */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        marginTop: 6,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: 'monospace',
-                          fontSize: 9,
-                          letterSpacing: '0.2em',
-                          color: 'rgba(255,255,255,0.6)',
-                        }}
-                      >
-                        INVERT
-                      </span>
-                      <button
-                        onClick={() => updateMask({ invert: !mask.invert })}
-                        style={{
-                          padding: '3px 12px',
-                          background: mask.invert
-                            ? 'rgba(255,255,255,0.92)'
-                            : 'transparent',
-                          color: mask.invert ? '#000' : 'rgba(255,255,255,0.7)',
-                          border: '1px solid rgba(255,255,255,0.25)',
-                          fontFamily: 'monospace',
-                          fontSize: 9,
-                          letterSpacing: '0.2em',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {mask.invert ? 'ON' : 'OFF'}
-                      </button>
-                    </div>
-
-                    {/* Motion picker */}
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(5, 1fr)',
-                        gap: 4,
-                        marginTop: 8,
-                      }}
-                    >
-                      {(
-                        [
-                          'still',
-                          'breathe',
-                          'spin',
-                          'drift',
-                          'pulse',
-                        ] as MaskMotion[]
-                      ).map((m) => {
-                        const active = mask.motion === m
-                        return (
-                          <button
-                            key={m}
-                            onClick={() => updateMask({ motion: m })}
-                            style={{
-                              fontFamily: 'monospace',
-                              fontSize: 8,
-                              letterSpacing: '0.15em',
-                              padding: '4px 0',
-                              background: active
-                                ? 'rgba(255,255,255,0.92)'
-                                : 'rgba(255,255,255,0.06)',
-                              color: active ? '#000' : 'rgba(255,255,255,0.7)',
-                              border: '1px solid rgba(255,255,255,0.22)',
-                              cursor: 'pointer',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {m}
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() => onMaskChange?.(MASK_DEFAULTS)}
-                      style={{
-                        width: '100%',
-                        marginTop: 8,
-                        padding: '4px 0',
-                        background: 'transparent',
-                        border: '1px solid rgba(255,255,255,0.18)',
-                        color: 'rgba(255,255,255,0.5)',
-                        fontFamily: 'monospace',
-                        fontSize: 9,
-                        letterSpacing: '0.25em',
-                        textTransform: 'uppercase',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      MASK RESET
-                    </button>
-                  </div>
+                {/* OVERLAYS — Photoshop-style layer stack above
+                    the tunnel canvas. Replaces the legacy MASK
+                    section. Layers can be added, reordered, blended,
+                    animated, and saved with the look. */}
+                {onAddLayer && (
+                  <OverlaysSection
+                    layers={overlayLayers}
+                    activeLayerId={activeLayerId}
+                    onAddLayer={onAddLayer}
+                    onSelectLayer={onSelectLayer ?? (() => {})}
+                    onUpdateLayer={onUpdateLayer ?? (() => {})}
+                    onDeleteLayer={onDeleteLayer ?? (() => {})}
+                    onDuplicateLayer={onDuplicateLayer ?? (() => {})}
+                    onReorderLayer={onReorderLayer ?? (() => {})}
+                    onClearLayers={onClearLayers ?? (() => {})}
+                    onSetLayers={onSetLayers}
+                    blendDiag={blendDiag}
+                    onToggleBlendDiag={onToggleBlendDiag}
+                    baseTunnelParams={baseTunnelParams}
+                    baseGenre={baseGenre}
+                  />
                 )}
 
                 <button
@@ -1373,7 +1140,13 @@ export function TunePanel({
           alignSelf: 'center',
         }}
       >
-        {open ? '▸ TUNE' : '◂ TUNE'}
+        {isLeft
+          ? open
+            ? '◂ TUNE'
+            : '▸ TUNE'
+          : open
+          ? '▸ TUNE'
+          : '◂ TUNE'}
       </button>
     </div>
   )

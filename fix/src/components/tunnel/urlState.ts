@@ -1,23 +1,21 @@
 import type { Genre } from './generator/generateLook'
 import type { MaskState, MaskMode, MaskMotion } from './masks/maskState'
 import type { MaskId } from './masks/maskAssets'
+import type { OverlayLayer } from './overlays/types'
+import { normalizeLayer } from './overlays/types'
+import { migrateMaskToLayers } from './overlays/migrate'
 
 // ─── URL state ────────────────────────────────────────────────────
 // Hash-based encoding for two cases:
-//   • Generated look:  #g=<genre>&s=<seed>&v=<recipe>[&m=<maskCode>]
-//   • Curated preset:  #p=<presetId>[&m=<maskCode>]
+//   • Generated look:  #g=<genre>&s=<seed>&v=<recipe>[&o=<base64>]
+//   • Curated preset:  #p=<presetId>[&o=<base64>]
 //
-// Mask code (compact): asset.mode.size.rot.softness.glow.invert.motion
-//   e.g. star.cutout.1.0.0.12.0.still
-// Each segment is a fixed slot to stay parser-tolerant. Defaults are
-// dropped on encode if they match MASK_DEFAULTS, kept on decode.
+// `o=` carries a base64-encoded JSON of the OverlayLayer[] stack.
+// Empty stacks drop the segment entirely.
 //
-// On mount, AsteroidScene parses the hash and routes:
-//   - generated → generateLook(genre, seed, {recipeVersion}) → applyPreset
-//   - curated   → find PRESETS by id → applyPreset
-// On state change (preset click / generate / save / mask edit), we
-// replaceState so the URL reflects the active look without polluting
-// history.
+// Backwards-compat: pre-2026-05-09 links used `m=<maskCode>` with a
+// single mask. parseHash still decodes those, but converts them into
+// a one-layer overlayLayers[] via `migrateMaskToLayers`.
 
 export type ParsedHash =
   | {
@@ -25,9 +23,13 @@ export type ParsedHash =
       genre: Genre
       seed: number
       recipeVersion: number
-      mask?: MaskState
+      overlayLayers: OverlayLayer[]
     }
-  | { kind: 'curated'; presetId: string; mask?: MaskState }
+  | {
+      kind: 'curated'
+      presetId: string
+      overlayLayers: OverlayLayer[]
+    }
   | null
 
 const VALID_GENRES: ReadonlySet<Genre> = new Set([
@@ -41,14 +43,14 @@ const VALID_GENRES: ReadonlySet<Genre> = new Set([
   'chroma',
 ])
 
+// Legacy mask validators kept so back-compat decode still works.
 const VALID_MASK_MODES: ReadonlySet<MaskMode> = new Set([
-  'none',
+  'off',
   'silhouette',
   'cutout',
   'lightLeak',
-  'stencil',
+  'tile',
 ])
-
 const VALID_MASK_MOTIONS: ReadonlySet<MaskMotion> = new Set([
   'still',
   'breathe',
@@ -56,7 +58,6 @@ const VALID_MASK_MOTIONS: ReadonlySet<MaskMotion> = new Set([
   'drift',
   'pulse',
 ])
-
 const VALID_MASK_IDS: ReadonlySet<MaskId> = new Set<MaskId>([
   'circle',
   'star',
@@ -70,27 +71,44 @@ const VALID_MASK_IDS: ReadonlySet<MaskId> = new Set<MaskId>([
   'crescent',
 ])
 
-function encodeMask(m: MaskState | undefined): string {
-  if (!m || m.mode === 'none') return ''
-  // asset.mode.size.rot.softness.glow.invert.motion
-  const parts = [
-    m.asset,
-    m.mode,
-    m.size.toFixed(2),
-    Math.round(m.rotation).toString(),
-    Math.round(m.softness).toString(),
-    Math.round(m.glow).toString(),
-    m.invert ? '1' : '0',
-    m.motion,
-  ]
-  return `&m=${parts.join('.')}`
+// ─── Layer encoding (base64 JSON) ─────────────────────────────────
+function encodeLayers(layers: OverlayLayer[]): string {
+  if (!layers || layers.length === 0) return ''
+  try {
+    const json = JSON.stringify(layers)
+    if (typeof btoa === 'function') {
+      // URL-safe base64: + → -, / → _, drop padding.
+      const b64 = btoa(unescape(encodeURIComponent(json)))
+      return `&o=${b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`
+    }
+    return ''
+  } catch {
+    return ''
+  }
 }
 
-function decodeMask(s: string | null): MaskState | undefined {
+function decodeLayers(s: string | null): OverlayLayer[] {
+  if (!s) return []
+  try {
+    const padded = s.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = padded.length % 4
+    const fixed = pad ? padded + '='.repeat(4 - pad) : padded
+    const json = decodeURIComponent(escape(atob(fixed)))
+    const arr = JSON.parse(json)
+    if (!Array.isArray(arr)) return []
+    return arr.map(normalizeLayer)
+  } catch {
+    return []
+  }
+}
+
+// ─── Legacy mask encoding (decode-only kept for old links) ────────
+function decodeLegacyMask(s: string | null): MaskState | undefined {
   if (!s) return undefined
   const parts = s.split('.')
   if (parts.length < 8) return undefined
-  const [asset, mode, size, rot, softness, glow, invert, motion] = parts
+  const [asset, mode, size, rot, softness, glow, invert, motion, speed, amount] =
+    parts
   if (!VALID_MASK_IDS.has(asset as MaskId)) return undefined
   if (!VALID_MASK_MODES.has(mode as MaskMode)) return undefined
   if (!VALID_MASK_MOTIONS.has(motion as MaskMotion)) return undefined
@@ -99,6 +117,8 @@ function decodeMask(s: string | null): MaskState | undefined {
   const sf = Number(softness)
   const gl = Number(glow)
   if (![sz, r, sf, gl].every(Number.isFinite)) return undefined
+  const sp = speed !== undefined ? Number(speed) : 1
+  const am = amount !== undefined ? Number(amount) : 1
   return {
     asset: asset as MaskId,
     mode: mode as MaskMode,
@@ -108,6 +128,8 @@ function decodeMask(s: string | null): MaskState | undefined {
     glow: gl,
     invert: invert === '1',
     motion: motion as MaskMotion,
+    motionSpeed: Number.isFinite(sp) ? sp : 1,
+    motionAmount: Number.isFinite(am) ? am : 1,
   }
 }
 
@@ -118,7 +140,12 @@ export function parseHash(hash: string): ParsedHash {
   const g = params.get('g')
   const s = params.get('s')
   const v = params.get('v')
-  const mask = decodeMask(params.get('m'))
+  let overlayLayers = decodeLayers(params.get('o'))
+  if (overlayLayers.length === 0) {
+    // No `o=` → look for legacy `m=` mask code and migrate.
+    const legacy = decodeLegacyMask(params.get('m'))
+    if (legacy) overlayLayers = migrateMaskToLayers(legacy)
+  }
   if (g && s) {
     if (!VALID_GENRES.has(g as Genre)) return null
     const seed = Number(s)
@@ -129,11 +156,11 @@ export function parseHash(hash: string): ParsedHash {
       genre: g as Genre,
       seed: seed >>> 0,
       recipeVersion,
-      mask,
+      overlayLayers,
     }
   }
   const p = params.get('p')
-  if (p) return { kind: 'curated', presetId: p, mask }
+  if (p) return { kind: 'curated', presetId: p, overlayLayers }
   return null
 }
 
@@ -141,20 +168,21 @@ export function encodeGenerated(
   genre: Genre,
   seed: number,
   recipeVersion: number,
-  mask?: MaskState,
+  overlayLayers?: OverlayLayer[],
 ): string {
-  return `#g=${genre}&s=${seed >>> 0}&v=${recipeVersion}${encodeMask(mask)}`
+  return `#g=${genre}&s=${seed >>> 0}&v=${recipeVersion}${encodeLayers(overlayLayers ?? [])}`
 }
 
-export function encodeCurated(presetId: string, mask?: MaskState): string {
-  return `#p=${encodeURIComponent(presetId)}${encodeMask(mask)}`
+export function encodeCurated(
+  presetId: string,
+  overlayLayers?: OverlayLayer[],
+): string {
+  return `#p=${encodeURIComponent(presetId)}${encodeLayers(overlayLayers ?? [])}`
 }
 
 export function writeHash(next: string): void {
   if (typeof window === 'undefined') return
   if (window.location.hash === next) return
-  // replaceState avoids accumulating history entries as the user
-  // clicks through presets / generates new looks.
   try {
     const url = new URL(window.location.href)
     url.hash = next

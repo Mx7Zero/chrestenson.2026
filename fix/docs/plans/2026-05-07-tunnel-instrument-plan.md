@@ -10,6 +10,8 @@
 
 **Reference design:** [`docs/plans/2026-05-07-tunnel-instrument-design.md`](./2026-05-07-tunnel-instrument-design.md) — read this first before any task. Open questions and final values for preset names, palette names, capability copy, and vibe constraints live there.
 
+**Current build notes:** [`docs/plans/2026-05-09-tunnel-instrument-build-notes.md`](./2026-05-09-tunnel-instrument-build-notes.md) — read this before resuming implementation. The branch has already shipped several chunks and is now in generator/save/share plus mask/overlay-layer territory; the original chunk list below is historical in places.
+
 **Cadence:** One PR per numbered chunk. No braiding. Each PR builds, lints, passes existing tests, and ships its own slice of value. Land each one before the next.
 
 ---

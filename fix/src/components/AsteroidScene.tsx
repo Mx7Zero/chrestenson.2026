@@ -50,8 +50,9 @@ import {
   encodeCurated,
   writeHash,
 } from './tunnel/urlState'
-import { MaskLayer } from './tunnel/masks/MaskLayer'
-import { MASK_DEFAULTS, type MaskState } from './tunnel/masks/maskState'
+import { OverlayStack } from './tunnel/overlays/OverlayStack'
+import { BlendDiag } from './tunnel/overlays/BlendDiag'
+import { makeLayer, type OverlayLayer } from './tunnel/overlays/types'
 
 type Triple = [number, number, number]
 
@@ -311,9 +312,14 @@ export function AsteroidScene({
   // genre) — the engine only carries the resolved Preset.
   const [currentLook, setCurrentLook] = useState<TunnelLook | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
-  // Mask layer (foreground silhouette/cutout/lightLeak overlay).
-  // Orthogonal to TunnelParams; carried on TunnelLook for save/share.
-  const [currentMask, setCurrentMask] = useState<MaskState>(MASK_DEFAULTS)
+  // Overlay layer stack (Photoshop-style). Replaces the old single
+  // mask. Orthogonal to TunnelParams; carried on TunnelLook for
+  // save/share/MY-SET round-trip.
+  const [overlayLayers, setOverlayLayers] = useState<OverlayLayer[]>([])
+  const [activeLayerId, setActiveLayerId] = useState<string | null>(null)
+  // Diagnostic toggle — when on, mounts BlendDiag (5 plain divs with
+  // different mix-blend-modes) over the tunnel for stack debugging.
+  const [showBlendDiag, setShowBlendDiag] = useState(false)
 
   const [hideModel, setHideModel] = useState(false)
   const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
@@ -388,37 +394,37 @@ export function AsteroidScene({
     }
   }, [])
 
+  // Helper: rewrite the URL hash for the current look + given layers.
+  // Called from every handler that mutates either side.
+  const rewriteHashFor = (
+    look: TunnelLook | null,
+    layers: OverlayLayer[],
+  ) => {
+    if (!look) return
+    if (look.source === 'generated' && look.seed !== undefined) {
+      writeHash(
+        encodeGenerated(
+          look.genre,
+          look.seed,
+          look.recipeVersion ?? RECIPE_VERSION,
+          layers,
+        ),
+      )
+    } else {
+      writeHash(encodeCurated(look.id, layers))
+    }
+  }
+
   const handlePresetClick = (p: Preset) => {
     if (p.flashWarn && !flashConfirmedRef.current) {
       setPendingFlashPreset(p)
       return
     }
     engine.applyPreset(p, 600)
-    // Catalog click resets currentLook to a curated record so
-    // SAVE/SHARE work consistently. Hash reflects the curated id.
-    setCurrentLook(presetToLook(p))
-    writeHash(encodeCurated(p.id, currentMask))
+    const look = presetToLook(p)
+    setCurrentLook(look)
+    rewriteHashFor(look, overlayLayers)
     setShareCopied(false)
-  }
-
-  // Mask edits update local state AND rewrite the URL so a SHARE
-  // immediately after twiddling the mask captures it.
-  const handleMaskChange = (next: MaskState) => {
-    setCurrentMask(next)
-    if (currentLook) {
-      if (currentLook.source === 'generated' && currentLook.seed !== undefined) {
-        writeHash(
-          encodeGenerated(
-            currentLook.genre,
-            currentLook.seed,
-            currentLook.recipeVersion ?? RECIPE_VERSION,
-            next,
-          ),
-        )
-      } else {
-        writeHash(encodeCurated(currentLook.id, next))
-      }
-    }
   }
 
   // ─── GENERATE ──────────────────────────────────────────────────
@@ -435,30 +441,21 @@ export function AsteroidScene({
     const apply = () => {
       engine.applyPreset(look, 600)
       setCurrentLook(look)
-      writeHash(
-        encodeGenerated(
-          genre,
-          seed,
-          look.recipeVersion ?? RECIPE_VERSION,
-          currentMask,
-        ),
-      )
+      rewriteHashFor(look, overlayLayers)
       setShareCopied(false)
     }
     if (look.flashWarn && !flashConfirmedRef.current) {
       setPendingFlashPreset(look)
-      // currentLook is set by FlashConfirmDialog continuation below.
       return
     }
     apply()
   }
 
-  // ─── SAVE current look to MY SET ───────────────────────────────
-  // Bake the current mask into the saved record so reload restores
-  // the full visual identity, not just the tunnel params.
+  // ─── SAVE current look (with layer stack) to MY SET ────────────
   const handleSave = () => {
     if (!currentLook) return
-    const stamped: TunnelLook = { ...currentLook, mask: currentMask }
+    const stamped: TunnelLook = { ...currentLook, overlayLayers }
+    delete (stamped as any).mask
     const next = saveLook(stamped)
     setMySetLooks(next)
     setCurrentLook(stamped)
@@ -482,6 +479,66 @@ export function AsteroidScene({
     }
   }
 
+  // ─── Overlay layer handlers ────────────────────────────────────
+  const updateLayers = (next: OverlayLayer[]) => {
+    setOverlayLayers(next)
+    rewriteHashFor(currentLook, next)
+  }
+
+  const handleAddLayer = () => {
+    const layer = makeLayer('shape', 'star')
+    const next = [...overlayLayers, layer]
+    setActiveLayerId(layer.id)
+    updateLayers(next)
+  }
+
+  const handleSelectLayer = (id: string | null) => setActiveLayerId(id)
+
+  const handleUpdateLayer = (id: string, patch: Partial<OverlayLayer>) => {
+    updateLayers(
+      overlayLayers.map((l) => (l.id === id ? { ...l, ...patch } : l)),
+    )
+  }
+
+  const handleDeleteLayer = (id: string) => {
+    const next = overlayLayers.filter((l) => l.id !== id)
+    if (activeLayerId === id) setActiveLayerId(next[next.length - 1]?.id ?? null)
+    updateLayers(next)
+  }
+
+  const handleDuplicateLayer = (id: string) => {
+    const idx = overlayLayers.findIndex((l) => l.id === id)
+    if (idx < 0) return
+    const src = overlayLayers[idx]
+    const dup: OverlayLayer = {
+      ...src,
+      id: `${src.id}-${Math.random().toString(36).slice(2, 6)}`,
+    }
+    const next = [
+      ...overlayLayers.slice(0, idx + 1),
+      dup,
+      ...overlayLayers.slice(idx + 1),
+    ]
+    setActiveLayerId(dup.id)
+    updateLayers(next)
+  }
+
+  const handleReorderLayer = (id: string, dir: -1 | 1) => {
+    const idx = overlayLayers.findIndex((l) => l.id === id)
+    if (idx < 0) return
+    const tgt = idx + dir
+    if (tgt < 0 || tgt >= overlayLayers.length) return
+    const next = overlayLayers.slice()
+    const [m] = next.splice(idx, 1)
+    next.splice(tgt, 0, m)
+    updateLayers(next)
+  }
+
+  const handleClearLayers = () => {
+    setActiveLayerId(null)
+    updateLayers([])
+  }
+
   // ─── On-mount hash routing ─────────────────────────────────────
   // If the URL carries `#g=<genre>&s=<seed>&v=<recipe>` or
   // `#p=<presetId>`, restore that look so deep links work.
@@ -495,20 +552,27 @@ export function AsteroidScene({
         reducedFlash: engine.reducedFlash,
       })
       setActiveTab(parsed.genre)
-      // Skip flash confirm here — user explicitly opened the link.
       engine.applyPreset(look, 0)
-      setCurrentLook({ ...look, mask: parsed.mask })
-      if (parsed.mask) setCurrentMask(parsed.mask)
+      setCurrentLook({ ...look, overlayLayers: parsed.overlayLayers })
+      if (parsed.overlayLayers.length > 0) {
+        setOverlayLayers(parsed.overlayLayers)
+        setActiveLayerId(parsed.overlayLayers[parsed.overlayLayers.length - 1].id)
+      }
     } else if (parsed.kind === 'curated') {
       const found = PRESETS.find((p) => p.id === parsed.presetId)
       if (found) {
         setActiveTab(found.tab)
         engine.applyPreset(found, 0)
-        setCurrentLook({ ...presetToLook(found), mask: parsed.mask })
-        if (parsed.mask) setCurrentMask(parsed.mask)
+        setCurrentLook({
+          ...presetToLook(found),
+          overlayLayers: parsed.overlayLayers,
+        })
+        if (parsed.overlayLayers.length > 0) {
+          setOverlayLayers(parsed.overlayLayers)
+          setActiveLayerId(parsed.overlayLayers[parsed.overlayLayers.length - 1].id)
+        }
       }
     }
-    // Run once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -564,7 +628,12 @@ export function AsteroidScene({
       id={sectionId}
       ref={containerRef}
       className="relative w-screen mx-[calc(50%-50vw)] h-[90vh] overflow-hidden"
-      style={{ background: currentBg.css }}
+      // `isolation: isolate` creates a stacking context that contains
+      // mix-blend-mode of overlay layers — without it the blend
+      // bleeds up into the page above the bird section. The
+      // background is set so screen/lighten blends have a real
+      // backdrop to lift from instead of leaking through to body.
+      style={{ background: currentBg.css, isolation: 'isolate' }}
     >
       {currentBg.video && (
         <video
@@ -585,10 +654,16 @@ export function AsteroidScene({
           paramsRef={engine.paramsRef}
         />
       )}
-      {/* MASK overlay — sits between tunnel canvas (z=0) and bird
-          canvas (z=1) so the bird stays in front of the silhouette. */}
+      {/* OVERLAY STACK — Photoshop-style layers sit between the
+          tunnel canvas (z=0) and the bird canvas (z=2). */}
       {currentBg.id === 'optical' && visualMode === 'tunnel' && (
-        <MaskLayer mask={currentMask} />
+        <OverlayStack layers={overlayLayers} />
+      )}
+      {/* BLEND DIAG — debug-only plain-div overlay. Toggle from the
+          OVERLAYS panel. If these blend, SVG path is the bug. If
+          they don't, the stage/canvas/isolation is the bug. */}
+      {currentBg.id === 'optical' && visualMode === 'tunnel' && showBlendDiag && (
+        <BlendDiag />
       )}
       {/* ─── LIVE PATH: mandala mode (SuprStage → LotusField baseline + FoldField candidate) ─── */}
       {currentBg.id === 'optical' && visualMode === 'mandala' && (
@@ -786,20 +861,22 @@ export function AsteroidScene({
       </div>
       {showBackgroundSelector && currentBg.id === 'optical' && sectionId === 'bird' && (
         <>
-          {/* PRESETS + TUNE panels — stacked vertical on the right edge */}
+          {/* PRESETS panel — anchored to the LEFT edge, slides in from
+              the left. TUNE panel — anchored to the RIGHT edge, slides
+              in from the right. Both vertically centered. The bird
+              canvas stays unobstructed in the middle. */}
           <div
-            className="absolute top-1/2 right-0"
+            className="absolute top-1/2 left-0"
             style={{
               zIndex: 2,
               transform: 'translateY(-50%)',
               display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              alignItems: 'flex-end',
+              alignItems: 'center',
               maxHeight: '78vh',
             }}
           >
             <PresetsPanel
+              side="left"
               open={presetsOpen}
               onToggle={() => setPresetsOpen(!presetsOpen)}
               activeTab={activeTab}
@@ -825,24 +902,13 @@ export function AsteroidScene({
                   engine.applyPreset(p, 600)
                   const look = p as TunnelLook
                   setCurrentLook(look)
-                  // Restore the saved mask if present, otherwise clear.
-                  const restoredMask = look.mask ?? MASK_DEFAULTS
-                  setCurrentMask(restoredMask)
-                  if (
-                    look.source === 'generated' &&
-                    look.seed !== undefined
-                  ) {
-                    writeHash(
-                      encodeGenerated(
-                        look.genre,
-                        look.seed,
-                        look.recipeVersion ?? RECIPE_VERSION,
-                        restoredMask,
-                      ),
-                    )
-                  } else {
-                    writeHash(encodeCurated(p.id, restoredMask))
-                  }
+                  // Restore the saved overlay stack (or empty if absent).
+                  const restoredLayers = look.overlayLayers ?? []
+                  setOverlayLayers(restoredLayers)
+                  setActiveLayerId(
+                    restoredLayers[restoredLayers.length - 1]?.id ?? null,
+                  )
+                  rewriteHashFor(look, restoredLayers)
                   setShareCopied(false)
                   return
                 }
@@ -851,7 +917,19 @@ export function AsteroidScene({
               }}
               hidden={fullscreen.active}
             />
+          </div>
+          <div
+            className="absolute top-1/2 right-0"
+            style={{
+              zIndex: 2,
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              maxHeight: '78vh',
+            }}
+          >
             <TunePanel
+              side="right"
               open={tuneOpen}
               onToggle={() => setTuneOpen(!tuneOpen)}
               tunnelParams={engine.staticParams}
@@ -863,8 +941,29 @@ export function AsteroidScene({
               hidden={fullscreen.active}
               reducedFlash={engine.reducedFlash}
               onReducedFlashChange={engine.setReducedFlash}
-              mask={currentMask}
-              onMaskChange={handleMaskChange}
+              overlayLayers={overlayLayers}
+              activeLayerId={activeLayerId}
+              onAddLayer={handleAddLayer}
+              onSelectLayer={handleSelectLayer}
+              onUpdateLayer={handleUpdateLayer}
+              onDeleteLayer={handleDeleteLayer}
+              onDuplicateLayer={handleDuplicateLayer}
+              onReorderLayer={handleReorderLayer}
+              onClearLayers={handleClearLayers}
+              onSetLayers={(next) => {
+                setActiveLayerId(next[next.length - 1]?.id ?? null)
+                updateLayers(next)
+              }}
+              blendDiag={showBlendDiag}
+              onToggleBlendDiag={() => setShowBlendDiag((v) => !v)}
+              baseTunnelParams={engine.staticParams}
+              baseGenre={
+                currentLook?.source === 'generated'
+                  ? currentLook.genre
+                  : (activeTab === 'myset'
+                      ? undefined
+                      : (activeTab as Genre))
+              }
             />
           </div>
           <TransportBar
@@ -915,23 +1014,12 @@ export function AsteroidScene({
                 const p = pendingFlashPreset
                 setPendingFlashPreset(null)
                 engine.applyPreset(p, 600)
-                // Stash a TunnelLook record either way so SAVE/SHARE work.
                 const look: TunnelLook =
                   'genre' in p && 'source' in p
                     ? (p as TunnelLook)
                     : presetToLook(p)
                 setCurrentLook(look)
-                if (look.source === 'generated' && look.seed !== undefined) {
-                  writeHash(
-                    encodeGenerated(
-                      look.genre,
-                      look.seed,
-                      look.recipeVersion ?? RECIPE_VERSION,
-                    ),
-                  )
-                } else {
-                  writeHash(encodeCurated(p.id))
-                }
+                rewriteHashFor(look, overlayLayers)
                 setShareCopied(false)
               }}
               onUseReducedFlash={() => {
@@ -945,17 +1033,7 @@ export function AsteroidScene({
                     ? (p as TunnelLook)
                     : presetToLook(p)
                 setCurrentLook(look)
-                if (look.source === 'generated' && look.seed !== undefined) {
-                  writeHash(
-                    encodeGenerated(
-                      look.genre,
-                      look.seed,
-                      look.recipeVersion ?? RECIPE_VERSION,
-                    ),
-                  )
-                } else {
-                  writeHash(encodeCurated(p.id))
-                }
+                rewriteHashFor(look, overlayLayers)
                 setShareCopied(false)
               }}
               onCancel={() => setPendingFlashPreset(null)}

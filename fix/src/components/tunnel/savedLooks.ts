@@ -1,4 +1,6 @@
 import type { TunnelLook } from './generator/generateLook'
+import { migrateMaskToLayers } from './overlays/migrate'
+import { normalizeLayer } from './overlays/types'
 
 // ─── Saved looks (localStorage CRUD) ──────────────────────────────
 // The MY SET tab reads this list. Generated looks are persisted via
@@ -9,6 +11,31 @@ import type { TunnelLook } from './generator/generateLook'
 const STORAGE_KEY = 'chrestenson.tunnel.savedLooks'
 const MAX_LOOKS = 200
 
+// Migration: pre-2026-05-09 saves carried `mask: MaskState`. After
+// the overlay-stack ships, those records still need to render. We
+// rewrite each loaded record so `overlayLayers` is the source of
+// truth and the legacy `mask` field is dropped. Also normalizes mode
+// strings ('none'→'off', 'stencil'→'tile') for any legacy mask still
+// in flight.
+function migrateLook(input: any): TunnelLook {
+  const l = { ...input }
+  if (l && l.mask && typeof l.mask === 'object') {
+    if (l.mask.mode === 'none') l.mask.mode = 'off'
+    if (l.mask.mode === 'stencil') l.mask.mode = 'tile'
+    if (typeof l.mask.motionSpeed !== 'number') l.mask.motionSpeed = 1
+    if (typeof l.mask.motionAmount !== 'number') l.mask.motionAmount = 1
+  }
+  // If the record predates overlay layers, derive them from `mask`.
+  if (!Array.isArray(l.overlayLayers)) {
+    l.overlayLayers = migrateMaskToLayers(l.mask)
+  } else {
+    l.overlayLayers = l.overlayLayers.map(normalizeLayer)
+  }
+  // Drop legacy mask field once layers are in place.
+  delete l.mask
+  return l as TunnelLook
+}
+
 export function loadSavedLooks(): TunnelLook[] {
   if (typeof window === 'undefined') return []
   try {
@@ -16,7 +43,7 @@ export function loadSavedLooks(): TunnelLook[] {
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return parsed as TunnelLook[]
+    return parsed.map(migrateLook)
   } catch {
     return []
   }

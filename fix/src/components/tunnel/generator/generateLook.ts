@@ -5,6 +5,7 @@ import { sampleVariation } from '../sampler'
 import { mulberry32 } from './rng'
 import { generateName } from './names'
 import type { MaskState } from '../masks/maskState'
+import type { OverlayLayer } from '../overlays/types'
 
 // ─── generateLook ─────────────────────────────────────────────────
 // Deterministic genre-constrained generator. Same (genre, seed,
@@ -32,9 +33,12 @@ export type LookMeta = {
   recipeVersion?: number
   createdAt?: string
   genre: Genre
-  // Mask overlay state — orthogonal to the engine; carried here so
-  // SAVE/SHARE/URL preserve the user's foreground silhouette.
+  // Deprecated: pre-2026-05-09 single mask. Kept on the type so old
+  // saves still parse; new code reads `overlayLayers`.
   mask?: MaskState
+  // Photoshop-style overlay stack rendered above the tunnel canvas.
+  // First-in-array is the bottom of the stack, last is the top.
+  overlayLayers?: OverlayLayer[]
 }
 
 export type TunnelLook = Preset & LookMeta

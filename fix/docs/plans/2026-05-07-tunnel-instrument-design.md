@@ -4,6 +4,12 @@
 **Component:** `fix/src/components/TunnelCanvas.tsx` + `fix/src/components/AsteroidScene.tsx`
 **Status:** Approved, ready for implementation plan
 
+> **2026-05-09 build update:** implementation has moved beyond the original
+> preset/instrument plan into generator, saved looks, URL restore, mask, and
+> Photoshop-style overlay-layer work. Read
+> [`2026-05-09-tunnel-instrument-build-notes.md`](./2026-05-09-tunnel-instrument-build-notes.md)
+> before continuing from this design doc.
+
 ## Goal
 
 Turn the hummingbird-section motion-art generator from a slide-show of presets into a **live visual instrument**. The user lands on a full-bleed live tunnel; controls feel peripheral; preset selection is morphing rather than reloading; demo and variation modes make the engine feel alive, directed, controllable.
