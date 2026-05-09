@@ -28,6 +28,14 @@ type TransportBarProps = {
   // Chunk 4 — DEMO wiring.
   demoActive?: boolean
   onDemoToggle?: () => void
+  // Chunk 7 — FULLSCREEN wiring. `fullscreenActive` flips the button
+  // label/affordance; `onFullscreenToggle` is the gesture-gated entry
+  // point (browser handles ESC). `visible` controls whether the bar
+  // is rendered at all — driven by mouse-wake while in fullscreen,
+  // always true otherwise.
+  fullscreenActive?: boolean
+  onFullscreenToggle?: () => void
+  visible?: boolean
 }
 
 const buttonBase: CSSProperties = {
@@ -57,6 +65,9 @@ export function TransportBar({
   activePresetValues,
   demoActive = false,
   onDemoToggle,
+  fullscreenActive = false,
+  onFullscreenToggle,
+  visible = true,
 }: TransportBarProps) {
   // Chunk 6 — derive engine chips for the now-playing line. We only
   // surface the auto chips here (paletteName already renders as a
@@ -71,6 +82,7 @@ export function TransportBar({
       : []
   return (
     <div
+      data-testid="transport-bar"
       style={{
         position: 'absolute',
         left: 0,
@@ -84,6 +96,13 @@ export function TransportBar({
         flexDirection: 'column',
         gap: 8,
         pointerEvents: 'none',
+        // Chunk 7 — visibility transitions for fullscreen mouse-wake.
+        // `visibility` keeps the layout stable; `opacity` fades chrome
+        // gracefully. Outside fullscreen the caller passes
+        // `visible: true` and the transition is a no-op.
+        opacity: visible ? 1 : 0,
+        visibility: visible ? 'visible' : 'hidden',
+        transition: 'opacity 0.2s ease, visibility 0.2s ease',
       }}
     >
       {/* Now-playing line */}
@@ -197,11 +216,24 @@ export function TransportBar({
         </div>
 
         <button
-          onClick={stub('fullscreen', 7)}
-          style={{ ...buttonBase, marginLeft: 'auto' }}
-          aria-label="Fullscreen"
+          onClick={onFullscreenToggle}
+          disabled={!onFullscreenToggle}
+          style={{
+            ...buttonBase,
+            marginLeft: 'auto',
+            background: fullscreenActive
+              ? 'rgba(255,255,255,0.92)'
+              : buttonBase.background,
+            color: fullscreenActive ? '#000000' : buttonBase.color,
+            borderColor: fullscreenActive
+              ? 'rgba(255,255,255,0.92)'
+              : 'rgba(255,255,255,0.25)',
+          }}
+          aria-label={
+            fullscreenActive ? 'Exit fullscreen' : 'Enter fullscreen'
+          }
         >
-          ⛶ FULLSCREEN
+          {fullscreenActive ? '⛶ EXIT' : '⛶ FULLSCREEN'}
         </button>
       </div>
     </div>

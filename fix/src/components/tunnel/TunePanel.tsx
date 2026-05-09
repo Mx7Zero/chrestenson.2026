@@ -133,6 +133,10 @@ type TunePanelProps = {
   setHideModel: (v: boolean) => void
   visualMode: 'tunnel' | 'mandala'
   setVisualMode: (m: 'tunnel' | 'mandala') => void
+  // Chunk 7 — see PresetsPanel for the wider rationale. Hidden in
+  // fullscreen showcase mode; toggle/tab state preserved across the
+  // transition.
+  hidden?: boolean
 }
 
 const PANEL_WIDTH = 480
@@ -146,11 +150,17 @@ export function TunePanel({
   setHideModel,
   visualMode,
   setVisualMode,
+  hidden = false,
 }: TunePanelProps) {
   const [tuneTab, setTuneTab] = useState<'play' | 'design'>('play')
 
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch' }}>
+    <div
+      style={{
+        display: hidden ? 'none' : 'flex',
+        alignItems: 'stretch',
+      }}
+    >
       <div
         style={{
           overflow: 'hidden',

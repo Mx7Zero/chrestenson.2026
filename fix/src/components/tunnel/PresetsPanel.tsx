@@ -38,6 +38,11 @@ type PresetsPanelProps = {
   onTabClick: (tab: TabId) => void
   onPresetClick: (preset: Preset) => void
   onFavoriteToggle?: (preset: Preset) => void
+  // Chunk 7 — when fullscreen showcase mode is active, the panel is
+  // pulled out of the layout entirely (display:none rather than
+  // collapsed-via-toggle). The toggle state is preserved so exiting
+  // fullscreen returns the user to whatever drawer config they had.
+  hidden?: boolean
 }
 
 const PANEL_WIDTH = 360
@@ -80,13 +85,19 @@ export function PresetsPanel({
   onTabClick,
   onPresetClick,
   onFavoriteToggle,
+  hidden = false,
 }: PresetsPanelProps) {
   const visiblePresets = presets.filter(
     (p) => p.tab === activeTab && !p.id.includes('.__validate-'),
   )
 
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch' }}>
+    <div
+      style={{
+        display: hidden ? 'none' : 'flex',
+        alignItems: 'stretch',
+      }}
+    >
       <div
         style={{
           overflow: 'hidden',

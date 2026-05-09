@@ -26,6 +26,8 @@ import { PresetsPanel } from './tunnel/PresetsPanel'
 import { TunePanel } from './tunnel/TunePanel'
 import { TransportBar } from './tunnel/TransportBar'
 import { useTunnelEngine } from './tunnel/useTunnelEngine'
+import { useFullscreen } from './tunnel/useFullscreen'
+import { useMouseWake } from './tunnel/useMouseWake'
 
 type Triple = [number, number, number]
 
@@ -183,6 +185,13 @@ export function AsteroidScene({
 }: AsteroidSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const selectorRef = useRef<HTMLDivElement>(null)
+  // Chunk 7 — fullscreen showcase mode. The bird container itself is
+  // the fullscreen target so the tunnel + bird canvas + transport bar
+  // ride along into fullscreen. `useMouseWake` drives auto-hide of
+  // the transport bar inside fullscreen; outside, the chrome is
+  // always visible so we ignore it.
+  const fullscreen = useFullscreen(containerRef)
+  const mouseAwake = useMouseWake(2500)
   const [inView, setInView] = useState(false)
   const [bgIndex, setBgIndex] = useState(() =>
     Math.max(0, BACKGROUND_PALETTE.findIndex((b) => b.id === defaultBackground)),
@@ -546,6 +555,7 @@ export function AsteroidScene({
                 // manual click commandeers the cycle as expected.
                 engine.applyPreset(p, 600)
               }}
+              hidden={fullscreen.active}
             />
             <TunePanel
               open={tuneOpen}
@@ -556,6 +566,7 @@ export function AsteroidScene({
               setHideModel={setHideModel}
               visualMode={visualMode}
               setVisualMode={setVisualMode}
+              hidden={fullscreen.active}
             />
           </div>
           <TransportBar
@@ -575,6 +586,15 @@ export function AsteroidScene({
                 if (cycle.length > 0) engine.startDemo(cycle, 8000)
               }
             }}
+            fullscreenActive={fullscreen.active}
+            onFullscreenToggle={() => {
+              // Chunk 7 — gesture-gated. `requestFullscreen` only
+              // resolves inside a user-initiated handler, which a
+              // React onClick satisfies. ESC exit is browser-handled.
+              if (fullscreen.active) fullscreen.exit()
+              else fullscreen.enter()
+            }}
+            visible={!fullscreen.active || mouseAwake}
           />
         </>
       )}
