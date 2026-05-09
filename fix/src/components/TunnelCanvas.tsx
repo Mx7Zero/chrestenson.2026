@@ -968,7 +968,7 @@ export function TunnelCanvas({
     <Canvas
       frameloop={active ? 'always' : 'never'}
       camera={{ position: [0, 0, 0], fov: params.fov, near: 0.1, far: 1000 }}
-      dpr={[1.5, 3]}
+      dpr={[1, 2]}
       gl={{ antialias: true, alpha: params.transparentCell !== 'none' }}
       style={{ position: 'absolute', inset: 0 }}
     >
