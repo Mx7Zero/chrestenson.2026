@@ -6,24 +6,27 @@ import {
   type Preset,
   type TabId,
 } from './presets'
+import { TUNNEL_DEFAULTS } from '../TunnelCanvas'
+import { deriveChips } from './chips'
 
 // ─── Presets panel ─────────────────────────────────────────────────
 // Right-side collapsible panel. Renders the tab strip across the
 // top, the active tab's capability copy line, and a 3-column tile
 // grid of presets that match the active tab.
 //
-// Tile shape (chunk 3 — chrome only):
+// Tile shape:
 //   • preset name (top)
-//   • palette name (sub-text)
 //   • ★ stub button (chunk 10 wires favorites)
 //   • ⚠ FLASH chip if `flashWarn` (chunk 9 wires the gate)
+//   • auto-derived engine chips + paletteName closer (chunk 6)
 //
-// Click a tile → `onPresetClick(preset)` (instant apply for now;
-// chunk 4 swaps in the morph).
+// Click a tile → `onPresetClick(preset)` triggers a 600ms morph.
 //
-// Chip wiring (auto-derived from `values`) lands in chunk 6; for now
-// each tile shows palette + an `id` chip placeholder so the grid
-// looks structurally correct.
+// Chunk 6 — chips are derived from the resolved params
+// `{...TUNNEL_DEFAULTS, ...preset.values}` via `deriveChips`. Up to 4
+// chips render per tile (3 auto + paletteName). The chip row uses
+// `flexWrap` so it spills to a second row on long chip combinations
+// rather than truncating. Tile minHeight grew to 80 to accommodate.
 
 type PresetsPanelProps = {
   open: boolean
@@ -49,13 +52,22 @@ const headerStyle: CSSProperties = {
 
 const chipStyle: CSSProperties = {
   fontFamily: 'monospace',
-  fontSize: 7,
-  letterSpacing: '0.1em',
+  fontSize: 8,
+  letterSpacing: '0.08em',
   textTransform: 'uppercase',
-  padding: '1px 5px',
+  padding: '1px 4px',
   background: 'rgba(255,255,255,0.05)',
   border: '1px solid rgba(255,255,255,0.14)',
   color: 'rgba(255,255,255,0.65)',
+  whiteSpace: 'nowrap',
+  // Tile is ~118px wide; the closing palette chip is the only one
+  // we make sure stands out with a slightly brighter border.
+}
+
+const paletteChipStyle: CSSProperties = {
+  ...chipStyle,
+  color: 'rgba(255,255,255,0.85)',
+  borderColor: 'rgba(255,255,255,0.28)',
 }
 
 export function PresetsPanel({
@@ -147,6 +159,13 @@ export function PresetsPanel({
             >
               {visiblePresets.map((p) => {
                 const active = activePresetId === p.id
+                const chips = deriveChips(
+                  { ...TUNNEL_DEFAULTS, ...p.values },
+                  p.paletteName,
+                )
+                // Last chip is always paletteName — split it out so we
+                // can style the closer differently (brighter border).
+                const autoChips = chips.slice(0, -1)
                 return (
                   <div
                     key={p.id}
@@ -163,7 +182,7 @@ export function PresetsPanel({
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 4,
-                      minHeight: 64,
+                      minHeight: 80,
                     }}
                     onClick={() => onPresetClick(p)}
                   >
@@ -230,7 +249,12 @@ export function PresetsPanel({
                           ⚠ FLASH
                         </span>
                       )}
-                      <span style={chipStyle}>{p.paletteName}</span>
+                      {autoChips.map((c) => (
+                        <span key={c} style={chipStyle}>
+                          {c}
+                        </span>
+                      ))}
+                      <span style={paletteChipStyle}>{p.paletteName}</span>
                     </div>
                   </div>
                 )

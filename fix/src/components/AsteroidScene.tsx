@@ -561,6 +561,7 @@ export function AsteroidScene({
           <TransportBar
             nowPlayingName={activePreset.name}
             paletteName={activePreset.paletteName}
+            activePresetValues={activePreset.values}
             demoActive={engine.demoActive}
             onDemoToggle={() => {
               if (engine.demoActive) {

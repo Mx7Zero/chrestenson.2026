@@ -1,4 +1,7 @@
 import type { CSSProperties } from 'react'
+import type { TunnelParams } from '../TunnelCanvas'
+import { TUNNEL_DEFAULTS } from '../TunnelCanvas'
+import { deriveChips } from './chips'
 
 // ─── Transport bar ─────────────────────────────────────────────────
 // Bottom-anchored full-width strip on the bird section. Houses the
@@ -11,10 +14,17 @@ import type { CSSProperties } from 'react'
 //   • INTENSITY    — chunk 9 (CALM · FULL · OVERDRIVE)
 //   • FULLSCREEN   — chunk 7
 //   • SHARE        — chunk 11
+//
+// Chunk 6 — the now-playing line shows auto-derived engine chips
+// between the preset name and the paletteName closer. The chips are
+// computed from the active preset's resolved params via `deriveChips`.
 
 type TransportBarProps = {
   nowPlayingName: string
   paletteName?: string
+  // Chunk 6 — partial values from the active preset; merged with
+  // TUNNEL_DEFAULTS to derive auto-chips for the now-playing line.
+  activePresetValues?: Partial<TunnelParams>
   // Chunk 4 — DEMO wiring.
   demoActive?: boolean
   onDemoToggle?: () => void
@@ -44,9 +54,21 @@ const stub = (label: string, chunk: number) => () =>
 export function TransportBar({
   nowPlayingName,
   paletteName,
+  activePresetValues,
   demoActive = false,
   onDemoToggle,
 }: TransportBarProps) {
+  // Chunk 6 — derive engine chips for the now-playing line. We only
+  // surface the auto chips here (paletteName already renders as a
+  // separate dim span at the end of the line, so we drop the closer
+  // returned by `deriveChips`).
+  const autoChips =
+    paletteName && activePresetValues
+      ? deriveChips(
+          { ...TUNNEL_DEFAULTS, ...activePresetValues },
+          paletteName,
+        ).slice(0, -1)
+      : []
   return (
     <div
       style={{
@@ -82,6 +104,12 @@ export function TransportBar({
       >
         <span style={{ color: 'rgba(255,255,255,0.5)' }}>NOW</span>
         <span style={{ color: '#ffffff' }}>{nowPlayingName}</span>
+        {autoChips.map((c) => (
+          <span key={c} style={{ display: 'contents' }}>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>·</span>
+            <span style={{ color: 'rgba(255,255,255,0.7)' }}>{c}</span>
+          </span>
+        ))}
         {paletteName && (
           <>
             <span style={{ color: 'rgba(255,255,255,0.3)' }}>·</span>
