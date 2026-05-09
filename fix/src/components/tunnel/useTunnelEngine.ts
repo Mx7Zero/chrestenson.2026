@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { TUNNEL_DEFAULTS, type TunnelParams } from '../TunnelCanvas'
 import type { Preset } from './presets'
 import { morphParams } from './morph'
+import { applyIntensity, type Intensity } from './intensity'
+import { applyReducedFlash } from './safety'
 
 // ─── useTunnelEngine ──────────────────────────────────────────────
 // Owns the composite engine state introduced in chunk 4:
@@ -36,6 +38,14 @@ export type TunnelEngine = {
   staticParams: TunnelParams
   activePreset: Preset | null
   demoActive: boolean
+  // Chunk 9 — INTENSITY + REDUCED FLASH ride on top of the resolved
+  // preset. Both are exposed as React state so the chrome can render
+  // active states; both have setters that re-target the morph against
+  // the current `activePreset` so the visual change feels immediate.
+  intensity: Intensity
+  reducedFlash: boolean
+  setIntensity: (level: Intensity) => void
+  setReducedFlash: (on: boolean) => void
   applyPreset: (preset: Preset, durationMs?: number) => void
   startDemo: (presets: Preset[], durationMs?: number) => void
   stopDemo: () => void
@@ -51,9 +61,23 @@ export type TunnelEngine = {
 }
 
 // Resolve a partial preset against the canonical defaults. The result
-// is a fully-shaped TunnelParams suitable as a morph endpoint.
+// is a fully-shaped TunnelParams suitable as a morph endpoint, BEFORE
+// the chunk 9 intensity/reduced-flash post-processing layer runs.
 function resolve(preset: Preset, baseline: TunnelParams = TUNNEL_DEFAULTS): TunnelParams {
   return { ...baseline, ...preset.values }
+}
+
+// Chunk 9 — post-process a resolved target through the intensity
+// multiplier (always) and the reduced-flash clamp (when engaged).
+// This is the single resolution chain referenced by the plan:
+//   defaults → preset → intensity → reduced-flash
+function postProcess(
+  resolved: TunnelParams,
+  level: Intensity,
+  reducedFlash: boolean,
+): TunnelParams {
+  const intensified = applyIntensity(resolved, level)
+  return reducedFlash ? applyReducedFlash(intensified) : intensified
 }
 
 // Fisher-Yates shuffle. Returns a new array; doesn't mutate input.
@@ -66,15 +90,37 @@ function shuffle<T>(items: T[]): T[] {
   return out
 }
 
-export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): TunnelEngine {
+export type UseTunnelEngineOptions = {
+  // Chunk 9 — first-mount initial values for the post-processing
+  // layer. AsteroidScene reads localStorage / prefers-reduced-motion
+  // before mounting and feeds them in here so the very first morph
+  // already runs through the right multipliers.
+  initialIntensity?: Intensity
+  initialReducedFlash?: boolean
+}
+
+export function useTunnelEngine(
+  initial: TunnelParams = TUNNEL_DEFAULTS,
+  options: UseTunnelEngineOptions = {},
+): TunnelEngine {
+  const { initialIntensity = 'full', initialReducedFlash = false } = options
+  // Initial seed — apply the post-process layer ONCE at mount so the
+  // first frame draws values consistent with the chosen intensity /
+  // reduced-flash defaults. Otherwise a CALM-by-default first paint
+  // would still be at FULL until the first morph.
+  const seeded = postProcess(
+    { ...initial },
+    initialIntensity,
+    initialReducedFlash,
+  )
   // The single source of truth for "what should the renderer draw this
   // frame." Updated in-place by the morph rAF loop and by setParam.
-  const paramsRef = useRef<TunnelParams>({ ...initial })
+  const paramsRef = useRef<TunnelParams>({ ...seeded })
 
   // Morph endpoints + timing. Mutable, kept in refs because the rAF
   // loop runs outside React's render cycle.
-  const fromRef = useRef<TunnelParams>({ ...initial })
-  const toRef = useRef<TunnelParams>({ ...initial })
+  const fromRef = useRef<TunnelParams>({ ...seeded })
+  const toRef = useRef<TunnelParams>({ ...seeded })
   const startedAtRef = useRef<number | null>(null)
   const durationRef = useRef<number>(600)
 
@@ -89,11 +135,24 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
   // for the now-playing line and the DEMO/STOP toggle.
   const [activePreset, setActivePreset] = useState<Preset | null>(null)
   const [demoActive, setDemoActive] = useState<boolean>(false)
+  // Chunk 9 — INTENSITY + REDUCED FLASH state. We keep both as React
+  // state (re-renders chrome on toggle) and as refs (stable read for
+  // applyPreset / demo step closures). The activePreset's resolved
+  // target is also cached so we can re-target the morph when one of
+  // these flips without needing to look up the preset again.
+  const [intensity, setIntensityState] = useState<Intensity>(initialIntensity)
+  const [reducedFlash, setReducedFlashState] =
+    useState<boolean>(initialReducedFlash)
+  const intensityRef = useRef<Intensity>(initialIntensity)
+  const reducedFlashRef = useRef<boolean>(initialReducedFlash)
+  // Cache the un-post-processed (resolved-but-pre-intensity) target so
+  // setIntensity/setReducedFlash can re-run postProcess on it.
+  const lastResolvedTargetRef = useRef<TunnelParams>({ ...initial })
   // staticParams snapshots the morph target at the start of each
   // morph. Drives React-level deps (geometry, pattern textures).
-  const [staticParams, setStaticParams] = useState<TunnelParams>(() => ({
-    ...initial,
-  }))
+  const [staticParams, setStaticParams] = useState<TunnelParams>(() =>
+    postProcess({ ...initial }, initialIntensity, initialReducedFlash),
+  )
 
   const rafRef = useRef<number | null>(null)
 
@@ -138,7 +197,16 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
       // a preset click is "give me this preset, full stop" — fields the
       // preset doesn't override snap back to defaults instead of leaking
       // from whatever was on screen.
-      const target = resolve(preset)
+      const resolved = resolve(preset)
+      // Cache the resolved-pre-intensity target so setIntensity /
+      // setReducedFlash can re-process it without needing the preset.
+      lastResolvedTargetRef.current = resolved
+      // Chunk 9 — apply intensity + reduced-flash post-processing.
+      const target = postProcess(
+        resolved,
+        intensityRef.current,
+        reducedFlashRef.current,
+      )
       toRef.current = target
       startedAtRef.current = performance.now()
       durationRef.current = durationMs
@@ -174,7 +242,13 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
         // Resolve against TUNNEL_DEFAULTS, not currentParams — see the
         // applyPreset comment for why.
         fromRef.current = { ...paramsRef.current }
-        const target = resolve(next)
+        const resolved = resolve(next)
+        lastResolvedTargetRef.current = resolved
+        const target = postProcess(
+          resolved,
+          intensityRef.current,
+          reducedFlashRef.current,
+        )
         toRef.current = target
         startedAtRef.current = performance.now()
         durationRef.current = durationMs
@@ -216,7 +290,13 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
       // on screen + the preset's overrides.
       const first = cycle[0]
       fromRef.current = { ...paramsRef.current }
-      const target = resolve(first)
+      const resolved = resolve(first)
+      lastResolvedTargetRef.current = resolved
+      const target = postProcess(
+        resolved,
+        intensityRef.current,
+        reducedFlashRef.current,
+      )
       toRef.current = target
       startedAtRef.current = performance.now()
       durationRef.current = durationMs
@@ -277,6 +357,49 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
     [cancelMorph],
   )
 
+  // ── setIntensity / setReducedFlash (chunk 9) ───────────────────
+  // Both setters update the ref + React state, then re-post-process
+  // the cached resolved target and start a quick 300ms morph so the
+  // visual change feels immediate. fromRef captures the current frame
+  // so the morph blends from whatever's on screen (no jump).
+  //
+  // We re-process the cached `lastResolvedTargetRef` rather than
+  // currentParams, because currentParams is already
+  // post-processed — re-applying intensity to it would compound.
+  const retargetForPostProcess = useCallback(
+    (level: Intensity, rf: boolean) => {
+      const resolved = lastResolvedTargetRef.current
+      const target = postProcess(resolved, level, rf)
+      fromRef.current = { ...paramsRef.current }
+      toRef.current = target
+      startedAtRef.current = performance.now()
+      durationRef.current = 300
+      setStaticParams(target)
+      ensureRafRunning()
+    },
+    [ensureRafRunning],
+  )
+
+  const setIntensity = useCallback(
+    (level: Intensity) => {
+      if (intensityRef.current === level) return
+      intensityRef.current = level
+      setIntensityState(level)
+      retargetForPostProcess(level, reducedFlashRef.current)
+    },
+    [retargetForPostProcess],
+  )
+
+  const setReducedFlash = useCallback(
+    (on: boolean) => {
+      if (reducedFlashRef.current === on) return
+      reducedFlashRef.current = on
+      setReducedFlashState(on)
+      retargetForPostProcess(intensityRef.current, on)
+    },
+    [retargetForPostProcess],
+  )
+
   // ── Cleanup on unmount ──────────────────────────────────────────
   useEffect(() => {
     return () => {
@@ -296,6 +419,10 @@ export function useTunnelEngine(initial: TunnelParams = TUNNEL_DEFAULTS): Tunnel
     staticParams,
     activePreset,
     demoActive,
+    intensity,
+    reducedFlash,
+    setIntensity,
+    setReducedFlash,
     applyPreset: applyPresetPublic,
     startDemo,
     stopDemo,

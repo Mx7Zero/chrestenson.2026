@@ -6,6 +6,7 @@ import {
   type Preset,
   type TabId,
 } from './presets'
+import type { TunnelLook } from './generator/generateLook'
 import { TUNNEL_DEFAULTS } from '../TunnelCanvas'
 import { deriveChips } from './chips'
 
@@ -38,6 +39,11 @@ type PresetsPanelProps = {
   onTabClick: (tab: TabId) => void
   onPresetClick: (preset: Preset) => void
   onFavoriteToggle?: (preset: Preset) => void
+  // 2026-05-08 reframe: MY SET tab renders saved generated looks
+  // (TunnelLook[]) instead of catalog presets. Pass the saved list
+  // here; tiles get a delete affordance instead of a star.
+  mySetLooks?: TunnelLook[]
+  onLookDelete?: (look: TunnelLook) => void
   // Chunk 7 — when fullscreen showcase mode is active, the panel is
   // pulled out of the layout entirely (display:none rather than
   // collapsed-via-toggle). The toggle state is preserved so exiting
@@ -85,11 +91,17 @@ export function PresetsPanel({
   onTabClick,
   onPresetClick,
   onFavoriteToggle,
+  mySetLooks = [],
+  onLookDelete,
   hidden = false,
 }: PresetsPanelProps) {
-  const visiblePresets = presets.filter(
-    (p) => p.tab === activeTab && !p.id.includes('.__validate-'),
-  )
+  const isMySet = activeTab === 'myset'
+  // For MY SET we render saved looks; otherwise filter the catalog by tab.
+  const visiblePresets: Preset[] = isMySet
+    ? mySetLooks
+    : presets.filter(
+        (p) => p.tab === activeTab && !p.id.includes('.__validate-'),
+      )
 
   return (
     <div
@@ -156,9 +168,12 @@ export function PresetsPanel({
                 color: 'rgba(255,255,255,0.4)',
                 padding: '24px 4px',
                 textAlign: 'center',
+                lineHeight: 1.6,
               }}
             >
-              No presets yet — coming in chunk 5.
+              {isMySet
+                ? 'No saved looks yet. Hit ✨ GENERATE then ☆ SAVE to start your set.'
+                : 'No presets in this tab.'}
             </div>
           ) : (
             <div
@@ -221,25 +236,33 @@ export function PresetsPanel({
                       </span>
                       <button
                         type="button"
-                        aria-label={`Favorite ${p.name}`}
+                        aria-label={
+                          isMySet
+                            ? `Delete ${p.name}`
+                            : `Favorite ${p.name}`
+                        }
+                        title={isMySet ? 'Delete from MY SET' : 'Favorite'}
                         onClick={(e) => {
                           e.stopPropagation()
-                          if (onFavoriteToggle) onFavoriteToggle(p)
-                          else
-                            // chunk 10: wire favorites
-                            console.info('chunk 10: not yet implemented (favorite)')
+                          if (isMySet) {
+                            onLookDelete?.(p as TunnelLook)
+                          } else if (onFavoriteToggle) {
+                            onFavoriteToggle(p)
+                          }
                         }}
                         style={{
                           background: 'transparent',
                           border: 'none',
-                          color: 'rgba(255,255,255,0.4)',
+                          color: isMySet
+                            ? 'rgba(255,140,140,0.65)'
+                            : 'rgba(255,255,255,0.4)',
                           fontSize: 10,
                           cursor: 'pointer',
                           padding: 0,
                           lineHeight: 1,
                         }}
                       >
-                        ☆
+                        {isMySet ? '✕' : '☆'}
                       </button>
                     </div>
                     <div

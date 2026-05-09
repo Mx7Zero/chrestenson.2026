@@ -28,8 +28,30 @@ import { TransportBar } from './tunnel/TransportBar'
 import { useTunnelEngine } from './tunnel/useTunnelEngine'
 import { useFullscreen } from './tunnel/useFullscreen'
 import { useMouseWake } from './tunnel/useMouseWake'
-import { VIBES } from './tunnel/vibes'
-import { sampleVariation } from './tunnel/sampler'
+import type { Intensity } from './tunnel/intensity'
+import { FlashConfirmDialog } from './tunnel/FlashConfirmDialog'
+import {
+  generateLook,
+  presetToLook,
+  RECIPE_VERSION,
+  type Genre,
+  type TunnelLook,
+} from './tunnel/generator/generateLook'
+import { freshSeed } from './tunnel/generator/rng'
+import {
+  loadSavedLooks,
+  saveLook,
+  deleteLook,
+  isLookSaved,
+} from './tunnel/savedLooks'
+import {
+  parseHash,
+  encodeGenerated,
+  encodeCurated,
+  writeHash,
+} from './tunnel/urlState'
+import { MaskLayer } from './tunnel/masks/MaskLayer'
+import { MASK_DEFAULTS, type MaskState } from './tunnel/masks/maskState'
 
 type Triple = [number, number, number]
 
@@ -215,7 +237,44 @@ export function AsteroidScene({
     }
     return TUNNEL_DEFAULTS
   }, [])
-  const engine = useTunnelEngine(initialTunnelParams)
+  // Chunk 9 — seed INTENSITY + REDUCED FLASH from localStorage. The
+  // first-visit defaults differ:
+  //   • INTENSITY default = 'full' unless prefers-reduced-motion is
+  //     set AND no value is persisted yet, in which case lock to
+  //     'calm' until the user picks something else.
+  //   • REDUCED FLASH default = false unless prefers-reduced-motion
+  //     is set AND no value is persisted yet, in which case true.
+  // Stored values always win over the media-query default.
+  const [initialIntensity, initialReducedFlash] = useMemo<
+    [Intensity, boolean]
+  >(() => {
+    if (typeof window === 'undefined') return ['full', false]
+    let storedIntensity: Intensity | null = null
+    let storedReducedFlash: boolean | null = null
+    try {
+      const i = window.localStorage.getItem('chrestenson.tunnel.intensity')
+      if (i === 'calm' || i === 'full' || i === 'overdrive') storedIntensity = i
+      const rf = window.localStorage.getItem('chrestenson.tunnel.reducedFlash')
+      if (rf === '1') storedReducedFlash = true
+      else if (rf === '0') storedReducedFlash = false
+    } catch {
+      /* storage may be unavailable — fall through */
+    }
+    let prm = false
+    try {
+      prm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    } catch {
+      /* no matchMedia — leave prm false */
+    }
+    const intensityResolved: Intensity =
+      storedIntensity ?? (prm ? 'calm' : 'full')
+    const reducedFlashResolved: boolean = storedReducedFlash ?? prm
+    return [intensityResolved, reducedFlashResolved]
+  }, [])
+  const engine = useTunnelEngine(initialTunnelParams, {
+    initialIntensity,
+    initialReducedFlash,
+  })
   // ─── Chunk 3 — split TUNE drawer into PresetsPanel + TunePanel ───
   // First-visit default: open on desktop (>= 1024px), closed on mobile.
   // After the first visit, `usePersistedBoolean` round-trips through
@@ -241,6 +300,21 @@ export function AsteroidScene({
   // the initial render so chrome (now-playing line, preset highlight)
   // has a sensible default before any click.
   const activePreset = engine.activePreset ?? PRESETS[0]
+
+  // ─── Saved looks (MY SET) + current generated look ─────────────
+  const [mySetLooks, setMySetLooks] = useState<TunnelLook[]>(() =>
+    loadSavedLooks(),
+  )
+  // The current generated look, if any. When the user clicks
+  // GENERATE we mint a seed, generate, apply to engine, and stash
+  // here so SAVE/SHARE have the full record (seed, recipeVersion,
+  // genre) — the engine only carries the resolved Preset.
+  const [currentLook, setCurrentLook] = useState<TunnelLook | null>(null)
+  const [shareCopied, setShareCopied] = useState(false)
+  // Mask layer (foreground silhouette/cutout/lightLeak overlay).
+  // Orthogonal to TunnelParams; carried on TunnelLook for save/share.
+  const [currentMask, setCurrentMask] = useState<MaskState>(MASK_DEFAULTS)
+
   const [hideModel, setHideModel] = useState(false)
   const [visualMode, setVisualMode] = useState<'tunnel' | 'mandala'>('tunnel')
   // Per-module state for the SUPR composition system. Setters are unused
@@ -266,6 +340,188 @@ export function AsteroidScene({
       /* storage may be unavailable — ignore */
     }
   }, [engine.staticParams])
+
+  // Chunk 9 — persist INTENSITY + REDUCED FLASH. Both setters in the
+  // engine flip React state, so these effects fire exactly when the
+  // user toggles. We write '1'/'0' for the boolean so we can
+  // distinguish "user explicitly set to false" from "never set yet"
+  // (null) on next visit.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem(
+        'chrestenson.tunnel.intensity',
+        engine.intensity,
+      )
+    } catch {
+      /* ignore */
+    }
+  }, [engine.intensity])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem(
+        'chrestenson.tunnel.reducedFlash',
+        engine.reducedFlash ? '1' : '0',
+      )
+    } catch {
+      /* ignore */
+    }
+  }, [engine.reducedFlash])
+
+  // Chunk 9 — flash confirmation gate. Once the user has acknowledged
+  // a flash-warn preset (either path: Continue or Use Reduced Flash),
+  // we persist '1' so future flashWarn clicks apply directly. The
+  // pending preset state holds whichever preset is waiting for the
+  // user's choice while the dialog is up.
+  const [pendingFlashPreset, setPendingFlashPreset] = useState<Preset | null>(
+    null,
+  )
+  const flashConfirmedRef = useRef<boolean>(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      flashConfirmedRef.current =
+        window.localStorage.getItem('chrestenson.tunnel.flashConfirmed') === '1'
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  const handlePresetClick = (p: Preset) => {
+    if (p.flashWarn && !flashConfirmedRef.current) {
+      setPendingFlashPreset(p)
+      return
+    }
+    engine.applyPreset(p, 600)
+    // Catalog click resets currentLook to a curated record so
+    // SAVE/SHARE work consistently. Hash reflects the curated id.
+    setCurrentLook(presetToLook(p))
+    writeHash(encodeCurated(p.id, currentMask))
+    setShareCopied(false)
+  }
+
+  // Mask edits update local state AND rewrite the URL so a SHARE
+  // immediately after twiddling the mask captures it.
+  const handleMaskChange = (next: MaskState) => {
+    setCurrentMask(next)
+    if (currentLook) {
+      if (currentLook.source === 'generated' && currentLook.seed !== undefined) {
+        writeHash(
+          encodeGenerated(
+            currentLook.genre,
+            currentLook.seed,
+            currentLook.recipeVersion ?? RECIPE_VERSION,
+            next,
+          ),
+        )
+      } else {
+        writeHash(encodeCurated(currentLook.id, next))
+      }
+    }
+  }
+
+  // ─── GENERATE ──────────────────────────────────────────────────
+  // Mint a seed in the active genre, generate, apply, stash, hash.
+  // MY SET tab has no constraint so the button disables there.
+  const handleGenerate = () => {
+    if (activeTab === 'myset') return
+    const genre = activeTab as Genre
+    const seed = freshSeed()
+    const look = generateLook(genre, seed, {
+      recipeVersion: RECIPE_VERSION,
+      reducedFlash: engine.reducedFlash,
+    })
+    const apply = () => {
+      engine.applyPreset(look, 600)
+      setCurrentLook(look)
+      writeHash(
+        encodeGenerated(
+          genre,
+          seed,
+          look.recipeVersion ?? RECIPE_VERSION,
+          currentMask,
+        ),
+      )
+      setShareCopied(false)
+    }
+    if (look.flashWarn && !flashConfirmedRef.current) {
+      setPendingFlashPreset(look)
+      // currentLook is set by FlashConfirmDialog continuation below.
+      return
+    }
+    apply()
+  }
+
+  // ─── SAVE current look to MY SET ───────────────────────────────
+  // Bake the current mask into the saved record so reload restores
+  // the full visual identity, not just the tunnel params.
+  const handleSave = () => {
+    if (!currentLook) return
+    const stamped: TunnelLook = { ...currentLook, mask: currentMask }
+    const next = saveLook(stamped)
+    setMySetLooks(next)
+    setCurrentLook(stamped)
+  }
+
+  const handleLookDelete = (look: TunnelLook) => {
+    const next = deleteLook(look.id)
+    setMySetLooks(next)
+  }
+
+  // ─── SHARE — copy hash deep-link ───────────────────────────────
+  const handleShare = async () => {
+    if (typeof window === 'undefined') return
+    const url = window.location.href
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareCopied(true)
+      window.setTimeout(() => setShareCopied(false), 1800)
+    } catch {
+      // Clipboard may not be available; fall back to no-op.
+    }
+  }
+
+  // ─── On-mount hash routing ─────────────────────────────────────
+  // If the URL carries `#g=<genre>&s=<seed>&v=<recipe>` or
+  // `#p=<presetId>`, restore that look so deep links work.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const parsed = parseHash(window.location.hash)
+    if (!parsed) return
+    if (parsed.kind === 'generated') {
+      const look = generateLook(parsed.genre, parsed.seed, {
+        recipeVersion: parsed.recipeVersion,
+        reducedFlash: engine.reducedFlash,
+      })
+      setActiveTab(parsed.genre)
+      // Skip flash confirm here — user explicitly opened the link.
+      engine.applyPreset(look, 0)
+      setCurrentLook({ ...look, mask: parsed.mask })
+      if (parsed.mask) setCurrentMask(parsed.mask)
+    } else if (parsed.kind === 'curated') {
+      const found = PRESETS.find((p) => p.id === parsed.presetId)
+      if (found) {
+        setActiveTab(found.tab)
+        engine.applyPreset(found, 0)
+        setCurrentLook({ ...presetToLook(found), mask: parsed.mask })
+        if (parsed.mask) setCurrentMask(parsed.mask)
+      }
+    }
+    // Run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const markFlashConfirmed = () => {
+    flashConfirmedRef.current = true
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('chrestenson.tunnel.flashConfirmed', '1')
+      } catch {
+        /* ignore */
+      }
+    }
+  }
   const currentBg = BACKGROUND_PALETTE[bgIndex]
 
   useEffect(() => {
@@ -328,6 +584,11 @@ export function AsteroidScene({
           params={engine.staticParams}
           paramsRef={engine.paramsRef}
         />
+      )}
+      {/* MASK overlay — sits between tunnel canvas (z=0) and bird
+          canvas (z=1) so the bird stays in front of the silhouette. */}
+      {currentBg.id === 'optical' && visualMode === 'tunnel' && (
+        <MaskLayer mask={currentMask} />
       )}
       {/* ─── LIVE PATH: mandala mode (SuprStage → LotusField baseline + FoldField candidate) ─── */}
       {currentBg.id === 'optical' && visualMode === 'mandala' && (
@@ -543,7 +804,10 @@ export function AsteroidScene({
               onToggle={() => setPresetsOpen(!presetsOpen)}
               activeTab={activeTab}
               presets={PRESETS}
-              activePresetId={activePreset.id}
+              hasFavorites={mySetLooks.length > 0}
+              mySetLooks={mySetLooks}
+              onLookDelete={handleLookDelete}
+              activePresetId={currentLook?.id ?? activePreset.id}
               onTabClick={(t) => {
                 // Chunk 4: switching tabs stops the demo cycle. The
                 // current preset stays loaded; the new tab simply
@@ -552,10 +816,38 @@ export function AsteroidScene({
                 setActiveTab(t)
               }}
               onPresetClick={(p) => {
-                // Chunk 4 — 600ms morph through useTunnelEngine.
-                // applyPreset() also stops any active demo, so a
-                // manual click commandeers the cycle as expected.
-                engine.applyPreset(p, 600)
+                // MY SET tiles are TunnelLooks; reapply via applyPreset.
+                if (activeTab === 'myset') {
+                  if (p.flashWarn && !flashConfirmedRef.current) {
+                    setPendingFlashPreset(p)
+                    return
+                  }
+                  engine.applyPreset(p, 600)
+                  const look = p as TunnelLook
+                  setCurrentLook(look)
+                  // Restore the saved mask if present, otherwise clear.
+                  const restoredMask = look.mask ?? MASK_DEFAULTS
+                  setCurrentMask(restoredMask)
+                  if (
+                    look.source === 'generated' &&
+                    look.seed !== undefined
+                  ) {
+                    writeHash(
+                      encodeGenerated(
+                        look.genre,
+                        look.seed,
+                        look.recipeVersion ?? RECIPE_VERSION,
+                        restoredMask,
+                      ),
+                    )
+                  } else {
+                    writeHash(encodeCurated(p.id, restoredMask))
+                  }
+                  setShareCopied(false)
+                  return
+                }
+                // Catalog click — flashWarn dialog gates first time.
+                handlePresetClick(p)
               }}
               hidden={fullscreen.active}
             />
@@ -569,12 +861,20 @@ export function AsteroidScene({
               visualMode={visualMode}
               setVisualMode={setVisualMode}
               hidden={fullscreen.active}
+              reducedFlash={engine.reducedFlash}
+              onReducedFlashChange={engine.setReducedFlash}
+              mask={currentMask}
+              onMaskChange={handleMaskChange}
             />
           </div>
           <TransportBar
-            nowPlayingName={activePreset.name}
-            paletteName={activePreset.paletteName}
-            activePresetValues={activePreset.values}
+            nowPlayingName={currentLook?.name ?? activePreset.name}
+            paletteName={
+              currentLook?.paletteName ?? activePreset.paletteName
+            }
+            activePresetValues={
+              currentLook?.values ?? activePreset.values
+            }
             demoActive={engine.demoActive}
             onDemoToggle={() => {
               if (engine.demoActive) {
@@ -588,41 +888,13 @@ export function AsteroidScene({
                 if (cycle.length > 0) engine.startDemo(cycle, 8000)
               }
             }}
-            // Chunk 8 — ⟲ VARIATION samples a transient preset from
-            // the active tab's vibe constraint and morphs into it
-            // through the same path as a catalog preset click. MY
-            // SET is virtual (no constraint), so the button disables
-            // on that tab. Variation autoflags `flashWarn` for RAVE/
-            // GLITCH and for any sample that lands on heavy chroma
-            // or high strobe (chunk 9 picks up the actual gate).
-            onVariationClick={
-              activeTab === 'myset'
-                ? undefined
-                : () => {
-                    const tab = activeTab as Exclude<TabId, 'myset'>
-                    const constraint = VIBES[tab]
-                    const sample = sampleVariation(constraint)
-                    const paletteMatch = constraint.paletteOptions.find(
-                      (p) =>
-                        p.colorA === sample.colorA &&
-                        p.colorB === sample.colorB,
-                    )
-                    const transient: Preset = {
-                      id: `variation.${tab}.${Date.now()}`,
-                      tab,
-                      name: 'Variation',
-                      paletteName: paletteMatch?.name ?? 'Variation',
-                      values: sample,
-                      flashWarn:
-                        tab === 'rave' ||
-                        tab === 'glitch' ||
-                        (sample.strobeRate ?? 0) > 2 ||
-                        (sample.chromatic ?? 0) > 0.4,
-                    }
-                    engine.applyPreset(transient, 600)
-                  }
-            }
-            variationDisabled={activeTab === 'myset'}
+            onGenerate={handleGenerate}
+            generateDisabled={activeTab === 'myset'}
+            onSave={handleSave}
+            saveDisabled={!currentLook || isLookSaved(currentLook.id)}
+            saved={!!currentLook && isLookSaved(currentLook.id)}
+            onShare={handleShare}
+            shareCopied={shareCopied}
             fullscreenActive={fullscreen.active}
             onFullscreenToggle={() => {
               // Chunk 7 — gesture-gated. `requestFullscreen` only
@@ -632,7 +904,63 @@ export function AsteroidScene({
               else fullscreen.enter()
             }}
             visible={!fullscreen.active || mouseAwake}
+            intensity={engine.intensity}
+            onIntensityChange={engine.setIntensity}
           />
+          {pendingFlashPreset && (
+            <FlashConfirmDialog
+              presetName={pendingFlashPreset.name}
+              onContinue={() => {
+                markFlashConfirmed()
+                const p = pendingFlashPreset
+                setPendingFlashPreset(null)
+                engine.applyPreset(p, 600)
+                // Stash a TunnelLook record either way so SAVE/SHARE work.
+                const look: TunnelLook =
+                  'genre' in p && 'source' in p
+                    ? (p as TunnelLook)
+                    : presetToLook(p)
+                setCurrentLook(look)
+                if (look.source === 'generated' && look.seed !== undefined) {
+                  writeHash(
+                    encodeGenerated(
+                      look.genre,
+                      look.seed,
+                      look.recipeVersion ?? RECIPE_VERSION,
+                    ),
+                  )
+                } else {
+                  writeHash(encodeCurated(p.id))
+                }
+                setShareCopied(false)
+              }}
+              onUseReducedFlash={() => {
+                markFlashConfirmed()
+                const p = pendingFlashPreset
+                setPendingFlashPreset(null)
+                engine.setReducedFlash(true)
+                engine.applyPreset(p, 600)
+                const look: TunnelLook =
+                  'genre' in p && 'source' in p
+                    ? (p as TunnelLook)
+                    : presetToLook(p)
+                setCurrentLook(look)
+                if (look.source === 'generated' && look.seed !== undefined) {
+                  writeHash(
+                    encodeGenerated(
+                      look.genre,
+                      look.seed,
+                      look.recipeVersion ?? RECIPE_VERSION,
+                    ),
+                  )
+                } else {
+                  writeHash(encodeCurated(p.id))
+                }
+                setShareCopied(false)
+              }}
+              onCancel={() => setPendingFlashPreset(null)}
+            />
+          )}
         </>
       )}
     </div>

@@ -2,22 +2,17 @@ import type { CSSProperties } from 'react'
 import type { TunnelParams } from '../TunnelCanvas'
 import { TUNNEL_DEFAULTS } from '../TunnelCanvas'
 import { deriveChips } from './chips'
+import type { Intensity } from './intensity'
 
 // ─── Transport bar ─────────────────────────────────────────────────
 // Bottom-anchored full-width strip on the bird section. Houses the
-// now-playing line and the transport buttons. Chunk 4 wires DEMO;
-// the other buttons stay stubbed until their respective chunks.
+// now-playing line and the transport buttons.
 //
-// Wiring lands in:
-//   • DEMO         — chunk 4 ✓
-//   • VARIATION    — chunk 8
-//   • INTENSITY    — chunk 9 (CALM · FULL · OVERDRIVE)
-//   • FULLSCREEN   — chunk 7
-//   • SHARE        — chunk 11
-//
-// Chunk 6 — the now-playing line shows auto-derived engine chips
-// between the preset name and the paletteName closer. The chips are
-// computed from the active preset's resolved params via `deriveChips`.
+// 2026-05-08 reframe: VARIATION → GENERATE. The button now mints a
+// fresh seed and asks the engine for a deterministic genre-constrained
+// look. SAVE persists the current look into MY SET. SHARE copies the
+// hash-encoded deep link. AsteroidScene owns generator + savedLooks
+// state and passes the handlers in.
 
 type TransportBarProps = {
   nowPlayingName: string
@@ -28,20 +23,24 @@ type TransportBarProps = {
   // Chunk 4 — DEMO wiring.
   demoActive?: boolean
   onDemoToggle?: () => void
-  // Chunk 8 — VARIATION wiring. `onVariationClick` samples a fresh
-  // transient preset from the active tab's `VibeConstraint` and
-  // morphs into it. The button is disabled when the active tab is
-  // MY SET (no vibe constraint — virtual tab).
-  onVariationClick?: () => void
-  variationDisabled?: boolean
-  // Chunk 7 — FULLSCREEN wiring. `fullscreenActive` flips the button
-  // label/affordance; `onFullscreenToggle` is the gesture-gated entry
-  // point (browser handles ESC). `visible` controls whether the bar
-  // is rendered at all — driven by mouse-wake while in fullscreen,
-  // always true otherwise.
+  // GENERATE — mint a fresh seeded look in the active genre.
+  onGenerate?: () => void
+  generateDisabled?: boolean
+  // SAVE — persist the current look into MY SET. Disabled when
+  // there's no current look or the current look is already saved.
+  onSave?: () => void
+  saveDisabled?: boolean
+  saved?: boolean
+  // SHARE — copy a deep-link of the current look.
+  onShare?: () => void
+  shareCopied?: boolean
+  // Chunk 7 — FULLSCREEN wiring.
   fullscreenActive?: boolean
   onFullscreenToggle?: () => void
   visible?: boolean
+  // Chunk 9 — INTENSITY 3-button group.
+  intensity?: Intensity
+  onIntensityChange?: (level: Intensity) => void
 }
 
 const buttonBase: CSSProperties = {
@@ -62,25 +61,25 @@ const intensitySegmentBase: CSSProperties = {
   padding: '6px 10px',
 }
 
-const stub = (label: string, chunk: number) => () =>
-  console.info(`chunk ${chunk}: not yet implemented (${label})`)
-
 export function TransportBar({
   nowPlayingName,
   paletteName,
   activePresetValues,
   demoActive = false,
   onDemoToggle,
-  onVariationClick,
-  variationDisabled = false,
+  onGenerate,
+  generateDisabled = false,
+  onSave,
+  saveDisabled = false,
+  saved = false,
+  onShare,
+  shareCopied = false,
   fullscreenActive = false,
   onFullscreenToggle,
   visible = true,
+  intensity = 'full',
+  onIntensityChange,
 }: TransportBarProps) {
-  // Chunk 6 — derive engine chips for the now-playing line. We only
-  // surface the auto chips here (paletteName already renders as a
-  // separate dim span at the end of the line, so we drop the closer
-  // returned by `deriveChips`).
   const autoChips =
     paletteName && activePresetValues
       ? deriveChips(
@@ -104,10 +103,6 @@ export function TransportBar({
         flexDirection: 'column',
         gap: 8,
         pointerEvents: 'none',
-        // Chunk 7 — visibility transitions for fullscreen mouse-wake.
-        // `visibility` keeps the layout stable; `opacity` fades chrome
-        // gracefully. Outside fullscreen the caller passes
-        // `visible: true` and the transition is a no-op.
         opacity: visible ? 1 : 0,
         visibility: visible ? 'visible' : 'hidden',
         transition: 'opacity 0.2s ease, visibility 0.2s ease',
@@ -145,22 +140,61 @@ export function TransportBar({
             </span>
           </>
         )}
-        <button
-          aria-label="Favorite current preset"
-          onClick={stub('favorite-now-playing', 10)}
+        <div
           style={{
             marginLeft: 'auto',
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255,255,255,0.5)',
-            fontSize: 12,
-            cursor: 'pointer',
-            padding: 0,
+            display: 'flex',
+            gap: 12,
+            alignItems: 'center',
             pointerEvents: 'auto',
           }}
         >
-          ☆
-        </button>
+          {onShare && (
+            <button
+              onClick={onShare}
+              aria-label="Copy share link"
+              title="Copy share link"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: shareCopied
+                  ? 'rgba(120,255,180,0.95)'
+                  : 'rgba(255,255,255,0.55)',
+                fontSize: 10,
+                letterSpacing: '0.25em',
+                cursor: 'pointer',
+                padding: 0,
+                fontFamily: 'monospace',
+                textTransform: 'uppercase',
+              }}
+            >
+              {shareCopied ? '✓ COPIED' : '⤴ SHARE'}
+            </button>
+          )}
+          <button
+            onClick={onSave}
+            disabled={saveDisabled || !onSave}
+            aria-label={saved ? 'Saved to MY SET' : 'Save to MY SET'}
+            title={saved ? 'Already saved' : 'Save to MY SET'}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: saved
+                ? 'rgba(255,220,120,0.95)'
+                : saveDisabled || !onSave
+                ? 'rgba(255,255,255,0.25)'
+                : 'rgba(255,255,255,0.7)',
+              fontSize: 10,
+              letterSpacing: '0.25em',
+              cursor: saveDisabled || !onSave ? 'not-allowed' : 'pointer',
+              padding: 0,
+              fontFamily: 'monospace',
+              textTransform: 'uppercase',
+            }}
+          >
+            {saved ? '★ SAVED' : '☆ SAVE'}
+          </button>
+        </div>
       </div>
 
       {/* Transport row */}
@@ -174,12 +208,28 @@ export function TransportBar({
         }}
       >
         <button
+          onClick={onGenerate}
+          disabled={generateDisabled || !onGenerate}
+          style={{
+            ...buttonBase,
+            background:
+              generateDisabled || !onGenerate
+                ? 'rgba(120,200,255,0.10)'
+                : 'rgba(120,200,255,0.22)',
+            borderColor: 'rgba(180,220,255,0.55)',
+            color: '#ffffff',
+            opacity: generateDisabled || !onGenerate ? 0.45 : 1,
+            cursor:
+              generateDisabled || !onGenerate ? 'not-allowed' : 'pointer',
+          }}
+        >
+          ✨ GENERATE
+        </button>
+        <button
           onClick={onDemoToggle}
           disabled={!onDemoToggle}
           style={{
             ...buttonBase,
-            // Active state — invert background so the button reads as
-            // a recording-light when DEMO is cycling.
             background: demoActive
               ? 'rgba(255,255,255,0.92)'
               : buttonBase.background,
@@ -191,40 +241,40 @@ export function TransportBar({
         >
           {demoActive ? '■ STOP' : '▶ DEMO'}
         </button>
-        <button
-          onClick={onVariationClick}
-          disabled={variationDisabled || !onVariationClick}
-          style={{
-            ...buttonBase,
-            opacity: variationDisabled || !onVariationClick ? 0.45 : 1,
-            cursor:
-              variationDisabled || !onVariationClick
-                ? 'not-allowed'
-                : 'pointer',
-          }}
-        >
-          ⟲ VARIATION
-        </button>
 
-        {/* Intensity segment group — visual only */}
         <div
           role="group"
           aria-label="Intensity"
           style={{ display: 'inline-flex', marginLeft: 4 }}
         >
-          {(['CALM', 'FULL', 'OVERDRIVE'] as const).map((label, i, arr) => {
+          {(
+            [
+              { label: 'CALM', level: 'calm' as const },
+              { label: 'FULL', level: 'full' as const },
+              { label: 'OVERDRIVE', level: 'overdrive' as const },
+            ]
+          ).map(({ label, level }, i, arr) => {
             const isLast = i === arr.length - 1
-            const active = label === 'FULL'
+            const active = intensity === level
             return (
               <button
                 key={label}
-                onClick={stub(`intensity-${label.toLowerCase()}`, 9)}
+                onClick={() => onIntensityChange?.(level)}
+                disabled={!onIntensityChange}
+                aria-pressed={active}
                 style={{
                   ...intensitySegmentBase,
-                  background: active ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.5)',
-                  color: active ? '#ffffff' : 'rgba(255,255,255,0.6)',
+                  background: active
+                    ? 'rgba(255,255,255,0.92)'
+                    : 'rgba(0,0,0,0.5)',
+                  color: active ? '#000000' : 'rgba(255,255,255,0.6)',
+                  borderColor: active
+                    ? 'rgba(255,255,255,0.92)'
+                    : 'rgba(255,255,255,0.25)',
                   borderRight: isLast
-                    ? '1px solid rgba(255,255,255,0.25)'
+                    ? active
+                      ? '1px solid rgba(255,255,255,0.92)'
+                      : '1px solid rgba(255,255,255,0.25)'
                     : 'none',
                 }}
               >
