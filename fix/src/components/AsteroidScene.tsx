@@ -20,7 +20,7 @@ import {
   TUNNEL_DEFAULTS,
   type TunnelParams,
 } from './TunnelCanvas'
-import { PRESETS, type TabId } from './tunnel/presets'
+import { PRESETS, type Preset, type TabId } from './tunnel/presets'
 import { usePersistedBoolean } from './tunnel/usePersistedBoolean'
 import { PresetsPanel } from './tunnel/PresetsPanel'
 import { TunePanel } from './tunnel/TunePanel'
@@ -28,6 +28,8 @@ import { TransportBar } from './tunnel/TransportBar'
 import { useTunnelEngine } from './tunnel/useTunnelEngine'
 import { useFullscreen } from './tunnel/useFullscreen'
 import { useMouseWake } from './tunnel/useMouseWake'
+import { VIBES } from './tunnel/vibes'
+import { sampleVariation } from './tunnel/sampler'
 
 type Triple = [number, number, number]
 
@@ -586,6 +588,41 @@ export function AsteroidScene({
                 if (cycle.length > 0) engine.startDemo(cycle, 8000)
               }
             }}
+            // Chunk 8 — ⟲ VARIATION samples a transient preset from
+            // the active tab's vibe constraint and morphs into it
+            // through the same path as a catalog preset click. MY
+            // SET is virtual (no constraint), so the button disables
+            // on that tab. Variation autoflags `flashWarn` for RAVE/
+            // GLITCH and for any sample that lands on heavy chroma
+            // or high strobe (chunk 9 picks up the actual gate).
+            onVariationClick={
+              activeTab === 'myset'
+                ? undefined
+                : () => {
+                    const tab = activeTab as Exclude<TabId, 'myset'>
+                    const constraint = VIBES[tab]
+                    const sample = sampleVariation(constraint)
+                    const paletteMatch = constraint.paletteOptions.find(
+                      (p) =>
+                        p.colorA === sample.colorA &&
+                        p.colorB === sample.colorB,
+                    )
+                    const transient: Preset = {
+                      id: `variation.${tab}.${Date.now()}`,
+                      tab,
+                      name: 'Variation',
+                      paletteName: paletteMatch?.name ?? 'Variation',
+                      values: sample,
+                      flashWarn:
+                        tab === 'rave' ||
+                        tab === 'glitch' ||
+                        (sample.strobeRate ?? 0) > 2 ||
+                        (sample.chromatic ?? 0) > 0.4,
+                    }
+                    engine.applyPreset(transient, 600)
+                  }
+            }
+            variationDisabled={activeTab === 'myset'}
             fullscreenActive={fullscreen.active}
             onFullscreenToggle={() => {
               // Chunk 7 — gesture-gated. `requestFullscreen` only

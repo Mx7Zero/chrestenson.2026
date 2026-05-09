@@ -28,6 +28,12 @@ type TransportBarProps = {
   // Chunk 4 — DEMO wiring.
   demoActive?: boolean
   onDemoToggle?: () => void
+  // Chunk 8 — VARIATION wiring. `onVariationClick` samples a fresh
+  // transient preset from the active tab's `VibeConstraint` and
+  // morphs into it. The button is disabled when the active tab is
+  // MY SET (no vibe constraint — virtual tab).
+  onVariationClick?: () => void
+  variationDisabled?: boolean
   // Chunk 7 — FULLSCREEN wiring. `fullscreenActive` flips the button
   // label/affordance; `onFullscreenToggle` is the gesture-gated entry
   // point (browser handles ESC). `visible` controls whether the bar
@@ -65,6 +71,8 @@ export function TransportBar({
   activePresetValues,
   demoActive = false,
   onDemoToggle,
+  onVariationClick,
+  variationDisabled = false,
   fullscreenActive = false,
   onFullscreenToggle,
   visible = true,
@@ -183,7 +191,18 @@ export function TransportBar({
         >
           {demoActive ? '■ STOP' : '▶ DEMO'}
         </button>
-        <button onClick={stub('variation', 8)} style={buttonBase}>
+        <button
+          onClick={onVariationClick}
+          disabled={variationDisabled || !onVariationClick}
+          style={{
+            ...buttonBase,
+            opacity: variationDisabled || !onVariationClick ? 0.45 : 1,
+            cursor:
+              variationDisabled || !onVariationClick
+                ? 'not-allowed'
+                : 'pointer',
+          }}
+        >
           ⟲ VARIATION
         </button>
 

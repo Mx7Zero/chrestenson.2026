@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sampleVariation — determinism with seeded RNG > matches a snapshot for a fixed seed 1`] = `
+{
+  "cellBlur": 0.21472908093278464,
+  "chromatic": 0.3000325788751715,
+  "colorA": "#ff1493",
+  "colorB": "#1a0040",
+  "density": 10,
+  "helix": 0,
+  "hueShift": 1.950178326474623,
+  "kaleidoscope": 7,
+  "patternA": "noise",
+  "patternB": "noise",
+  "rings": 5,
+  "roll": 0.11956532921810699,
+  "speed": 0.04164170096021948,
+  "strobeRate": 0,
+}
+`;
