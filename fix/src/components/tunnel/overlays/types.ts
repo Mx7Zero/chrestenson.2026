@@ -147,6 +147,40 @@ export type OverlayLayer = {
   sourceGenre?: Genre
   sourceRecipeVersion?: number
   sourceName?: string  // human-readable label, optional
+  // Wireframe-effect specific tunables (only read when the asset
+  // dispatches to the Wireframe3D renderer). All optional with
+  // sensible defaults; ignored by every other asset type.
+  wireSpeed?: number         // 0..3 multiplier on rotation rate
+  wireStrokeWidth?: number   // 0.5..6 px stroke thickness
+  wirePerspective?: number   // 1.5..6 camera distance (lower = more 3D)
+  wireRotMix?: number        // 0..1 — 0 = Y only, 1 = X+Y mix
+  wireFreeze?: boolean       // pause the rotation loop
+  wireMultiplier?: number    // 1..8 instances stamped at center with phase offset
+  wireDensity?: number       // 0.5..2 mesh detail multiplier for parametric geoms
+  wireDashLength?: number    // 0..20 stroke-dasharray length; 0 = solid
+  // Trails: render previous N phases at fading opacity for "ghost"
+  // motion. Wireframe-only for now.
+  wireTrailCount?: number    // 0..8 trailing copies
+  wireTrailDecay?: number    // 0.3..0.95 per-step opacity falloff
+  wireTrailBlur?: number     // 0..8 px blur on trailing paths
+  // Depth fog: bucket edges into front / mid / back by averaged Z
+  // and assign decreasing alpha so 3D reads as depth, not flat
+  // drafting. Wireframe-only.
+  wireDepthFog?: boolean
+  wireDepthFogAmount?: number // 0..1 blend strength
+  // Layer-wide composition controls (effect AND non-effect layers).
+  kaleidoscope?: number      // 1..12 fold rotational symmetry; 1 = off
+  mirrorX?: boolean
+  mirrorY?: boolean
+  // Color cycle — animates `filter: hue-rotate()` on a nested wrapper
+  // so it composes with the layer's static blur + drop-shadow filters.
+  colorCycle?: boolean
+  colorCycleSpeed?: number   // 0.1..3 cycles per ~10s baseline
+  colorCycleRange?: number   // 0..720 deg sweep per cycle
+  // Lock: when true, the OverlaysSection disables transform sliders
+  // (X/Y/scale/rotation). Doesn't affect animation — see freeze for
+  // that. Lets users compose without accidentally bumping a layer.
+  locked?: boolean
 }
 
 // Defaults used by the layer factory. Per-type overrides applied in

@@ -19,6 +19,7 @@ import {
   type PulseTarget,
 } from './types'
 import { generateLook, RECIPE_VERSION, type Genre } from '../generator/generateLook'
+import { RECIPES } from './recipes'
 import { freshSeed } from '../generator/rng'
 import type { TunnelParams } from '../../TunnelCanvas'
 
@@ -259,6 +260,44 @@ export function OverlaysSection({
           )}
         </div>
       </div>
+
+      {/* RECIPES — one-click templates that drop a fully-configured
+          layer onto the stack. Re-seed once added to vary it. */}
+      {onSetLayers && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 4,
+            overflowX: 'auto',
+            paddingBottom: 6,
+            marginBottom: 8,
+          }}
+        >
+          {RECIPES.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => onSetLayers([...layers, r.build()])}
+              title={r.description}
+              style={{
+                fontFamily: 'monospace',
+                fontSize: 8,
+                letterSpacing: '0.15em',
+                padding: '5px 8px',
+                background:
+                  'linear-gradient(135deg, rgba(180,120,255,0.18), rgba(120,200,255,0.18))',
+                color: 'rgba(230,240,255,0.95)',
+                border: '1px solid rgba(180,200,255,0.4)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                textTransform: 'uppercase',
+                flexShrink: 0,
+              }}
+            >
+              + {r.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* LAYER LIST */}
       {layers.length === 0 ? (
@@ -831,7 +870,34 @@ export function OverlaysSection({
             0.01,
             (v) => onUpdateLayer(active.id, { opacity: v }),
           )}
-          {sliderRow(
+          {/* Lock — disables transform sliders so manual placement
+              doesn't get bumped during composition. */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              marginBottom: 4,
+            }}
+          >
+            <span style={{ ...labelStyle, width: 56 }}>LOCK</span>
+            <button
+              onClick={() =>
+                onUpdateLayer(active.id, { locked: !(active.locked ?? false) })
+              }
+              style={{
+                ...smallBtn,
+                flex: 1,
+                background: active.locked
+                  ? 'rgba(255,220,120,0.95)'
+                  : 'transparent',
+                color: active.locked ? '#000' : 'rgba(255,255,255,0.7)',
+              }}
+            >
+              {active.locked ? '🔒 LOCKED' : '🔓 UNLOCKED'}
+            </button>
+          </div>
+          {!active.locked && sliderRow(
             'SCALE',
             active.scale,
             (v) => v.toFixed(2),
@@ -840,7 +906,7 @@ export function OverlaysSection({
             0.05,
             (v) => onUpdateLayer(active.id, { scale: v }),
           )}
-          {active.type !== 'tile' &&
+          {!active.locked && active.type !== 'tile' &&
             sliderRow(
               'X',
               active.x,
@@ -850,7 +916,7 @@ export function OverlaysSection({
               0.01,
               (v) => onUpdateLayer(active.id, { x: v }),
             )}
-          {active.type !== 'tile' &&
+          {!active.locked && active.type !== 'tile' &&
             sliderRow(
               'Y',
               active.y,
@@ -860,7 +926,7 @@ export function OverlaysSection({
               0.01,
               (v) => onUpdateLayer(active.id, { y: v }),
             )}
-          {sliderRow(
+          {!active.locked && sliderRow(
             'ROT',
             active.rotation,
             (v) => Math.round(v).toString(),
@@ -977,55 +1043,385 @@ export function OverlaysSection({
             })}
           </div>
 
-          {active.motion !== 'none' && (
+          {(active.motion !== 'none' ||
+            !!ASSETS.find((a) => a.id === active.asset)?.effectId) && (
             <>
-              {sliderRow(
-                'SPEED',
-                active.motionSpeed,
-                (v) => v.toFixed(2),
-                0.25,
-                3,
-                0.05,
-                (v) => onUpdateLayer(active.id, { motionSpeed: v }),
+              {active.motion !== 'none' && (
+                <>
+                  {sliderRow(
+                    'SPEED',
+                    active.motionSpeed,
+                    (v) => v.toFixed(2),
+                    0.25,
+                    3,
+                    0.05,
+                    (v) => onUpdateLayer(active.id, { motionSpeed: v }),
+                  )}
+                  {sliderRow(
+                    'AMNT',
+                    active.motionAmount,
+                    (v) => v.toFixed(2),
+                    0,
+                    2,
+                    0.05,
+                    (v) => onUpdateLayer(active.id, { motionAmount: v }),
+                  )}
+                  {sliderRow(
+                    'PHASE',
+                    active.motionPhase ?? 0,
+                    (v) => v.toFixed(2),
+                    0,
+                    1,
+                    0.01,
+                    (v) => onUpdateLayer(active.id, { motionPhase: v }),
+                  )}
+                  {sliderRow(
+                    'JITTER',
+                    active.motionRandomness ?? 0,
+                    (v) => v.toFixed(2),
+                    0,
+                    1,
+                    0.01,
+                    (v) => onUpdateLayer(active.id, { motionRandomness: v }),
+                  )}
+                  {active.motion === 'orbit' &&
+                    sliderRow(
+                      'ORBIT R',
+                      active.orbitRadius ?? 0.18,
+                      (v) => v.toFixed(2),
+                      0.02,
+                      0.6,
+                      0.01,
+                      (v) => onUpdateLayer(active.id, { orbitRadius: v }),
+                    )}
+                </>
               )}
-              {sliderRow(
-                'AMNT',
-                active.motionAmount,
-                (v) => v.toFixed(2),
-                0,
-                2,
-                0.05,
-                (v) => onUpdateLayer(active.id, { motionAmount: v }),
-              )}
-              {sliderRow(
-                'PHASE',
-                active.motionPhase ?? 0,
-                (v) => v.toFixed(2),
-                0,
-                1,
-                0.01,
-                (v) => onUpdateLayer(active.id, { motionPhase: v }),
-              )}
-              {sliderRow(
-                'JITTER',
-                active.motionRandomness ?? 0,
-                (v) => v.toFixed(2),
-                0,
-                1,
-                0.01,
-                (v) => onUpdateLayer(active.id, { motionRandomness: v }),
-              )}
-              {active.motion === 'orbit' &&
-                sliderRow(
-                  'ORBIT R',
-                  active.orbitRadius ?? 0.18,
-                  (v) => v.toFixed(2),
-                  0.02,
-                  0.6,
-                  0.01,
-                  (v) => onUpdateLayer(active.id, { orbitRadius: v }),
+              {/* COMPOSITION controls — kaleidoscope + mirror — apply to
+              ALL effect layers (wireframes, plasma, leaks, etc.). */}
+          {(() => {
+            const meta = ASSETS.find((a) => a.id === active.asset)
+            if (!meta?.effectId) return null
+            return (
+              <>
+                {sliderRow(
+                  'KALEIDO',
+                  active.kaleidoscope ?? 1,
+                  (v) => Math.round(v).toString(),
+                  1,
+                  12,
+                  1,
+                  (v) =>
+                    onUpdateLayer(active.id, {
+                      kaleidoscope: Math.round(v),
+                    }),
                 )}
-              {active.motion === 'pulse' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 4,
+                  }}
+                >
+                  <span style={{ ...labelStyle, width: 56 }}>MIRROR</span>
+                  <button
+                    onClick={() =>
+                      onUpdateLayer(active.id, {
+                        mirrorX: !(active.mirrorX ?? false),
+                      })
+                    }
+                    style={{
+                      ...smallBtn,
+                      flex: 1,
+                      background: active.mirrorX
+                        ? 'rgba(255,255,255,0.92)'
+                        : 'transparent',
+                      color: active.mirrorX ? '#000' : 'rgba(255,255,255,0.7)',
+                    }}
+                  >
+                    ↔ X
+                  </button>
+                  <button
+                    onClick={() =>
+                      onUpdateLayer(active.id, {
+                        mirrorY: !(active.mirrorY ?? false),
+                      })
+                    }
+                    style={{
+                      ...smallBtn,
+                      flex: 1,
+                      background: active.mirrorY
+                        ? 'rgba(255,255,255,0.92)'
+                        : 'transparent',
+                      color: active.mirrorY ? '#000' : 'rgba(255,255,255,0.7)',
+                    }}
+                  >
+                    ↕ Y
+                  </button>
+                </div>
+                {/* Color cycle */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 4,
+                  }}
+                >
+                  <span style={{ ...labelStyle, width: 56 }}>HUE CYC</span>
+                  <button
+                    onClick={() =>
+                      onUpdateLayer(active.id, {
+                        colorCycle: !(active.colorCycle ?? false),
+                      })
+                    }
+                    style={{
+                      ...smallBtn,
+                      flex: 1,
+                      background: active.colorCycle
+                        ? 'rgba(180,120,255,0.85)'
+                        : 'transparent',
+                      color: active.colorCycle
+                        ? '#000'
+                        : 'rgba(255,255,255,0.7)',
+                    }}
+                  >
+                    {active.colorCycle ? '◉ ON' : '○ OFF'}
+                  </button>
+                </div>
+                {active.colorCycle && (
+                  <>
+                    {sliderRow(
+                      'CYC SPD',
+                      active.colorCycleSpeed ?? 1,
+                      (v) => v.toFixed(2),
+                      0.1,
+                      3,
+                      0.05,
+                      (v) =>
+                        onUpdateLayer(active.id, { colorCycleSpeed: v }),
+                    )}
+                    {sliderRow(
+                      'CYC RNG',
+                      active.colorCycleRange ?? 360,
+                      (v) => Math.round(v).toString(),
+                      30,
+                      720,
+                      10,
+                      (v) =>
+                        onUpdateLayer(active.id, { colorCycleRange: v }),
+                    )}
+                  </>
+                )}
+              </>
+            )
+          })()}
+
+          {/* WIREFRAME controls — visible only when the active asset
+              is a wireframe effect (effectId starting with 'wire'). */}
+          {(() => {
+            const meta = ASSETS.find((a) => a.id === active.asset)
+            const isWire = !!meta?.effectId?.startsWith('wire')
+            if (!isWire) return null
+            return (
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: 6,
+                  border: '1px dashed rgba(180,220,255,0.5)',
+                  background: 'rgba(120,200,255,0.06)',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 9,
+                    letterSpacing: '0.2em',
+                    color: 'rgba(180,220,255,0.95)',
+                    textTransform: 'uppercase',
+                    marginBottom: 6,
+                  }}
+                >
+                  ✦ WIREFRAME 3D
+                </div>
+                {sliderRow(
+                  'SPEED',
+                  active.wireSpeed ?? 1,
+                  (v) => v.toFixed(2),
+                  0,
+                  3,
+                  0.05,
+                  (v) => onUpdateLayer(active.id, { wireSpeed: v }),
+                )}
+                {sliderRow(
+                  'STROKE',
+                  active.wireStrokeWidth ?? 1.4,
+                  (v) => v.toFixed(2),
+                  0.5,
+                  6,
+                  0.1,
+                  (v) => onUpdateLayer(active.id, { wireStrokeWidth: v }),
+                )}
+                {sliderRow(
+                  'PERSP',
+                  active.wirePerspective ?? 3,
+                  (v) => v.toFixed(2),
+                  1.5,
+                  6,
+                  0.1,
+                  (v) => onUpdateLayer(active.id, { wirePerspective: v }),
+                )}
+                {sliderRow(
+                  'X-MIX',
+                  active.wireRotMix ?? 0.5,
+                  (v) => v.toFixed(2),
+                  0,
+                  1,
+                  0.05,
+                  (v) => onUpdateLayer(active.id, { wireRotMix: v }),
+                )}
+                {sliderRow(
+                  'COUNT',
+                  active.wireMultiplier ?? 1,
+                  (v) => Math.round(v).toString(),
+                  1,
+                  8,
+                  1,
+                  (v) =>
+                    onUpdateLayer(active.id, {
+                      wireMultiplier: Math.round(v),
+                    }),
+                )}
+                {sliderRow(
+                  'DENSITY',
+                  active.wireDensity ?? 1,
+                  (v) => v.toFixed(2),
+                  0.5,
+                  2,
+                  0.05,
+                  (v) => onUpdateLayer(active.id, { wireDensity: v }),
+                )}
+                {sliderRow(
+                  'DASH',
+                  active.wireDashLength ?? 0,
+                  (v) => v.toFixed(1),
+                  0,
+                  20,
+                  0.5,
+                  (v) => onUpdateLayer(active.id, { wireDashLength: v }),
+                )}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 4,
+                  }}
+                >
+                  <span style={{ ...labelStyle, width: 56 }}>FREEZE</span>
+                  <button
+                    onClick={() =>
+                      onUpdateLayer(active.id, {
+                        wireFreeze: !(active.wireFreeze ?? false),
+                      })
+                    }
+                    style={{
+                      ...smallBtn,
+                      background: active.wireFreeze
+                        ? 'rgba(255,255,255,0.92)'
+                        : 'transparent',
+                      color: active.wireFreeze
+                        ? '#000'
+                        : 'rgba(255,255,255,0.7)',
+                      flex: 1,
+                    }}
+                  >
+                    {active.wireFreeze ? '■ FROZEN' : '▶ ANIMATING'}
+                  </button>
+                </div>
+                {/* Trails */}
+                {sliderRow(
+                  'TRAIL',
+                  active.wireTrailCount ?? 0,
+                  (v) => Math.round(v).toString(),
+                  0,
+                  8,
+                  1,
+                  (v) =>
+                    onUpdateLayer(active.id, {
+                      wireTrailCount: Math.round(v),
+                    }),
+                )}
+                {(active.wireTrailCount ?? 0) > 0 && (
+                  <>
+                    {sliderRow(
+                      'DECAY',
+                      active.wireTrailDecay ?? 0.6,
+                      (v) => v.toFixed(2),
+                      0.3,
+                      0.95,
+                      0.01,
+                      (v) =>
+                        onUpdateLayer(active.id, { wireTrailDecay: v }),
+                    )}
+                    {sliderRow(
+                      'TR BLUR',
+                      active.wireTrailBlur ?? 0,
+                      (v) => v.toFixed(1),
+                      0,
+                      8,
+                      0.2,
+                      (v) =>
+                        onUpdateLayer(active.id, { wireTrailBlur: v }),
+                    )}
+                  </>
+                )}
+                {/* Depth fog */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginTop: 4,
+                  }}
+                >
+                  <span style={{ ...labelStyle, width: 56 }}>DEPTH</span>
+                  <button
+                    onClick={() =>
+                      onUpdateLayer(active.id, {
+                        wireDepthFog: !(active.wireDepthFog ?? false),
+                      })
+                    }
+                    style={{
+                      ...smallBtn,
+                      flex: 1,
+                      background: active.wireDepthFog
+                        ? 'rgba(120,200,255,0.85)'
+                        : 'transparent',
+                      color: active.wireDepthFog
+                        ? '#000'
+                        : 'rgba(255,255,255,0.7)',
+                    }}
+                  >
+                    {active.wireDepthFog ? '◉ FOG ON' : '○ FOG OFF'}
+                  </button>
+                </div>
+                {active.wireDepthFog &&
+                  sliderRow(
+                    'FOG AMT',
+                    active.wireDepthFogAmount ?? 0.7,
+                    (v) => v.toFixed(2),
+                    0,
+                    1,
+                    0.05,
+                    (v) =>
+                      onUpdateLayer(active.id, { wireDepthFogAmount: v }),
+                  )}
+              </div>
+            )
+          })()}
+
+          {active.motion === 'pulse' && (
                 <div
                   style={{
                     display: 'flex',

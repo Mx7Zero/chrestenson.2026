@@ -28,8 +28,10 @@ export type AssetCategory =
   | 'music'
   | 'cosmic'
   | 'effects'
+  | 'wireframes'
 
 export const ASSET_CATEGORIES: AssetCategory[] = [
+  'wireframes',
   'effects',
   'psychedelic',
   'music',
@@ -159,6 +161,78 @@ export const ASSETS: AssetEntry[] = [
     tags: ['scanlines', 'crt', 'bars'],
     recommendedModes: ['shape', 'cutout'],
     effectId: 'crtBars',
+  },
+  // ─── 3D wireframe effects ─────────────────────────────────────
+  // JS-driven 3D rotation, perspective projection, animated polyline.
+  {
+    id: 'fx-wire-cube',
+    name: 'Wire Cube',
+    viewBox: '0 0 100 100',
+    d: 'M22 22 H78 V78 H22 Z M30 30 H70 V70 H30 Z M22 22 L30 30 M78 22 L70 30 M78 78 L70 70 M22 78 L30 70',
+    category: 'wireframes',
+    tags: ['wireframe', 'cube', '3d', 'cyber'],
+    recommendedModes: ['shape', 'glow'],
+    effectId: 'wireCube',
+  },
+  {
+    id: 'fx-wire-ico',
+    name: 'Wire Icosahedron',
+    viewBox: '0 0 100 100',
+    d: 'M50 8 L92 30 L78 78 L22 78 L8 30 Z M50 8 L78 78 M50 8 L22 78 M92 30 L22 78 M8 30 L78 78',
+    category: 'wireframes',
+    tags: ['wireframe', 'd20', 'ico', '3d'],
+    recommendedModes: ['shape', 'glow'],
+    effectId: 'wireIco',
+  },
+  {
+    id: 'fx-wire-sphere',
+    name: 'Wire Sphere',
+    viewBox: '0 0 100 100',
+    d: 'M50 5 a 45 45 0 1 0 0.001 0 z M5 50 H95 M50 5 V95 M14 30 H86 M14 70 H86 M30 14 V86 M70 14 V86',
+    category: 'wireframes',
+    tags: ['wireframe', 'sphere', 'globe', '3d'],
+    recommendedModes: ['shape', 'glow'],
+    effectId: 'wireSphere',
+  },
+  {
+    id: 'fx-wire-helix',
+    name: 'Wire Helix',
+    viewBox: '0 0 100 100',
+    d: 'M30 10 Q 70 25 30 40 Q 70 55 30 70 Q 70 85 30 90 M70 10 Q 30 25 70 40 Q 30 55 70 70 Q 30 85 70 90 M30 25 H70 M30 55 H70 M30 85 H70',
+    category: 'wireframes',
+    tags: ['wireframe', 'helix', 'dna', '3d'],
+    recommendedModes: ['shape', 'glow'],
+    effectId: 'wireHelix',
+  },
+  {
+    id: 'fx-wire-portal',
+    name: 'Wire Portal',
+    viewBox: '0 0 100 100',
+    d: 'M50 50 m -45 0 a 45 45 0 1 0 90 0 a 45 45 0 1 0 -90 0 z M50 50 m -32 0 a 32 32 0 1 0 64 0 a 32 32 0 1 0 -64 0 z M50 50 m -20 0 a 20 20 0 1 0 40 0 a 20 20 0 1 0 -40 0 z M50 50 m -10 0 a 10 10 0 1 0 20 0 a 10 10 0 1 0 -20 0 z',
+    category: 'wireframes',
+    tags: ['wireframe', 'portal', 'tunnel', 'rings'],
+    recommendedModes: ['shape', 'glow'],
+    effectId: 'wirePortal',
+  },
+  {
+    id: 'fx-wire-torus',
+    name: 'Wire Torus',
+    viewBox: '0 0 100 100',
+    d: 'M50 50 m -42 0 a 42 16 0 1 0 84 0 a 42 16 0 1 0 -84 0 z M50 50 m -28 0 a 28 10 0 1 1 56 0 a 28 10 0 1 1 -56 0 z',
+    category: 'wireframes',
+    tags: ['wireframe', 'torus', 'donut', '3d'],
+    recommendedModes: ['shape', 'glow'],
+    effectId: 'wireTorus',
+  },
+  {
+    id: 'fx-wire-pyramid',
+    name: 'Wire Pyramid',
+    viewBox: '0 0 100 100',
+    d: 'M20 78 H80 L88 86 H28 Z M20 78 L50 14 M80 78 L50 14 M28 86 L50 14 M88 86 L50 14',
+    category: 'wireframes',
+    tags: ['wireframe', 'pyramid', 'tetrahedron', '3d'],
+    recommendedModes: ['shape', 'glow'],
+    effectId: 'wirePyramid',
   },
   // ─── TABLER ICONS (MIT) — designed filled glyphs ─────────────
   {

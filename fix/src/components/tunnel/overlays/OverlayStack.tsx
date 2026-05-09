@@ -280,26 +280,114 @@ function LayerView({
     const effectId = assetMeta.effectId
     const cw0 = Math.max(1, cw)
     const ch0 = Math.max(1, ch)
+    // 2D layer transform: x/y as %-of-half-viewport translation,
+    // scale + rotation around the effect's center. Applied to the
+    // wrapper div so the effect's INTERNAL animation (e.g. wireframe
+    // rotation) doesn't fight the user's manual placement.
+    const txPct = (layer.x ?? 0) * 50
+    const tyPct = (layer.y ?? 0) * 50
+    const mx = layer.mirrorX ? -1 : 1
+    const my = layer.mirrorY ? -1 : 1
+    const layerTransform = `translate(${txPct}%, ${tyPct}%) scale(${layer.scale * mx}, ${layer.scale * my}) rotate(${layer.rotation}deg)`
+    // Build CSS filter chain: blur + (for wireframes/glow) a
+    // drop-shadow halo using the layer fill color.
+    const filterParts: string[] = []
+    if (layer.blur > 0) filterParts.push(`blur(${layer.blur}px)`)
+    if (layer.glow > 0) {
+      const halo = layer.fill || '#ffffff'
+      filterParts.push(`drop-shadow(0 0 ${layer.glow}px ${halo})`)
+    }
+    // Kaleidoscope: render N rotated/mirrored copies of the entire
+    // effect inside a wrapper. Each fold alternates mirrored so it
+    // reads as a real kaleidoscope rather than a plain radial array.
+    const fold = Math.max(1, Math.min(12, layer.kaleidoscope ?? 1))
+    const renderEffect = (
+      <EffectSVG
+        effectId={effectId}
+        seed={layer.assetSeed ?? layer.randomSeed}
+        fill={layer.fill}
+        cw={cw0}
+        ch={ch0}
+        wireSpeed={layer.wireSpeed}
+        wireStrokeWidth={layer.wireStrokeWidth}
+        wirePerspective={layer.wirePerspective}
+        wireRotMix={layer.wireRotMix}
+        wireFreeze={layer.wireFreeze}
+        wireMultiplier={layer.wireMultiplier}
+        wireDensity={layer.wireDensity}
+        wireDashLength={layer.wireDashLength}
+        wireTrailCount={layer.wireTrailCount}
+        wireTrailDecay={layer.wireTrailDecay}
+        wireTrailBlur={layer.wireTrailBlur}
+        wireDepthFog={layer.wireDepthFog}
+        wireDepthFogAmount={layer.wireDepthFogAmount}
+      />
+    )
+    // Color cycle: nest a wrapper whose only filter is a CSS-animated
+    // hue-rotate. Doesn't fight the outer wrapper's blur/drop-shadow
+    // because filters are per-element, not inherited.
+    const cycleSpeed = layer.colorCycleSpeed ?? 1
+    const cycleRange = layer.colorCycleRange ?? 360
+    const cycleEnabled = !!layer.colorCycle && cycleSpeed > 0
+    const cycleDur = cycleEnabled ? Math.max(0.5, 10 / cycleSpeed) : 0
+    const cycleUid = `${layer.id}-${cycleEnabled ? 'on' : 'off'}`.replace(
+      /[^a-zA-Z0-9]/g,
+      '_',
+    )
+    const wrapInComposition = (node: React.ReactNode) =>
+      fold === 1 ? (
+        node
+      ) : (
+        <>
+          {Array.from({ length: fold }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                transform: `rotate(${(360 / fold) * i}deg)${i % 2 === 1 ? ' scaleX(-1)' : ''}`,
+                transformOrigin: 'center center',
+              }}
+            >
+              {node}
+            </div>
+          ))}
+        </>
+      )
     return (
       <div
         style={{
           position: 'absolute',
           inset: 0,
+          transform: layerTransform,
+          transformOrigin: 'center center',
           mixBlendMode: layer.blendMode as React.CSSProperties['mixBlendMode'],
           opacity: layer.opacity,
           pointerEvents: 'none',
-          // Apply blur as a simple CSS filter — feTurbulence already
-          // has internal noise; user blur softens the whole effect.
-          filter: layer.blur > 0 ? `blur(${layer.blur}px)` : undefined,
+          filter: filterParts.length > 0 ? filterParts.join(' ') : undefined,
         }}
       >
-        <EffectSVG
-          effectId={effectId}
-          seed={layer.assetSeed ?? layer.randomSeed}
-          fill={layer.fill}
-          cw={cw0}
-          ch={ch0}
-        />
+        {cycleEnabled && (
+          <style>{`
+@keyframes hueCycle-${cycleUid} {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(${cycleRange}deg); }
+}
+        `}</style>
+        )}
+        {cycleEnabled ? (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              animation: `hueCycle-${cycleUid} ${cycleDur}s linear infinite`,
+            }}
+          >
+            {wrapInComposition(renderEffect)}
+          </div>
+        ) : (
+          wrapInComposition(renderEffect)
+        )}
       </div>
     )
   }
