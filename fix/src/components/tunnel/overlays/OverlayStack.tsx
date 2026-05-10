@@ -38,35 +38,6 @@ function parseViewBox(vb: string): [number, number, number, number] {
   return [0, 0, 100, 100]
 }
 
-function clampWireBudget(layer: OverlayLayer, fold: number) {
-  const fogBuckets = layer.wireDepthFog ? 3 : 1
-  let safeFold = Math.max(1, Math.min(6, fold))
-  let safeMultiplier = Math.max(1, Math.min(6, Math.round(layer.wireMultiplier ?? 1)))
-  let safeTrail = Math.max(0, Math.min(5, Math.round(layer.wireTrailCount ?? 0)))
-  const slots = () => safeFold * safeMultiplier * (safeTrail + 1) * fogBuckets
-
-  // Keep one layer below the point where kaleido × count × trail ×
-  // depth-fog becomes hundreds of SVG paths with per-frame `d`
-  // mutations. Preserve the visual read by trimming trails first,
-  // then center copies, then folds.
-  while (slots() > 144 && safeTrail > 2) safeTrail -= 1
-  while (slots() > 144 && safeMultiplier > 3) safeMultiplier -= 1
-  while (slots() > 144 && safeFold > 4) safeFold -= 1
-  while (slots() > 144 && safeTrail > 0) safeTrail -= 1
-  while (slots() > 144 && safeMultiplier > 1) safeMultiplier -= 1
-
-  const requestedDensity = layer.wireDensity ?? 1
-  const densityCap = slots() > 72 ? 1.25 : 1.7
-  const safeDensity = Math.max(0.5, Math.min(densityCap, requestedDensity))
-
-  return {
-    fold: safeFold,
-    wireMultiplier: safeMultiplier,
-    wireTrailCount: safeTrail,
-    wireDensity: safeDensity,
-  }
-}
-
 // ─── OverlayStack ─────────────────────────────────────────────────
 // Renders an array of OverlayLayers as a Photoshop-style stack. The
 // outer container is absolute, full-bleed, between tunnel canvas
@@ -380,12 +351,7 @@ function LayerView({
     // Kaleidoscope: render N rotated/mirrored copies of the entire
     // effect inside a wrapper. Each fold alternates mirrored so it
     // reads as a real kaleidoscope rather than a plain radial array.
-    const requestedFold = Math.max(1, Math.min(12, layer.kaleidoscope ?? 1))
-    const isWireEffect = effectId.startsWith('wire')
-    const wireBudget = isWireEffect
-      ? clampWireBudget(layer, requestedFold)
-      : null
-    const fold = wireBudget?.fold ?? requestedFold
+    const fold = Math.max(1, Math.min(12, layer.kaleidoscope ?? 1))
     const renderEffect = (
       <EffectSVG
         effectId={effectId}
@@ -398,10 +364,10 @@ function LayerView({
         wirePerspective={layer.wirePerspective}
         wireRotMix={layer.wireRotMix}
         wireFreeze={layer.wireFreeze}
-        wireMultiplier={wireBudget?.wireMultiplier ?? layer.wireMultiplier}
-        wireDensity={wireBudget?.wireDensity ?? layer.wireDensity}
+        wireMultiplier={layer.wireMultiplier}
+        wireDensity={layer.wireDensity}
         wireDashLength={layer.wireDashLength}
-        wireTrailCount={wireBudget?.wireTrailCount ?? layer.wireTrailCount}
+        wireTrailCount={layer.wireTrailCount}
         wireTrailDecay={layer.wireTrailDecay}
         wireTrailBlur={layer.wireTrailBlur}
         wireDepthFog={layer.wireDepthFog}
@@ -651,7 +617,7 @@ function LayerView({
           pointerEvents: 'none',
         }}
       >
-        <TunnelCanvas active={!reducedMotion} params={resolvedParams} />
+        <TunnelCanvas active={true} params={resolvedParams} />
       </div>
     )
   }
