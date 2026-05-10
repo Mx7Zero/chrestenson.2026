@@ -2,6 +2,10 @@ import type { MaskId } from '../masks/maskAssets'
 import type { TunnelParams } from '../../TunnelCanvas'
 import type { Genre } from '../generator/generateLook'
 
+// Re-export so consumers have a single import location for the
+// overlay type surface (layers + their pattern-space instances).
+export type { LayerInstance } from './expandLayer'
+
 // ─── Overlay Layers ───────────────────────────────────────────────
 // Photoshop-style stack above the tunnel canvas. Each layer is an
 // SVG-driven visual element with its own type (shape/cutout/glow/

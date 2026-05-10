@@ -235,65 +235,61 @@ to{transform:rotate(360deg);}
         // Pattern-space expansion: each layer becomes N instances.
         // Task 1 wires `single` + `massive` only; other modes return
         // a single identity instance until later tasks fill them in.
+        //
+        // ─── Key stability invariant ──────────────────────────────
+        // The instance index `i` is part of the React key. For React
+        // to re-order rather than re-mount when a layer's pattern
+        // params change, `expandLayerToInstances` MUST return a
+        // stable order across renders for a given layer state. Future
+        // pattern modes (kaleido, radial, tileGrid, cloneCloud, etc.)
+        // must not shuffle the array — append/prune deterministically
+        // off the same enumeration so index `i` always refers to the
+        // same instance slot. Reordering between renders forces a
+        // remount (and a flash) on every pattern-param tweak.
         const instances = expandLayerToInstances(layer)
         return instances.map((inst, i) => (
-          <InstanceWrapper
+          <LayerView
             key={`${layer.id}-i${i}`}
+            layer={layer}
             instance={inst}
-          >
-            <LayerView
-              layer={layer}
-              cw={cw}
-              ch={ch}
-              vmin={vmin}
-              reducedMotion={reducedMotion}
-            />
-          </InstanceWrapper>
+            cw={cw}
+            ch={ch}
+            vmin={vmin}
+            reducedMotion={reducedMotion}
+          />
         ))
       })}
     </div>
   )
 }
 
-// Wraps a LayerView with the per-instance transform (translate +
-// scale + rotation) and opacity multiplier from `expandLayerToInstances`.
-// For `single`/`massive` modes the only meaningful field is `scale`;
-// the rest reduce to no-ops so existing visuals stay identical.
-function InstanceWrapper({
-  instance,
-  children,
-}: {
-  instance: LayerInstance
-  children: React.ReactNode
-}) {
+// Identity instance used when no `instance` prop is passed. Keeps
+// LayerView callers that don't care about pattern space (none today)
+// working without ceremony.
+const IDENTITY_INSTANCE: LayerInstance = {
+  dx: 0,
+  dy: 0,
+  scale: 1,
+  rotation: 0,
+  phase: 0,
+  opacity: 1,
+}
+
+// Build the CSS transform string the per-instance transform would
+// have applied as an outer wrapper. Returns '' when the instance is
+// identity so the resulting transform composition stays byte-identical
+// to the pre-pattern-space render path.
+function instanceTransformCss(instance: LayerInstance): string {
   const isIdentity =
     instance.dx === 0 &&
     instance.dy === 0 &&
     instance.rotation === 0 &&
     instance.scale === 1 &&
-    instance.opacity === 1 &&
     !instance.mirror
-  if (isIdentity) {
-    // No wrapper needed — preserves the exact previous render path
-    // so back-compat is byte-identical when no pattern fields are set.
-    return <>{children}</>
-  }
+  if (isIdentity) return ''
   const mirrorX = instance.mirror === 'x' ? -1 : 1
   const mirrorY = instance.mirror === 'y' ? -1 : 1
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        transform: `translate(${instance.dx}px, ${instance.dy}px) rotate(${instance.rotation}deg) scale(${instance.scale * mirrorX}, ${instance.scale * mirrorY})`,
-        transformOrigin: 'center center',
-        opacity: instance.opacity,
-        pointerEvents: 'none',
-      }}
-    >
-      {children}
-    </div>
-  )
+  return `translate(${instance.dx}px, ${instance.dy}px) rotate(${instance.rotation}deg) scale(${instance.scale * mirrorX}, ${instance.scale * mirrorY})`
 }
 
 const MOTION_BASE_DUR_S: Record<string, number> = {
@@ -309,18 +305,30 @@ const MOTION_BASE_DUR_S: Record<string, number> = {
 
 function LayerView({
   layer,
+  instance = IDENTITY_INSTANCE,
   cw,
   ch,
   vmin,
   reducedMotion,
 }: {
   layer: OverlayLayer
+  instance?: LayerInstance
   cw: number
   ch: number
   vmin: number
   reducedMotion: boolean
 }) {
   const assetMeta = findAsset(layer.asset)
+  // Per-instance transform/opacity baked INTO the same DOM node that
+  // carries `mix-blend-mode`. Previously this lived on an outer
+  // `InstanceWrapper` div, which created its own stacking context
+  // (own transform + opacity) — invisible for `single`/`massive` (both
+  // identity), but a footgun for Task 2+ pattern modes: blend modes
+  // would composite against the wrapper instead of the tunnel canvas.
+  // Composing here keeps blend on the same node as the combined
+  // transform, so no intermediate stacking context exists.
+  const instanceTransform = instanceTransformCss(instance)
+  const instanceOpacity = instance.opacity
 
   // ─── EFFECT ASSETS ─────────────────────────────────────────────
   // Animated full-bleed SVG generators (laser fan, plasma, god rays,
@@ -339,7 +347,15 @@ function LayerView({
     const tyPct = (layer.y ?? 0) * 50
     const mx = layer.mirrorX ? -1 : 1
     const my = layer.mirrorY ? -1 : 1
-    const layerTransform = `translate(${txPct}%, ${tyPct}%) scale(${layer.scale * mx}, ${layer.scale * my}) rotate(${layer.rotation}deg)`
+    // Per-instance transform composes OUTERMOST so it positions the
+    // already-transformed layer (matches the previous wrapper-around-
+    // LayerView semantics — outer wrapper applied last).
+    const layerTransform = [
+      instanceTransform,
+      `translate(${txPct}%, ${tyPct}%) scale(${layer.scale * mx}, ${layer.scale * my}) rotate(${layer.rotation}deg)`,
+    ]
+      .filter(Boolean)
+      .join(' ')
     // Build CSS filter chain: blur + (for wireframes/glow) a
     // drop-shadow halo using the layer fill color.
     const filterParts: string[] = []
@@ -413,7 +429,7 @@ function LayerView({
           transform: layerTransform,
           transformOrigin: 'center center',
           mixBlendMode: layer.blendMode as React.CSSProperties['mixBlendMode'],
-          opacity: layer.opacity,
+          opacity: layer.opacity * instanceOpacity,
           pointerEvents: 'none',
           filter: filterParts.length > 0 ? filterParts.join(' ') : undefined,
         }}
@@ -512,13 +528,20 @@ function LayerView({
   // that actually carries paint), not on a wrapper div. The wrapper
   // div is a layout-only container; putting blend on it can cause
   // the blend to be clipped by the wrapper's full-viewport rect.
+  //
+  // Per-instance transform/opacity (from `expandLayerToInstances`)
+  // ride on this SAME node so the mix-blend node has no parent that
+  // creates a stacking context above it — preventing blend modes
+  // from compositing against a wrapper instead of the tunnel canvas.
   const svgStyle: React.CSSProperties = {
     position: 'absolute',
     inset: 0,
     width: '100%',
     height: '100%',
     mixBlendMode: layer.blendMode as React.CSSProperties['mixBlendMode'],
-    opacity: layer.opacity,
+    opacity: layer.opacity * instanceOpacity,
+    transform: instanceTransform || undefined,
+    transformOrigin: 'center center',
   }
 
   // ─── INDEPENDENT TUNNEL SOURCE ────────────────────────────────
@@ -602,7 +625,7 @@ function LayerView({
           position: 'absolute',
           inset: 0,
           mixBlendMode: layer.blendMode as React.CSSProperties['mixBlendMode'],
-          opacity: layer.opacity,
+          opacity: layer.opacity * instanceOpacity,
           ...maskCss,
           filter: filterChain.length > 0 ? filterChain.join(' ') : undefined,
           // Do not apply the generic SVG motion keyframes to an
@@ -613,6 +636,12 @@ function LayerView({
           // source already moves internally; mask-geometry animation
           // needs a dedicated implementation that animates mask
           // position/size/path around the saved base position.
+          //
+          // Per-instance transform IS applied here so pattern-space
+          // (Task 2+) can stamp this layer at multiple offsets. It
+          // sits on the same node as `mix-blend-mode` so blend still
+          // composites against the tunnel canvas, not a wrapper.
+          transform: instanceTransform || undefined,
           transformOrigin: '50% 50%',
           pointerEvents: 'none',
         }}
