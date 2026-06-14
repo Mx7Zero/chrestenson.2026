@@ -16,6 +16,7 @@ import {
   type OverlayBlend,
   type OverlayMotion,
   type OverlaySource,
+  type PatternMode,
   type PulseTarget,
 } from './types'
 import { generateLook, RECIPE_VERSION, type Genre } from '../generator/generateLook'
@@ -32,6 +33,24 @@ const GENRES: Genre[] = [
   'glitch',
   'sacred',
   'chroma',
+]
+
+// Pattern-space modes shown in the picker. Order matches the plan
+// (single → massive → mirrorStage → radial → kaleido → tileGrid →
+// tunnelRepeat → cloneCloud → mandalaStack). Modes that aren't
+// rendered yet by `expandLayerToInstances` still show in the picker
+// so the surface is complete; selecting them just produces a single
+// identity instance until the corresponding task lights them up.
+const PATTERN_MODES: PatternMode[] = [
+  'single',
+  'massive',
+  'mirrorStage',
+  'radial',
+  'kaleido',
+  'tileGrid',
+  'tunnelRepeat',
+  'cloneCloud',
+  'mandalaStack',
 ]
 
 // ─── OverlaysSection ──────────────────────────────────────────────
@@ -1096,6 +1115,97 @@ export function OverlaysSection({
                     )}
                 </>
               )}
+              {/* PATTERN SPACE — picks how the layer expands into N
+                  instances (single, mandala, mirrored pair, grid…).
+                  Layer-wide; works for shapes, cutouts, glows, tiles,
+                  and effects. Conditionally exposes per-mode tunables
+                  below the picker. Modes whose renderer hasn't shipped
+                  yet still appear in the dropdown — selecting them
+                  produces a single instance until the matching task
+                  lights them up. */}
+          {(() => {
+            const mode = active.patternMode ?? 'single'
+            return (
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: 6,
+                  border: '1px dashed rgba(220,180,255,0.45)',
+                  background: 'rgba(220,180,255,0.06)',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 9,
+                    letterSpacing: '0.2em',
+                    color: 'rgba(220,180,255,0.95)',
+                    textTransform: 'uppercase',
+                    marginBottom: 6,
+                  }}
+                >
+                  ✦ PATTERN
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginBottom: 4,
+                  }}
+                >
+                  <span style={{ ...labelStyle, width: 56 }}>MODE</span>
+                  <select
+                    value={mode}
+                    onChange={(e) =>
+                      onUpdateLayer(active.id, {
+                        patternMode: e.target.value as PatternMode,
+                      })
+                    }
+                    style={{
+                      flex: 1,
+                      fontFamily: 'monospace',
+                      fontSize: 10,
+                      background: 'rgba(0,0,0,0.5)',
+                      color: 'rgba(255,255,255,0.9)',
+                      border: '1px solid rgba(255,255,255,0.22)',
+                      padding: '2px 4px',
+                    }}
+                  >
+                    {PATTERN_MODES.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {mode === 'kaleido' &&
+                  sliderRow(
+                    'FOLDS',
+                    active.kaleidoFolds ?? 6,
+                    (v) => Math.round(v).toString(),
+                    1,
+                    32,
+                    1,
+                    (v) =>
+                      onUpdateLayer(active.id, {
+                        kaleidoFolds: Math.round(v),
+                      }),
+                  )}
+                {mode === 'mirrorStage' &&
+                  sliderRow(
+                    'OFFSET',
+                    active.spacingX ?? 0.25,
+                    (v) => v.toFixed(2),
+                    0,
+                    0.5,
+                    0.01,
+                    (v) => onUpdateLayer(active.id, { spacingX: v }),
+                  )}
+              </div>
+            )
+          })()}
+
               {/* COMPOSITION controls — kaleidoscope + mirror — apply to
               ALL effect layers (wireframes, plasma, leaks, etc.). */}
           {(() => {

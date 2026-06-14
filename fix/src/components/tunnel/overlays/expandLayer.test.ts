@@ -58,4 +58,22 @@ describe('expandLayerToInstances', () => {
     )
     expect(inst[0].scale).toBeGreaterThanOrEqual(5)
   })
+
+  it('kaleido mode produces N folds with mirrored alternation', () => {
+    const inst = expandLayerToInstances(
+      base({ patternMode: 'kaleido', kaleidoFolds: 6 }),
+    )
+    expect(inst).toHaveLength(6)
+    const rotations = inst.map((i) => Math.round(i.rotation))
+    expect(new Set(rotations).size).toBe(6)
+  })
+
+  it('mirrorStage mode returns 2 instances offset on X with opposite scaleX', () => {
+    const inst = expandLayerToInstances(
+      base({ patternMode: 'mirrorStage', spacingX: 0.25 }),
+    )
+    expect(inst).toHaveLength(2)
+    expect(inst[0].dx).toBeLessThan(0)
+    expect(inst[1].dx).toBeGreaterThan(0)
+  })
 })
